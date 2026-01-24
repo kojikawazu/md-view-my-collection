@@ -36,6 +36,7 @@ Configuration:
 - This snapshot does not include Git history, so no established commit message convention is visible.
 - Use short, imperative commit messages (e.g., "Add report filter state").
 - PRs should include: a clear summary, testing notes (or "Not tested"), and screenshots for UI changes.
+- Start development work on a separate branch (do not work directly on `main`).
 
 ## Agent-Specific Notes
 - The UI stores sample data in `localStorage` (see `base/App.tsx`), so verify behavior with fresh storage when debugging.

@@ -10,3 +10,4 @@
 - Prisma: schema is pulled only via `prisma db pull` (no schema editing).
 - Testing: E2E only (Playwright), no unit tests.
 - Deployment: Vercel, `main` branch only, `front/` only, no previews.
+- Development starts on a feature branch (no direct work on `main`).
