@@ -1,23 +1,25 @@
 'use client';
 
 import React, { useState } from 'react';
-import { DesignSystem, User } from '../../types';
+import { DesignSystem } from '../../types';
 
 interface LoginPageProps {
   theme: DesignSystem;
-  onLogin: (user: User) => void;
+  onLogin: (email: string, password: string) => Promise<string | null>;
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({ theme, onLogin }) => {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const { colors, fontHeader, borderRadius } = theme;
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    if (username && password) {
-      onLogin({ id: '1', username, role: 'admin' });
-    }
+    if (!email || !password) return;
+    void onLogin(email, password).then((message) => {
+      setError(message);
+    });
   };
 
   return (
@@ -31,14 +33,14 @@ const LoginPage: React.FC<LoginPageProps> = ({ theme, onLogin }) => {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <label className={`block text-[10px] uppercase font-bold tracking-widest ${colors.text} opacity-80`}>
-              Username
+              Email
             </label>
             <input
-              type="text"
-              value={username}
-              onChange={(event) => setUsername(event.target.value)}
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
               className={`w-full border ${colors.border} p-4 text-sm ${colors.text} bg-white focus:outline-none focus:ring-1 focus:ring-[#3d2b1f] ${borderRadius} placeholder:text-neutral-400`}
-              placeholder="Enter your username"
+              placeholder="Enter your email"
               required
             />
           </div>
@@ -55,6 +57,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ theme, onLogin }) => {
               required
             />
           </div>
+          {error && <p className="text-sm text-red-700">{error}</p>}
 
           <button
             type="submit"

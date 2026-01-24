@@ -23,7 +23,12 @@ const reportsFixture = [
   },
 ];
 
-const userFixture = { id: '1', username: 'tester', role: 'admin' as const };
+const userFixture = {
+  id: '1',
+  username: 'tester',
+  email: 'tester@example.com',
+  role: 'admin' as const,
+};
 
 const setStorage = async (
   page: Parameters<typeof test>[0]['page'],
@@ -86,7 +91,7 @@ test.describe('Reports app', () => {
     await page.getByRole('button', { name: 'Authenticate' }).click();
     await expect(page).toHaveURL(/\/login$/);
 
-    await page.getByPlaceholder('Enter your username').fill('tester');
+    await page.getByPlaceholder('Enter your email').fill('tester@example.com');
     await page.getByPlaceholder('Enter your password').fill('password');
     await page.getByRole('button', { name: 'Authenticate' }).click();
     await expect(page).toHaveURL(/\/$/);

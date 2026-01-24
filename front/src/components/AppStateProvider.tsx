@@ -4,14 +4,15 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ESPRESSO_THEME, INITIAL_REPORTS } from '../constants';
 import { DesignSystem, ReportItem, User } from '../types';
+import { supabase } from '../lib/supabaseClient';
 
 interface AppState {
   theme: DesignSystem;
   reports: ReportItem[];
   currentUser: User | null;
   isHydrated: boolean;
-  login: (user: User) => void;
-  logout: () => void;
+  login: (email: string, password: string) => Promise<string | null>;
+  logout: () => Promise<void>;
   addReport: (report: Omit<ReportItem, 'id'>) => void;
   updateReport: (id: string, updatedData: Partial<ReportItem>) => void;
   deleteReport: (id: string) => void;
@@ -33,27 +34,48 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
   const [isHydrated, setIsHydrated] = useState(false);
   const router = useRouter();
   const theme = ESPRESSO_THEME;
+  const authMode = process.env.NEXT_PUBLIC_AUTH_MODE ?? 'supabase';
 
   useEffect(() => {
-    const savedReports = localStorage.getItem('espresso_reports');
-    if (savedReports) {
-      try {
-        setReports(JSON.parse(savedReports));
-      } catch {
-        setReports(INITIAL_REPORTS);
+    const init = async () => {
+      const savedReports = localStorage.getItem('espresso_reports');
+      if (savedReports) {
+        try {
+          setReports(JSON.parse(savedReports));
+        } catch {
+          setReports(INITIAL_REPORTS);
+        }
       }
-    }
 
-    const savedUser = localStorage.getItem('espresso_user');
-    if (savedUser) {
-      try {
-        setCurrentUser(JSON.parse(savedUser));
-      } catch {
-        setCurrentUser(null);
+      if (authMode === 'local') {
+        const savedUser = localStorage.getItem('espresso_user');
+        if (savedUser) {
+          try {
+            setCurrentUser(JSON.parse(savedUser));
+          } catch {
+            setCurrentUser(null);
+          }
+        }
+        setIsHydrated(true);
+        return;
       }
-    }
 
-    setIsHydrated(true);
+      const { data } = await supabase.auth.getSession();
+      const sessionUser = data.session?.user ?? null;
+      setCurrentUser(
+        sessionUser
+          ? {
+              id: sessionUser.id,
+              username: sessionUser.email?.split('@')[0] ?? 'user',
+              email: sessionUser.email ?? undefined,
+              role: 'admin',
+            }
+          : null,
+      );
+      setIsHydrated(true);
+    };
+
+    void init();
   }, []);
 
   useEffect(() => {
@@ -61,19 +83,64 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
   }, [reports]);
 
   useEffect(() => {
-    localStorage.setItem('espresso_user', JSON.stringify(currentUser));
+    if (authMode === 'local') {
+      localStorage.setItem('espresso_user', JSON.stringify(currentUser));
+    }
   }, [currentUser]);
 
-  const login = (user: User) => {
-    console.info('[auth] login', { userId: user.id, username: user.username });
-    localStorage.setItem('espresso_user', JSON.stringify(user));
-    setCurrentUser(user);
+  useEffect(() => {
+    if (authMode === 'local') return;
+    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+      const sessionUser = session?.user ?? null;
+      setCurrentUser(
+        sessionUser
+          ? {
+              id: sessionUser.id,
+              username: sessionUser.email?.split('@')[0] ?? 'user',
+              email: sessionUser.email ?? undefined,
+              role: 'admin',
+            }
+          : null,
+      );
+    });
+    return () => subscription.subscription.unsubscribe();
+  }, []);
+
+  const login = async (email: string, password: string) => {
+    if (authMode === 'local') {
+      const user = { id: '1', username: email.split('@')[0] ?? email, email, role: 'admin' as const };
+      console.info('[auth] login', { userId: user.id, username: user.username });
+      localStorage.setItem('espresso_user', JSON.stringify(user));
+      setCurrentUser(user);
+      router.push('/');
+      return null;
+    }
+
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return error.message;
+    const sessionUser = data.user;
+    if (sessionUser) {
+      console.info('[auth] login', { userId: sessionUser.id, username: sessionUser.email });
+      setCurrentUser({
+        id: sessionUser.id,
+        username: sessionUser.email?.split('@')[0] ?? 'user',
+        email: sessionUser.email ?? undefined,
+        role: 'admin',
+      });
+    }
     router.push('/');
+    return null;
   };
 
-  const logout = () => {
+  const logout = async () => {
     console.info('[auth] logout');
-    localStorage.setItem('espresso_user', JSON.stringify(null));
+    if (authMode === 'local') {
+      localStorage.setItem('espresso_user', JSON.stringify(null));
+      setCurrentUser(null);
+      router.push('/login');
+      return;
+    }
+    await supabase.auth.signOut();
     setCurrentUser(null);
     router.push('/login');
   };

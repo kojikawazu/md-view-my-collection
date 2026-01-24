@@ -24,5 +24,8 @@ export default defineConfig({
     command: 'npm run dev',
     url: baseURL,
     reuseExistingServer: !process.env.CI,
+    env: {
+      NEXT_PUBLIC_AUTH_MODE: 'local',
+    },
   },
 });
