@@ -13,6 +13,7 @@
     "format": "prettier --write ."
   },
   "dependencies": {
+    "@prisma/client": "^7.3.0",
     "@supabase/supabase-js": "^2.55.0",
     "next": "16.1.4",
     "react": "19.2.3",
@@ -22,8 +23,9 @@
     "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
     "@playwright/test": "^1.51.1",
+    "@tailwindcss/postcss": "^4",
+    "dotenv": "^17.2.2",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
@@ -31,6 +33,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.4",
     "prettier": "^3.6.2",
+    "prisma": "^7.3.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

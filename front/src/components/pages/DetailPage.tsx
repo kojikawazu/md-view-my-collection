@@ -18,6 +18,9 @@ interface DetailPageProps {
 const DetailPage: React.FC<DetailPageProps> = ({ theme, report, user, onDelete }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const { colors, fontHeader, fontPrimary, borderRadius } = theme;
+  const displayDate = report
+    ? (report.publishDate || report.createdAt || '').split('T')[0]
+    : '';
 
   if (!report) {
     return (
@@ -58,7 +61,7 @@ const DetailPage: React.FC<DetailPageProps> = ({ theme, report, user, onDelete }
             </div>
             <div>
               <p className={`font-bold ${colors.text}`}>{report.author}</p>
-              <p className={`text-xs ${colors.muted}`}>{report.date}</p>
+              <p className={`text-xs ${colors.muted}`}>{displayDate}</p>
             </div>
           </div>
 

@@ -8,7 +8,8 @@ const reportsFixture = [
     content: '# Heading\n\nSome content.\n\n- Point A\n- Point B',
     category: 'Strategy',
     author: 'Editor One',
-    date: '2024-11-20',
+    publishDate: '2024-11-20',
+    createdAt: '2024-11-20T00:00:00.000Z',
     tags: ['#AI', '#UIUX'],
   },
   {
@@ -18,7 +19,8 @@ const reportsFixture = [
     content: '## Subheading\n\nMore details here.',
     category: 'Development',
     author: 'Editor Two',
-    date: '2024-11-18',
+    publishDate: '2024-11-18',
+    createdAt: '2024-11-18T00:00:00.000Z',
     tags: ['#Minimal'],
   },
 ];
@@ -120,6 +122,11 @@ test.describe('Reports app', () => {
     await page.locator('input[name="title"]').fill('New Report');
     await page.locator('textarea[name="summary"]').fill('New summary.');
     await page.locator('textarea[name="content"]').fill('# Title\n\nBody');
+
+    await submitButton.click();
+    await expect(page.getByText('タグを入力してください。')).toBeVisible();
+    await expect(page.getByText('レポートの投稿確認')).toHaveCount(0);
+
     await page.locator('input[name="tags"]').fill('a, b, #c');
 
     await page.getByRole('button', { name: 'レポートを投稿' }).click();

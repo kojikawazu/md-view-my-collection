@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model VideoEntry {
+  id           String    @id
+  youtubeUrl   String
+  title        String
+  thumbnailUrl String
+  tags         String[]
+  category     String
+  goodPoints   String
+  memo         String
+  rating       Int
+  publishDate  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime
+
+  @@index([createdAt])
+  @@index([publishDate])
+  @@index([rating])
+}
+
+model Report {
+  id          String    @id @default(uuid())
+  title       String
+  summary     String?
+  content     String
+  category    String
+  author      String
+  publishDate DateTime?
+  tags        String[]  @default([])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([publishDate])
+  @@index([category])
+  @@index([createdAt])
+}

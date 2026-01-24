@@ -22,11 +22,13 @@ export interface DesignSystem {
 export interface ReportItem {
   id: string;
   title: string;
-  summary: string;
+  summary?: string;
   content: string;
   category: string;
   author: string;
-  date: string;
+  publishDate?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
   tags: string[];
 }
 

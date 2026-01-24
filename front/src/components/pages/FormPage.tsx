@@ -26,6 +26,7 @@ const FormPage: React.FC<FormPageProps> = ({
   const router = useRouter();
   const { colors, fontHeader, borderRadius } = theme;
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [tagError, setTagError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<Omit<ReportItem, 'id'>>({
     title: '',
@@ -33,7 +34,7 @@ const FormPage: React.FC<FormPageProps> = ({
     content: '',
     category: CATEGORIES[0],
     author: user?.username || 'Guest Editor',
-    date: new Date().toISOString().split('T')[0],
+    publishDate: new Date().toISOString().split('T')[0],
     tags: [],
   });
 
@@ -70,10 +71,15 @@ const FormPage: React.FC<FormPageProps> = ({
       })
       .filter(Boolean);
     setFormData((prev) => ({ ...prev, tags }));
+    if (tags.length > 0) setTagError(null);
   };
 
   const handleSubmitAttempt = (event: React.FormEvent) => {
     event.preventDefault();
+    if (formData.tags.length === 0) {
+      setTagError('タグを入力してください。');
+      return;
+    }
     setShowConfirmModal(true);
   };
 
@@ -129,6 +135,7 @@ const FormPage: React.FC<FormPageProps> = ({
               className={`w-full bg-white border ${colors.border} p-4 text-sm focus:outline-none ${borderRadius}`}
               placeholder="例: デザイン, UI, 2024"
             />
+            {tagError && <p className="text-xs text-red-700">{tagError}</p>}
           </div>
         </div>
 

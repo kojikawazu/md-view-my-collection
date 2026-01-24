@@ -26,6 +26,7 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     env: {
       NEXT_PUBLIC_AUTH_MODE: 'local',
+      NEXT_PUBLIC_DATA_MODE: 'local',
     },
   },
 });

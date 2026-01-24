@@ -41,3 +41,4 @@ Configuration:
 ## Agent-Specific Notes
 - The UI stores sample data in `localStorage` (see `base/App.tsx`), so verify behavior with fresh storage when debugging.
 - Deployment is Vercel, `main` branch only, `front/` directory only, no preview.
+- Database migrations are禁止 (no migrations). Schema changes must be reflected only in code files and applied in the separate DB project by the owner.

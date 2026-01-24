@@ -35,17 +35,56 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
   const router = useRouter();
   const theme = ESPRESSO_THEME;
   const authMode = process.env.NEXT_PUBLIC_AUTH_MODE ?? 'supabase';
+  const dataMode = process.env.NEXT_PUBLIC_DATA_MODE ?? 'supabase';
 
-  useEffect(() => {
-    const init = async () => {
+  const normalizeReport = (report: ReportItem) => ({
+    ...report,
+    publishDate: report.publishDate ?? null,
+    tags: report.tags ?? [],
+    summary: report.summary ?? null,
+  });
+
+  const toPayload = (report: Partial<ReportItem>) => ({
+    title: report.title,
+    summary: report.summary ?? null,
+    content: report.content,
+    category: report.category,
+    author: report.author,
+    publishDate: report.publishDate ?? null,
+    tags: report.tags ?? [],
+  });
+
+  const fetchReports = async () => {
+    if (dataMode === 'local') {
       const savedReports = localStorage.getItem('espresso_reports');
       if (savedReports) {
         try {
           setReports(JSON.parse(savedReports));
+          return;
         } catch {
           setReports(INITIAL_REPORTS);
+          return;
         }
       }
+      setReports(INITIAL_REPORTS);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('Report')
+      .select('*')
+      .order('createdAt', { ascending: false });
+    if (error) {
+      console.error('[reports] fetch failed', error.message);
+      setReports([]);
+      return;
+    }
+    setReports((data ?? []).map(normalizeReport));
+  };
+
+  useEffect(() => {
+    const init = async () => {
+      await fetchReports();
 
       if (authMode === 'local') {
         const savedUser = localStorage.getItem('espresso_user');
@@ -79,14 +118,16 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('espresso_reports', JSON.stringify(reports));
-  }, [reports]);
+    if (dataMode === 'local') {
+      localStorage.setItem('espresso_reports', JSON.stringify(reports));
+    }
+  }, [reports, dataMode]);
 
   useEffect(() => {
     if (authMode === 'local') {
       localStorage.setItem('espresso_user', JSON.stringify(currentUser));
     }
-  }, [currentUser]);
+  }, [currentUser, authMode]);
 
   useEffect(() => {
     if (authMode === 'local') return;
@@ -146,22 +187,85 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
   };
 
   const addReport = (report: Omit<ReportItem, 'id'>) => {
-    const newReport = { ...report, id: Date.now().toString() };
-    console.info('[reports] create', { reportId: newReport.id, title: newReport.title });
-    setReports((prev) => [newReport, ...prev]);
-    router.push('/');
+    if (dataMode === 'local') {
+      const newReport = { ...report, id: Date.now().toString() };
+      console.info('[reports] create', { reportId: newReport.id, title: newReport.title });
+      setReports((prev) => [newReport, ...prev]);
+      router.push('/');
+      return;
+    }
+
+    const create = async () => {
+      const payload = toPayload(report);
+      const { data, error } = await supabase
+        .from('Report')
+        .insert(payload)
+        .select('*')
+        .single();
+      if (error) {
+        console.error('[reports] create failed', error.message);
+        return;
+      }
+      if (data) {
+        setReports((prev) => [normalizeReport(data), ...prev]);
+        router.push('/');
+      }
+    };
+    void create();
   };
 
   const updateReport = (id: string, updatedData: Partial<ReportItem>) => {
-    console.info('[reports] update', { reportId: id });
-    setReports((prev) => prev.map((report) => (report.id === id ? { ...report, ...updatedData } : report)));
-    router.push(`/report/${id}`);
+    if (dataMode === 'local') {
+      console.info('[reports] update', { reportId: id });
+      setReports((prev) =>
+        prev.map((report) => (report.id === id ? { ...report, ...updatedData } : report)),
+      );
+      router.push(`/report/${id}`);
+      return;
+    }
+
+    const update = async () => {
+      const payload = toPayload(updatedData);
+      const { data, error } = await supabase
+        .from('Report')
+        .update(payload)
+        .eq('id', id)
+        .select('*')
+        .single();
+      if (error) {
+        console.error('[reports] update failed', error.message);
+        return;
+      }
+      if (data) {
+        console.info('[reports] update', { reportId: id });
+        setReports((prev) =>
+          prev.map((report) => (report.id === id ? normalizeReport(data) : report)),
+        );
+        router.push(`/report/${id}`);
+      }
+    };
+    void update();
   };
 
   const deleteReport = (id: string) => {
-    console.info('[reports] delete', { reportId: id });
-    setReports((prev) => prev.filter((report) => report.id !== id));
-    router.push('/');
+    if (dataMode === 'local') {
+      console.info('[reports] delete', { reportId: id });
+      setReports((prev) => prev.filter((report) => report.id !== id));
+      router.push('/');
+      return;
+    }
+
+    const remove = async () => {
+      const { error } = await supabase.from('Report').delete().eq('id', id);
+      if (error) {
+        console.error('[reports] delete failed', error.message);
+        return;
+      }
+      console.info('[reports] delete', { reportId: id });
+      setReports((prev) => prev.filter((report) => report.id !== id));
+      router.push('/');
+    };
+    void remove();
   };
 
   return (

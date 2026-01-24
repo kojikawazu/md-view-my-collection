@@ -11,6 +11,10 @@ interface ListPageProps {
 
 const ListPage: React.FC<ListPageProps> = ({ theme, reports }) => {
   const { colors, fontHeader, fontPrimary, borderRadius } = theme;
+  const getDisplayDate = (report: ReportItem) => {
+    const raw = report.publishDate || report.createdAt || '';
+    return raw.includes('T') ? raw.split('T')[0] : raw;
+  };
 
   return (
     <div className="p-8 md:p-12 transition-all duration-300">
@@ -35,7 +39,7 @@ const ListPage: React.FC<ListPageProps> = ({ theme, reports }) => {
               >
                 {report.category}
               </span>
-              <span className={`text-xs ${colors.muted}`}>{report.date}</span>
+              <span className={`text-xs ${colors.muted}`}>{getDisplayDate(report)}</span>
             </div>
             <h2 className={`${fontHeader} text-2xl font-bold ${colors.text} mb-4 leading-tight group-hover:underline`}>
               <Link href={`/report/${report.id}`}>{report.title}</Link>
