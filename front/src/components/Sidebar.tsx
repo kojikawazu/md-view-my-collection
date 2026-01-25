@@ -2,14 +2,20 @@
 
 import React from 'react';
 import { DesignSystem } from '../types';
-import { CATEGORIES, TRENDING_TAGS } from '../constants';
+import { CATEGORIES } from '../constants';
 
 interface SidebarProps {
   theme: DesignSystem;
+  tags: string[];
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ theme }) => {
+const Sidebar: React.FC<SidebarProps> = ({ theme, tags }) => {
   const { colors, fontHeader, sidebarStyle, borderRadius } = theme;
+
+  const visibleTags = tags
+    .map((tag) => tag.trim())
+    .filter(Boolean)
+    .map((tag) => tag.replace(/^#/, ''));
 
   return (
     <aside
@@ -40,14 +46,18 @@ const Sidebar: React.FC<SidebarProps> = ({ theme }) => {
             Trending Tags
           </h3>
           <div className="flex flex-wrap gap-2">
-            {TRENDING_TAGS.map((tag) => (
-              <span
-                key={tag}
-                className={`text-[10px] px-2 py-1 ${colors.accent} text-white ${borderRadius} cursor-pointer hover:brightness-125 transition-all`}
-              >
-                {tag}
-              </span>
-            ))}
+            {visibleTags.length > 0 ? (
+              visibleTags.map((tag) => (
+                <span
+                  key={tag}
+                  className={`text-[10px] px-2 py-1 ${colors.accent} text-white ${borderRadius} cursor-pointer hover:brightness-125 transition-all before:mr-0.5 before:content-['#']`}
+                >
+                  {tag}
+                </span>
+              ))
+            ) : (
+              <span className={`text-[10px] ${colors.muted}`}>No tags</span>
+            )}
           </div>
         </div>
 
