@@ -34,6 +34,7 @@
 - [x] 主要導線のE2Eテスト作成（一覧/詳細/投稿/編集/削除/ログイン）
 - [x] E2Eテスト仕様（正常/準正常/異常）を定義（`docs/04.e2e-cases.md`）
 - [x] GitHub ActionsでE2E自動実行を追加
+- [x] GitHub ActionsのE2E実行成功を確認
 
 ## デプロイ/運用
 - [x] Vercelプロジェクトを作成
