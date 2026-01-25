@@ -270,7 +270,14 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
               localStorage.setItem('espresso_user', JSON.stringify(null));
               setCurrentUser(null);
             } else {
-              setCurrentUser(parsedUser);
+              const normalizedUser = parsedUser
+                ? {
+                    ...parsedUser,
+                    username: 'Manager',
+                  }
+                : null;
+              setCurrentUser(normalizedUser);
+              localStorage.setItem('espresso_user', JSON.stringify(normalizedUser));
             }
           } catch {
             setCurrentUser(null);
