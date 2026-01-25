@@ -40,6 +40,9 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Run E2E tests
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: "http://localhost:54321"
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: "e2e-placeholder-anon-key"
         run: npm run test:e2e
 
       - name: Upload Playwright report
