@@ -12,7 +12,7 @@ interface ListPageProps {
 
 const ListPage: React.FC<ListPageProps> = ({ theme, reports }) => {
   const { colors, fontHeader, fontPrimary, borderRadius } = theme;
-  const { selectedCategory, selectedTag, setSelectedCategory, setSelectedTag } = useAppState();
+  const { selectedCategory, selectedTag, setSelectedCategory, setSelectedTag, currentUser } = useAppState();
   const getDisplayDate = (report: ReportItem) => {
     const raw = report.publishDate || report.createdAt || '';
     return raw.includes('T') ? raw.split('T')[0] : raw;
@@ -66,7 +66,9 @@ const ListPage: React.FC<ListPageProps> = ({ theme, reports }) => {
       </div>
 
       <div className="grid gap-8 grid-cols-1 lg:grid-cols-2">
-        {visibleReports.map((report) => (
+        {visibleReports.map((report) => {
+          const displayAuthor = currentUser?.username ?? report.author;
+          return (
           <article
             key={report.id}
             className={`${colors.surface} ${colors.border} border p-8 transition-all duration-300 shadow-sm hover:shadow-xl ${borderRadius} group`}
@@ -90,10 +92,10 @@ const ListPage: React.FC<ListPageProps> = ({ theme, reports }) => {
                 <div
                   className={`w-10 h-10 ${colors.accent} ${borderRadius} opacity-20 flex items-center justify-center font-bold text-[#3d2b1f]`}
                 >
-                  {report.author.charAt(0)}
+                  {displayAuthor.charAt(0)}
                 </div>
                 <div>
-                  <span className={`block text-sm font-bold ${colors.text}`}>{report.author}</span>
+                  <span className={`block text-sm font-bold ${colors.text}`}>{displayAuthor}</span>
                   <span className={`block text-[10px] tracking-wider uppercase ${colors.muted} font-medium`}>
                     Research Fellow
                   </span>
@@ -107,7 +109,8 @@ const ListPage: React.FC<ListPageProps> = ({ theme, reports }) => {
               </AppLink>
             </div>
           </article>
-        ))}
+          );
+        })}
         {visibleReports.length === 0 && (
           <div className={`col-span-full py-24 text-center ${colors.muted}`}>
             <p className="text-xl italic">No reports found.</p>
