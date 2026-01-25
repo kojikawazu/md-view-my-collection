@@ -13,25 +13,42 @@ const LoginPage: React.FC<LoginPageProps> = ({ theme, onLogin, onLoginWithGoogle
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { colors, fontHeader, borderRadius } = theme;
   const authMode = process.env.NEXT_PUBLIC_AUTH_MODE ?? 'supabase';
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     if (!email || !password) return;
+    setIsSubmitting(true);
     void onLogin(email, password).then((message) => {
       setError(message);
+      if (message) {
+        setIsSubmitting(false);
+      }
     });
   };
 
   const handleGoogleLogin = () => {
+    setIsSubmitting(true);
     void onLoginWithGoogle().then((message) => {
       setError(message);
+      if (message) {
+        setIsSubmitting(false);
+      }
     });
   };
 
   return (
     <div className={`min-h-screen flex items-center justify-center ${colors.background} ${colors.text} p-6`}>
+      {isSubmitting && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center loading-gradient transition-opacity duration-700">
+          <div className="flex flex-col items-center gap-3">
+            <div className="h-10 w-10 animate-spin rounded-full border-2 border-[#5c4033] border-t-transparent" />
+            <span className="text-sm uppercase tracking-[0.3em] text-[#8c7e75]">Loading</span>
+          </div>
+        </div>
+      )}
       <div className={`w-full max-w-md bg-white border ${colors.border} p-12 shadow-2xl ${borderRadius}`}>
         <div className="text-center mb-10">
           <h1 className={`${fontHeader} text-3xl font-bold ${colors.primary} mb-2`}>EarthyDesign</h1>
