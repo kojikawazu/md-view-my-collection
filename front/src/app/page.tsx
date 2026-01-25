@@ -5,11 +5,7 @@ import ListPage from '../components/pages/ListPage';
 import { useAppState } from '../components/AppStateProvider';
 
 export default function HomePage() {
-  const { theme, reports, isHydrated } = useAppState();
-
-  if (!isHydrated) {
-    return null;
-  }
+  const { theme, reports } = useAppState();
 
   return (
     <AppShell>
