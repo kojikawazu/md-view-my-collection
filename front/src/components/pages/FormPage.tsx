@@ -43,13 +43,13 @@ const FormPage: React.FC<FormPageProps> = ({
     if (!user) {
       router.push('/login');
     }
-    if (reportId && reports) {
-      const existing = reports.find((report) => report.id === reportId);
-      if (existing) {
-        const { id: _, ...rest } = existing;
-        setFormData(rest);
+      if (reportId && reports) {
+        const existing = reports.find((report) => report.id === reportId);
+        if (existing) {
+          const { id: _, ...rest } = existing;
+          setFormData({ ...rest, summary: rest.summary ?? '' });
+        }
       }
-    }
   }, [reportId, reports, user, router, isHydrated]);
 
   if (!isHydrated) return null;
@@ -143,7 +143,7 @@ const FormPage: React.FC<FormPageProps> = ({
           <label className={`text-xs uppercase tracking-widest ${colors.muted} font-bold`}>要約</label>
           <textarea
             name="summary"
-            value={formData.summary}
+            value={formData.summary ?? ''}
             onChange={handleChange}
             required
             className={`w-full bg-white border ${colors.border} p-4 text-sm focus:outline-none min-h-[100px] ${borderRadius}`}
