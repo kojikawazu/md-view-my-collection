@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import Footer from './Footer';
@@ -10,18 +10,28 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
   const { theme, currentUser, logout, isHydrated } = useAppState();
   const [showLoading, setShowLoading] = useState(true);
   const [fadeOutLoading, setFadeOutLoading] = useState(false);
+  const loadingStartRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (isHydrated) {
-      setFadeOutLoading(true);
+    if (loadingStartRef.current === null) {
+      loadingStartRef.current = Date.now();
     }
+  }, []);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    const minDurationMs = 700;
+    const elapsed = Date.now() - (loadingStartRef.current ?? Date.now());
+    const remaining = Math.max(0, minDurationMs - elapsed);
+    const timer = setTimeout(() => setFadeOutLoading(true), remaining);
+    return () => clearTimeout(timer);
   }, [isHydrated]);
 
   return (
     <div className={`${theme.colors.background} ${theme.fontPrimary} ${theme.colors.text} min-h-screen flex flex-col`}>
       {showLoading && (
         <div
-          className={`fixed inset-0 z-[999] flex items-center justify-center ${theme.colors.background} transition-opacity duration-500 ${
+          className={`fixed inset-0 z-[999] flex items-center justify-center loading-gradient transition-opacity duration-700 ${
             fadeOutLoading ? 'opacity-0 pointer-events-none' : 'opacity-100'
           }`}
           onTransitionEnd={() => {
