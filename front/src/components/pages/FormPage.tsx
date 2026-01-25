@@ -90,7 +90,7 @@ const FormPage: React.FC<FormPageProps> = ({
   return (
     <div className="max-w-3xl mx-auto p-8 md:p-12">
       <h1 className={`${fontHeader} text-4xl font-bold ${colors.primary} mb-12`}>
-        {reportId ? 'レポートを再構築' : '新しいレポートを起草'}
+        {reportId ? 'レポートを編集' : '新しいレポートを投稿'}
       </h1>
 
       <form onSubmit={handleSubmitAttempt} className="space-y-8">

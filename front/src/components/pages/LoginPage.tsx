@@ -51,8 +51,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ theme, onLogin, onLoginWithGoogle
       )}
       <div className={`w-full max-w-md bg-white border ${colors.border} p-12 shadow-2xl ${borderRadius}`}>
         <div className="text-center mb-10">
-          <h1 className={`${fontHeader} text-3xl font-bold ${colors.primary} mb-2`}>EarthyDesign</h1>
-          <p className={`text-sm ${colors.muted} font-medium`}>Access the editorial dashboard</p>
+          <h1 className={`${fontHeader} text-3xl font-bold ${colors.primary} mb-2`}>Report Viewer</h1>
+          <p className={`text-sm ${colors.muted} font-medium`}>レポート管理ダッシュボードへアクセス</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -98,11 +98,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ theme, onLogin, onLoginWithGoogle
                 onClick={handleGoogleLogin}
                 className={`w-full py-4 bg-white border ${colors.border} text-sm font-bold tracking-widest hover:bg-neutral-50 transition-all uppercase ${borderRadius}`}
               >
-                Continue with Google
+                Googleアカウントでログイン
               </button>
-              <p className={`text-[11px] ${colors.muted} text-center`}>
-                Googleアカウントでログインします。
-              </p>
             </>
           )}
           {error && <p className="text-sm text-red-700">{error}</p>}

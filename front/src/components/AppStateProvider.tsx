@@ -9,6 +9,7 @@ import { supabase } from '../lib/supabaseClient';
 interface AppState {
   theme: DesignSystem;
   reports: ReportItem[];
+  tags: string[];
   currentUser: User | null;
   isHydrated: boolean;
   login: (email: string, password: string) => Promise<string | null>;
@@ -31,6 +32,7 @@ export const useAppState = () => {
 
 export const AppStateProvider = ({ children }: { children: React.ReactNode }) => {
   const [reports, setReports] = useState<ReportItem[]>([]);
+  const [tags, setTags] = useState<string[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
   const router = useRouter();
@@ -76,6 +78,9 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
 
   const normalizeTagNames = (tags: string[]) =>
     Array.from(new Set(tags.map((tag) => tag.trim()).filter(Boolean)));
+
+  const deriveTagsFromReports = (items: ReportItem[]) =>
+    normalizeTagNames(items.flatMap((report) => report.tags ?? []));
 
   const mapReportFromDb = (report: ReportRow): ReportItem => {
     const tagMappings = report.ReportTagMapping ?? [];
@@ -178,14 +183,18 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
       const savedReports = localStorage.getItem('espresso_reports');
       if (savedReports) {
         try {
-          setReports(JSON.parse(savedReports));
+          const parsedReports = JSON.parse(savedReports) as ReportItem[];
+          setReports(parsedReports);
+          setTags(deriveTagsFromReports(parsedReports));
           return;
         } catch {
           setReports([]);
+          setTags([]);
           return;
         }
       }
       setReports([]);
+      setTags([]);
       return;
     }
 
@@ -201,9 +210,37 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     setReports((data ?? []).map(mapReportFromDb));
   };
 
+  const fetchTags = async () => {
+    if (dataMode === 'local') {
+      const savedReports = localStorage.getItem('espresso_reports');
+      if (savedReports) {
+        try {
+          const parsedReports = JSON.parse(savedReports) as ReportItem[];
+          setTags(deriveTagsFromReports(parsedReports));
+          return;
+        } catch {
+          setTags([]);
+          return;
+        }
+      }
+      setTags([]);
+      return;
+    }
+
+    const { data, error } = await supabase.from('ReportTag').select('name').order('name');
+    if (error) {
+      console.error('[tags] fetch failed', error.message);
+      setTags([]);
+      return;
+    }
+    const names = (data ?? []).map((tag) => tag.name).filter(Boolean) as string[];
+    setTags(names);
+  };
+
   useEffect(() => {
     const init = async () => {
       await fetchReports();
+      await fetchTags();
 
       if (authMode === 'local') {
         const savedUser = localStorage.getItem('espresso_user');
@@ -325,7 +362,11 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     if (dataMode === 'local') {
       const newReport = { ...report, id: Date.now().toString() };
       console.info('[reports] create', { reportId: newReport.id, title: newReport.title });
-      setReports((prev) => [newReport, ...prev]);
+      setReports((prev) => {
+        const nextReports = [newReport, ...prev];
+        setTags(deriveTagsFromReports(nextReports));
+        return nextReports;
+      });
       router.push('/');
       return;
     }
@@ -349,6 +390,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         const syncedTags = await syncReportTags(data.id, report.tags ?? []);
         const tags = syncedTags ?? normalizeTagNames(report.tags ?? []);
         setReports((prev) => [normalizeReport({ ...data, tags }), ...prev]);
+        await fetchTags();
         router.push('/');
       }
     };
@@ -358,9 +400,13 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
   const updateReport = (id: string, updatedData: Partial<ReportItem>) => {
     if (dataMode === 'local') {
       console.info('[reports] update', { reportId: id });
-      setReports((prev) =>
-        prev.map((report) => (report.id === id ? { ...report, ...updatedData } : report)),
-      );
+      setReports((prev) => {
+        const nextReports = prev.map((report) =>
+          report.id === id ? { ...report, ...updatedData } : report,
+        );
+        setTags(deriveTagsFromReports(nextReports));
+        return nextReports;
+      });
       router.push(`/report/${id}`);
       return;
     }
@@ -392,6 +438,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             return normalizeReport({ ...data, tags });
           }),
         );
+        await fetchTags();
         router.push(`/report/${id}`);
       }
     };
@@ -401,7 +448,11 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
   const deleteReport = (id: string) => {
     if (dataMode === 'local') {
       console.info('[reports] delete', { reportId: id });
-      setReports((prev) => prev.filter((report) => report.id !== id));
+      setReports((prev) => {
+        const nextReports = prev.filter((report) => report.id !== id);
+        setTags(deriveTagsFromReports(nextReports));
+        return nextReports;
+      });
       router.push('/');
       return;
     }
@@ -424,6 +475,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
       value={{
         theme,
         reports,
+        tags,
         currentUser,
         isHydrated,
         login,

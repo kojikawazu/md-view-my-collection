@@ -22,9 +22,6 @@ const ListPage: React.FC<ListPageProps> = ({ theme, reports }) => {
         <h1 className={`${fontHeader} text-4xl md:text-5xl font-bold ${colors.primary} mb-4`}>
           Latest Reports
         </h1>
-        <p className={`${fontPrimary} text-lg ${colors.muted}`}>
-          Insightful analysis on digital aesthetics, functionality, and the future of design systems.
-        </p>
       </div>
 
       <div className="grid gap-8 grid-cols-1 lg:grid-cols-2">
