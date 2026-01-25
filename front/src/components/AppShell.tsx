@@ -15,7 +15,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
   const loadingStartRef = useRef<number | null>(null);
   const loadingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevPathRef = useRef<string | null>(null);
-  const minDurationMs = 700;
+  const minDurationMs = 1000;
 
   useEffect(() => {
     if (loadingStartRef.current === null) {
