@@ -42,3 +42,5 @@ Configuration:
 - The UI stores sample data in `localStorage` (see `base/App.tsx`), so verify behavior with fresh storage when debugging.
 - Deployment is Vercel, `main` branch only, `front/` directory only, no preview.
 - Database migrations are禁止 (no migrations). Schema changes must be reflected only in code files and applied in the separate DB project by the owner.
+- Always read `docs/TASKS.md` before starting work to align on remaining tasks and completion status.
+- After each completed task, update `docs/TASKS.md` and this file if requirements or workflows changed.

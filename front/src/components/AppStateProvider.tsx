@@ -12,6 +12,7 @@ interface AppState {
   currentUser: User | null;
   isHydrated: boolean;
   login: (email: string, password: string) => Promise<string | null>;
+  loginWithGoogle: () => Promise<string | null>;
   logout: () => Promise<void>;
   addReport: (report: Omit<ReportItem, 'id'>) => void;
   updateReport: (id: string, updatedData: Partial<ReportItem>) => void;
@@ -36,6 +37,15 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
   const theme = ESPRESSO_THEME;
   const authMode = process.env.NEXT_PUBLIC_AUTH_MODE ?? 'supabase';
   const dataMode = process.env.NEXT_PUBLIC_DATA_MODE ?? 'supabase';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+
+  type ReportRow = Omit<ReportItem, 'tags'> & {
+    ReportTagMapping?: {
+      id: string;
+      reportTagId: string;
+      ReportTag?: { name: string | null } | null;
+    }[];
+  };
 
   const normalizeReport = (report: ReportItem) => ({
     ...report,
@@ -44,15 +54,112 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     summary: report.summary ?? null,
   });
 
-  const toPayload = (report: Partial<ReportItem>) => ({
-    title: report.title,
-    summary: report.summary ?? null,
-    content: report.content,
-    category: report.category,
-    author: report.author,
-    publishDate: report.publishDate ?? null,
-    tags: report.tags ?? [],
-  });
+  const toReportPayload = (report: Partial<ReportItem>) => {
+    const payload = {
+      title: report.title,
+      summary: report.summary ?? null,
+      content: report.content,
+      category: report.category,
+      author: report.author,
+      publishDate: report.publishDate ?? null,
+    };
+    return Object.fromEntries(Object.entries(payload).filter(([, value]) => value !== undefined));
+  };
+
+  const normalizeTagNames = (tags: string[]) =>
+    Array.from(new Set(tags.map((tag) => tag.trim()).filter(Boolean)));
+
+  const mapReportFromDb = (report: ReportRow): ReportItem => {
+    const tagMappings = report.ReportTagMapping ?? [];
+    const tags = tagMappings
+      .map((mapping) => mapping.ReportTag?.name)
+      .filter((tag): tag is string => Boolean(tag));
+    const { ReportTagMapping: _ignored, ...rest } = report;
+    return normalizeReport({ ...(rest as ReportItem), tags });
+  };
+
+  const ensureTags = async (tags: string[]) => {
+    const normalized = normalizeTagNames(tags);
+    if (normalized.length === 0) return [];
+    const { data: existing, error } = await supabase
+      .from('ReportTag')
+      .select('id, name')
+      .in('name', normalized);
+    if (error) {
+      console.error('[tags] fetch failed', error.message);
+      return null;
+    }
+    const existingTags = existing ?? [];
+    const existingNames = new Set(existingTags.map((tag) => tag.name));
+    const missing = normalized.filter((name) => !existingNames.has(name));
+    if (missing.length === 0) return existingTags;
+    const newTags = missing.map((name) => ({ id: crypto.randomUUID(), name }));
+    const { data: inserted, error: insertError } = await supabase
+      .from('ReportTag')
+      .insert(newTags)
+      .select('id, name');
+    if (insertError) {
+      console.error('[tags] create failed', insertError.message);
+      return null;
+    }
+    return [...existingTags, ...(inserted ?? newTags)];
+  };
+
+  const syncReportTags = async (reportId: string, tags: string[]) => {
+    const normalized = normalizeTagNames(tags);
+    if (normalized.length === 0) {
+      const { error } = await supabase.from('ReportTagMapping').delete().eq('reportId', reportId);
+      if (error) {
+        console.error('[tags] clear failed', error.message);
+      }
+      return [];
+    }
+
+    const tagRows = await ensureTags(normalized);
+    if (!tagRows) return null;
+    const tagIdByName = new Map(tagRows.map((tag) => [tag.name, tag.id]));
+    const desiredTagIds = normalized.map((name) => tagIdByName.get(name)).filter(Boolean) as string[];
+
+    const { data: existingMappings, error } = await supabase
+      .from('ReportTagMapping')
+      .select('id, reportTagId, ReportTag(name)')
+      .eq('reportId', reportId);
+    if (error) {
+      console.error('[tags] mapping fetch failed', error.message);
+      return null;
+    }
+
+    const existing = existingMappings ?? [];
+    const existingTagIds = new Set(existing.map((mapping) => mapping.reportTagId));
+
+    const toInsert = desiredTagIds
+      .filter((tagId) => !existingTagIds.has(tagId))
+      .map((reportTagId) => ({ id: crypto.randomUUID(), reportId, reportTagId }));
+    const toDeleteIds = existing
+      .filter((mapping) => {
+        const name = mapping.ReportTag?.name ?? '';
+        return name && !normalized.includes(name);
+      })
+      .map((mapping) => mapping.id);
+
+    if (toDeleteIds.length > 0) {
+      const { error: deleteError } = await supabase.from('ReportTagMapping').delete().in('id', toDeleteIds);
+      if (deleteError) {
+        console.error('[tags] mapping delete failed', deleteError.message);
+        return null;
+      }
+    }
+
+    if (toInsert.length > 0) {
+      const { error: insertError } = await supabase.from('ReportTagMapping').insert(toInsert);
+      if (insertError) {
+        console.error('[tags] mapping create failed', insertError.message);
+        return null;
+      }
+    }
+
+    return normalized;
+  };
 
   const fetchReports = async () => {
     if (dataMode === 'local') {
@@ -72,14 +179,14 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
 
     const { data, error } = await supabase
       .from('Report')
-      .select('*')
+      .select('*, ReportTagMapping(ReportTag(name))')
       .order('createdAt', { ascending: false });
     if (error) {
       console.error('[reports] fetch failed', error.message);
       setReports([]);
       return;
     }
-    setReports((data ?? []).map(normalizeReport));
+    setReports((data ?? []).map(mapReportFromDb));
   };
 
   useEffect(() => {
@@ -125,9 +232,10 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
 
   useEffect(() => {
     if (authMode === 'local') {
+      if (!isHydrated) return;
       localStorage.setItem('espresso_user', JSON.stringify(currentUser));
     }
-  }, [currentUser, authMode]);
+  }, [currentUser, authMode, isHydrated]);
 
   useEffect(() => {
     if (authMode === 'local') return;
@@ -173,6 +281,21 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     return null;
   };
 
+  const loginWithGoogle = async () => {
+    if (authMode === 'local') {
+      return null;
+    }
+    const redirectTo =
+      siteUrl ?? (typeof window === 'undefined' ? undefined : `${window.location.origin}/`);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: redirectTo ? { redirectTo } : undefined,
+    });
+    if (error) return error.message;
+    console.info('[auth] login', { provider: 'google' });
+    return null;
+  };
+
   const logout = async () => {
     console.info('[auth] logout');
     if (authMode === 'local') {
@@ -196,7 +319,11 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     }
 
     const create = async () => {
-      const payload = toPayload(report);
+      const payload = {
+        id: crypto.randomUUID(),
+        updatedAt: new Date().toISOString(),
+        ...toReportPayload(report),
+      };
       const { data, error } = await supabase
         .from('Report')
         .insert(payload)
@@ -207,7 +334,9 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         return;
       }
       if (data) {
-        setReports((prev) => [normalizeReport(data), ...prev]);
+        const syncedTags = await syncReportTags(data.id, report.tags ?? []);
+        const tags = syncedTags ?? normalizeTagNames(report.tags ?? []);
+        setReports((prev) => [normalizeReport({ ...data, tags }), ...prev]);
         router.push('/');
       }
     };
@@ -225,7 +354,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     }
 
     const update = async () => {
-      const payload = toPayload(updatedData);
+      const payload = toReportPayload(updatedData);
       const { data, error } = await supabase
         .from('Report')
         .update(payload)
@@ -237,9 +366,19 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         return;
       }
       if (data) {
+        let syncedTags: string[] | null = null;
+        if (Array.isArray(updatedData.tags)) {
+          syncedTags = await syncReportTags(id, updatedData.tags);
+        }
         console.info('[reports] update', { reportId: id });
         setReports((prev) =>
-          prev.map((report) => (report.id === id ? normalizeReport(data) : report)),
+          prev.map((reportItem) => {
+            if (reportItem.id !== id) return reportItem;
+            const tags = Array.isArray(updatedData.tags)
+              ? syncedTags ?? normalizeTagNames(updatedData.tags)
+              : reportItem.tags;
+            return normalizeReport({ ...data, tags });
+          }),
         );
         router.push(`/report/${id}`);
       }
@@ -276,6 +415,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         currentUser,
         isHydrated,
         login,
+        loginWithGoogle,
         logout,
         addReport,
         updateReport,

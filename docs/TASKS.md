@@ -10,12 +10,12 @@
 - [x] ログ方針を確定（本番/開発ともconsole、セキュリティ配慮）
 
 ## リポジトリ構成
-- [ ] `base/` を `front/` にコピーして実装用ディレクトリを用意（開発開始時のみ）
-- [ ] `base/` を読み取り専用扱いとする運用ルールを整備
+- [x] `base/` を `front/` にコピーして実装用ディレクトリを用意（開発開始時のみ）
+- [x] `base/` を読み取り専用扱いとする運用ルールを整備
 
 ## フロントエンド実装（front/）
-- [ ] 画面ルーティングを維持（一覧/詳細/新規/編集/ログイン）
-- [ ] UI要件に沿って画面を実装/調整
+- [x] 画面ルーティングを維持（一覧/詳細/新規/編集/ログイン）
+- [x] UI要件に沿って画面を実装/調整
 - [x] ログイン/ログアウト動作を実装
 - [x] 投稿/編集/削除の確認モーダル動作を実装
 - [x] Markdown簡易レンダリングを実装（要サニタイズ方針）
@@ -38,14 +38,16 @@
 - [ ] 本番環境変数を整備（必要が出た場合のみ）
 
 ## 残タスク
-- [ ] allowedDevOrigins 警告の対応
+- [x] allowedDevOrigins 警告の対応
 - [ ] Supabase DB連携の動作確認（実データCRUD）
 - [ ] 監査/ログの強化（必要なら）
+- [x] Google OAuthのリダイレクト固定（`NEXT_PUBLIC_SITE_URL` を使用）
 
 ## 開発再開メモ
-- [ ] `front/` のNext.js再構築後、baseレイアウトの反映を開始する。
-- [ ] Prettier設定を追加（package.jsonのscript/依存追加、.prettierrc/.prettierignore）。
-- [ ] `front/src/types.ts` を作成してbaseの型を移植。
-- [ ] `front/src/constants.tsx` を作成してbaseのテーマ/初期データを移植。
-- [ ] `front/src/components/` と `front/src/app/` に画面/部品を移植する。
-- [ ] ルーティング: `/`, `/report/[id]`, `/report/new`, `/report/[id]/edit`, `/login` をApp Routerで構成。
+- [x] `front/` のNext.js再構築後、baseレイアウトの反映を開始する。
+- [x] Prettier設定を追加（package.jsonのscript/依存追加、.prettierrc/.prettierignore）。
+- [x] `front/src/types.ts` を作成してbaseの型を移植。
+- [x] `front/src/constants.tsx` を作成してbaseのテーマ/初期データを移植。
+- [x] `front/src/components/` と `front/src/app/` に画面/部品を移植する。
+- [x] ルーティング: `/`, `/report/[id]`, `/report/new`, `/report/[id]/edit`, `/login` をApp Routerで構成。
+- [x] SupabaseログインにGoogle OAuthを追加（localはE2E用に維持）
