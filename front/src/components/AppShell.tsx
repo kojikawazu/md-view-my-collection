@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import Footer from './Footer';
+import { LoadingProvider } from './LoadingContext';
 import { useAppState } from './AppStateProvider';
 
 const AppShell = ({ children }: { children: React.ReactNode }) => {
@@ -14,7 +15,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
   const [fadeOutLoading, setFadeOutLoading] = useState(false);
   const loadingStartRef = useRef<number | null>(null);
   const loadingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const prevPathRef = useRef<string | null>(null);
+  const lastManualTriggerRef = useRef<number | null>(null);
   const minDurationMs = 1000;
 
   useEffect(() => {
@@ -37,6 +38,11 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
     scheduleFadeOut(minDurationMs);
   };
 
+  const triggerLoading = () => {
+    lastManualTriggerRef.current = Date.now();
+    startLoading();
+  };
+
   useEffect(() => {
     if (!isHydrated) return;
     const elapsed = Date.now() - (loadingStartRef.current ?? Date.now());
@@ -45,11 +51,11 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
   }, [isHydrated]);
 
   useEffect(() => {
-    const prevPath = prevPathRef.current;
-    prevPathRef.current = pathname;
-    if (prevPath === '/login' && pathname === '/') {
-      startLoading();
+    const now = Date.now();
+    if (lastManualTriggerRef.current && now - lastManualTriggerRef.current < 300) {
+      return;
     }
+    startLoading();
   }, [pathname]);
 
   useEffect(() => {
@@ -77,16 +83,18 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
           </div>
         </div>
       )}
-      <div className={`transition-opacity duration-700 ${isHydrated ? 'opacity-100' : 'opacity-0'}`}>
-        <Header theme={theme} user={currentUser} onLogout={logout} />
-        <div className="flex flex-1 pt-24">
-          <Sidebar theme={theme} />
-          <main className="flex-1 overflow-x-hidden">
-            {children}
-            <Footer theme={theme} />
-          </main>
+      <LoadingProvider value={{ startLoading: triggerLoading }}>
+        <div className={`transition-opacity duration-700 ${isHydrated ? 'opacity-100' : 'opacity-0'}`}>
+          <Header theme={theme} user={currentUser} onLogout={logout} />
+          <div className="flex flex-1 pt-24">
+            <Sidebar theme={theme} />
+            <main className="flex-1 overflow-x-hidden">
+              {children}
+              <Footer theme={theme} />
+            </main>
+          </div>
         </div>
-      </div>
+      </LoadingProvider>
     </div>
   );
 };
