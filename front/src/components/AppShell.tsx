@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import Footer from './Footer';
@@ -8,9 +9,13 @@ import { useAppState } from './AppStateProvider';
 
 const AppShell = ({ children }: { children: React.ReactNode }) => {
   const { theme, currentUser, logout, isHydrated } = useAppState();
+  const pathname = usePathname();
   const [showLoading, setShowLoading] = useState(true);
   const [fadeOutLoading, setFadeOutLoading] = useState(false);
   const loadingStartRef = useRef<number | null>(null);
+  const loadingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const prevPathRef = useRef<string | null>(null);
+  const minDurationMs = 700;
 
   useEffect(() => {
     if (loadingStartRef.current === null) {
@@ -18,14 +23,42 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
     }
   }, []);
 
+  const scheduleFadeOut = (delayMs: number) => {
+    if (loadingTimerRef.current) {
+      clearTimeout(loadingTimerRef.current);
+    }
+    loadingTimerRef.current = setTimeout(() => setFadeOutLoading(true), delayMs);
+  };
+
+  const startLoading = () => {
+    setShowLoading(true);
+    setFadeOutLoading(false);
+    loadingStartRef.current = Date.now();
+    scheduleFadeOut(minDurationMs);
+  };
+
   useEffect(() => {
     if (!isHydrated) return;
-    const minDurationMs = 700;
     const elapsed = Date.now() - (loadingStartRef.current ?? Date.now());
     const remaining = Math.max(0, minDurationMs - elapsed);
-    const timer = setTimeout(() => setFadeOutLoading(true), remaining);
-    return () => clearTimeout(timer);
+    scheduleFadeOut(remaining);
   }, [isHydrated]);
+
+  useEffect(() => {
+    const prevPath = prevPathRef.current;
+    prevPathRef.current = pathname;
+    if (prevPath === '/login' && pathname === '/') {
+      startLoading();
+    }
+  }, [pathname]);
+
+  useEffect(() => {
+    return () => {
+      if (loadingTimerRef.current) {
+        clearTimeout(loadingTimerRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className={`${theme.colors.background} ${theme.fontPrimary} ${theme.colors.text} min-h-screen flex flex-col`}>
