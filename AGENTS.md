@@ -36,7 +36,11 @@ Configuration:
 - This snapshot does not include Git history, so no established commit message convention is visible.
 - Use short, imperative commit messages (e.g., "Add report filter state").
 - PRs should include: a clear summary, testing notes (or "Not tested"), and screenshots for UI changes.
+- Start development work on a separate branch (do not work directly on `main`).
 
 ## Agent-Specific Notes
 - The UI stores sample data in `localStorage` (see `base/App.tsx`), so verify behavior with fresh storage when debugging.
 - Deployment is Vercel, `main` branch only, `front/` directory only, no preview.
+- Database migrations are禁止 (no migrations). Schema changes must be reflected only in code files and applied in the separate DB project by the owner.
+- Always read `docs/TASKS.md` before starting work to align on remaining tasks and completion status.
+- After each completed task, update `docs/TASKS.md` and this file if requirements or workflows changed.

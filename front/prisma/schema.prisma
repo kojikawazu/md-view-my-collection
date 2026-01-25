@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model VideoEntry {
+  id           String    @id
+  youtubeUrl   String
+  title        String
+  thumbnailUrl String
+  tags         String[]
+  category     String
+  goodPoints   String
+  memo         String
+  rating       Int
+  publishDate  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime
+
+  @@index([createdAt])
+  @@index([publishDate])
+  @@index([rating])
+}
+
+model Report {
+  id               String             @id @default(uuid())
+  title            String
+  summary          String?
+  content          String
+  category         String
+  author           String
+  publishDate      DateTime?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  ReportTagMapping ReportTagMapping[]
+
+  @@index([publishDate])
+  @@index([category])
+  @@index([createdAt])
+}
+
+model ReportTag {
+  id               String             @id
+  name             String             @unique
+  createdAt        DateTime           @default(now())
+  ReportTagMapping ReportTagMapping[]
+
+  @@index([name])
+}
+
+model ReportTagMapping {
+  id          String    @id
+  reportId    String
+  reportTagId String
+  createdAt   DateTime  @default(now())
+  Report      Report    @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  ReportTag   ReportTag @relation(fields: [reportTagId], references: [id], onDelete: Cascade)
+
+  @@unique([reportId, reportTagId])
+  @@index([reportId])
+  @@index([reportTagId])
+}
