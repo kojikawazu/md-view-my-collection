@@ -14,7 +14,7 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: 'Classic Espresso Blog',
+  title: 'Report Viewer',
   description: 'A design-forward report journal for modern teams.',
 };
 
