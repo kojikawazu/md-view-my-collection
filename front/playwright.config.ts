@@ -27,6 +27,7 @@ export default defineConfig({
     env: {
       NEXT_PUBLIC_AUTH_MODE: 'local',
       NEXT_PUBLIC_DATA_MODE: 'local',
+      NEXT_PUBLIC_ADMIN_EMAIL: 'tester@example.com',
     },
   },
 });

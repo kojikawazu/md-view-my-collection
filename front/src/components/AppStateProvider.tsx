@@ -46,6 +46,19 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
   const authMode = process.env.NEXT_PUBLIC_AUTH_MODE ?? 'supabase';
   const dataMode = process.env.NEXT_PUBLIC_DATA_MODE ?? 'supabase';
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  const adminEmailConfig = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? process.env.ADMIN_EMAIL ?? '';
+
+  const getAllowedEmails = () =>
+    adminEmailConfig
+      .split(',')
+      .map((email) => email.trim().toLowerCase())
+      .filter(Boolean);
+
+  const isAllowedEmail = (email?: string | null) => {
+    const allowed = getAllowedEmails();
+    if (!email || allowed.length === 0) return false;
+    return allowed.includes(email.toLowerCase());
+  };
 
   type ReportTagRef = { name: string | null };
 
@@ -252,7 +265,13 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         const savedUser = localStorage.getItem('espresso_user');
         if (savedUser) {
           try {
-            setCurrentUser(JSON.parse(savedUser));
+            const parsedUser = JSON.parse(savedUser) as User | null;
+            if (parsedUser?.email && !isAllowedEmail(parsedUser.email)) {
+              localStorage.setItem('espresso_user', JSON.stringify(null));
+              setCurrentUser(null);
+            } else {
+              setCurrentUser(parsedUser);
+            }
           } catch {
             setCurrentUser(null);
           }
@@ -263,16 +282,23 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
 
       const { data } = await supabase.auth.getSession();
       const sessionUser = data.session?.user ?? null;
-      setCurrentUser(
-        sessionUser
-          ? {
-              id: sessionUser.id,
-              username: 'Manager',
-              email: sessionUser.email ?? undefined,
-              role: 'admin',
-            }
-          : null,
-      );
+      if (sessionUser) {
+        if (!isAllowedEmail(sessionUser.email)) {
+          await supabase.auth.signOut();
+          setCurrentUser(null);
+          router.push('/login?error=unauthorized');
+          setIsHydrated(true);
+          return;
+        }
+        setCurrentUser({
+          id: sessionUser.id,
+          username: 'Manager',
+          email: sessionUser.email ?? undefined,
+          role: 'admin',
+        });
+      } else {
+        setCurrentUser(null);
+      }
       setIsHydrated(true);
     };
 
@@ -296,6 +322,12 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     if (authMode === 'local') return;
     const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
       const sessionUser = session?.user ?? null;
+      if (sessionUser && !isAllowedEmail(sessionUser.email)) {
+        void supabase.auth.signOut();
+        setCurrentUser(null);
+        router.push('/login?error=unauthorized');
+        return;
+      }
       setCurrentUser(
         sessionUser
           ? {
@@ -313,6 +345,9 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
   const login = async (email: string, password: string) => {
     if (authMode === 'local') {
       const user = { id: '1', username: 'Manager', email, role: 'admin' as const };
+      if (!isAllowedEmail(user.email)) {
+        return '許可されていないメールアドレスです。';
+      }
       console.info('[auth] login', { userId: user.id, username: user.username });
       localStorage.setItem('espresso_user', JSON.stringify(user));
       setCurrentUser(user);
@@ -324,6 +359,10 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     if (error) return error.message;
     const sessionUser = data.user;
     if (sessionUser) {
+      if (!isAllowedEmail(sessionUser.email)) {
+        await supabase.auth.signOut();
+        return '許可されていないメールアドレスです。';
+      }
       console.info('[auth] login', { userId: sessionUser.id, username: sessionUser.email });
       setCurrentUser({
         id: sessionUser.id,

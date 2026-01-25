@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { DesignSystem } from '../../types';
 
 interface LoginPageProps {
@@ -16,6 +17,15 @@ const LoginPage: React.FC<LoginPageProps> = ({ theme, onLogin, onLoginWithGoogle
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { colors, fontHeader, borderRadius } = theme;
   const authMode = process.env.NEXT_PUBLIC_AUTH_MODE ?? 'supabase';
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const errorParam = searchParams.get('error');
+    if (errorParam === 'unauthorized') {
+      setError('許可されていないメールアドレスです。');
+      setIsSubmitting(false);
+    }
+  }, [searchParams]);
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
