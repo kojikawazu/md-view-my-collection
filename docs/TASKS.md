@@ -56,3 +56,6 @@
 - [x] `front/src/components/` と `front/src/app/` に画面/部品を移植する。
 - [x] ルーティング: `/`, `/report/[id]`, `/report/new`, `/report/[id]/edit`, `/login` をApp Routerで構成。
 - [x] SupabaseログインにGoogle OAuthを追加（localはE2E用に維持）
+
+## ドキュメント
+- [x] ドキュメントを最新状態に整理
