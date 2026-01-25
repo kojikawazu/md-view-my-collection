@@ -202,6 +202,18 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
   };
 
   useEffect(() => {
+    if (!siteUrl || typeof window === 'undefined') return;
+    try {
+      const expected = new URL(siteUrl);
+      if (expected.origin !== window.location.origin) {
+        window.location.href = siteUrl;
+      }
+    } catch {
+      // Ignore invalid NEXT_PUBLIC_SITE_URL
+    }
+  }, [siteUrl]);
+
+  useEffect(() => {
     const init = async () => {
       await fetchReports();
 
