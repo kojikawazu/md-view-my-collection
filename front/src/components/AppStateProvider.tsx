@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ESPRESSO_THEME, INITIAL_REPORTS } from '../constants';
+import { ESPRESSO_THEME } from '../constants';
 import { DesignSystem, ReportItem, User } from '../types';
 import { supabase } from '../lib/supabaseClient';
 
@@ -30,7 +30,7 @@ export const useAppState = () => {
 };
 
 export const AppStateProvider = ({ children }: { children: React.ReactNode }) => {
-  const [reports, setReports] = useState<ReportItem[]>(INITIAL_REPORTS);
+  const [reports, setReports] = useState<ReportItem[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
   const router = useRouter();
@@ -181,11 +181,11 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
           setReports(JSON.parse(savedReports));
           return;
         } catch {
-          setReports(INITIAL_REPORTS);
+          setReports([]);
           return;
         }
       }
-      setReports(INITIAL_REPORTS);
+      setReports([]);
       return;
     }
 
