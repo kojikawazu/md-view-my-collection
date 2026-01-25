@@ -39,12 +39,20 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
   const dataMode = process.env.NEXT_PUBLIC_DATA_MODE ?? 'supabase';
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
 
+  type ReportTagRef = { name: string | null };
+
   type ReportRow = Omit<ReportItem, 'tags'> & {
     ReportTagMapping?: {
       id: string;
       reportTagId: string;
-      ReportTag?: { name: string | null } | null;
+      ReportTag?: ReportTagRef | ReportTagRef[] | null;
     }[];
+  };
+
+  type ReportTagMappingRow = {
+    id: string;
+    reportTagId: string;
+    ReportTag?: ReportTagRef | ReportTagRef[] | null;
   };
 
   const normalizeReport = (report: ReportItem) => ({
@@ -72,7 +80,10 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
   const mapReportFromDb = (report: ReportRow): ReportItem => {
     const tagMappings = report.ReportTagMapping ?? [];
     const tags = tagMappings
-      .map((mapping) => mapping.ReportTag?.name)
+      .map((mapping) => {
+        const reportTag = Array.isArray(mapping.ReportTag) ? mapping.ReportTag[0] : mapping.ReportTag;
+        return reportTag?.name ?? null;
+      })
       .filter((tag): tag is string => Boolean(tag));
     const { ReportTagMapping: _ignored, ...rest } = report;
     return normalizeReport({ ...(rest as ReportItem), tags });
@@ -129,7 +140,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
       return null;
     }
 
-    const existing = existingMappings ?? [];
+    const existing = (existingMappings ?? []) as ReportTagMappingRow[];
     const existingTagIds = new Set(existing.map((mapping) => mapping.reportTagId));
 
     const toInsert = desiredTagIds
@@ -137,7 +148,8 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
       .map((reportTagId) => ({ id: crypto.randomUUID(), reportId, reportTagId }));
     const toDeleteIds = existing
       .filter((mapping) => {
-        const name = mapping.ReportTag?.name ?? '';
+        const reportTag = Array.isArray(mapping.ReportTag) ? mapping.ReportTag[0] : mapping.ReportTag;
+        const name = reportTag?.name ?? '';
         return name && !normalized.includes(name);
       })
       .map((mapping) => mapping.id);

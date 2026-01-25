@@ -22,7 +22,7 @@ export interface DesignSystem {
 export interface ReportItem {
   id: string;
   title: string;
-  summary?: string;
+  summary?: string | null;
   content: string;
   category: string;
   author: string;
