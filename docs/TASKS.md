@@ -47,6 +47,7 @@
 - [x] Supabase DB連携の動作確認（実データCRUD）
 - [ ] 監査/ログの強化（必要なら）
 - [x] Google OAuthのリダイレクト固定（`NEXT_PUBLIC_SITE_URL` を使用）
+- [x] ローディング画面のグラデーション/表示を調整
 
 ## 開発再開メモ
 - [x] `front/` のNext.js再構築後、baseレイアウトの反映を開始する。
