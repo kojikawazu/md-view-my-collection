@@ -45,6 +45,7 @@
 - [x] allowedDevOrigins の警告対策を強化
 - [x] ログイン後の表示ユーザー名をManagerに固定
 - [x] 管理者メールの環境変数一致のみログイン許可
+- [x] ログインのURLエラー処理をwindow.location参照に変更（ビルド対策）
 
 ## データ/永続化
 - [x] 保存先の確定（Supabase等）
