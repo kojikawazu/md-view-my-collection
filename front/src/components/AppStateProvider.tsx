@@ -267,7 +267,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         sessionUser
           ? {
               id: sessionUser.id,
-              username: sessionUser.email?.split('@')[0] ?? 'user',
+              username: 'Manager',
               email: sessionUser.email ?? undefined,
               role: 'admin',
             }
@@ -300,7 +300,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         sessionUser
           ? {
               id: sessionUser.id,
-              username: sessionUser.email?.split('@')[0] ?? 'user',
+              username: 'Manager',
               email: sessionUser.email ?? undefined,
               role: 'admin',
             }
@@ -312,7 +312,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
 
   const login = async (email: string, password: string) => {
     if (authMode === 'local') {
-      const user = { id: '1', username: email.split('@')[0] ?? email, email, role: 'admin' as const };
+      const user = { id: '1', username: 'Manager', email, role: 'admin' as const };
       console.info('[auth] login', { userId: user.id, username: user.username });
       localStorage.setItem('espresso_user', JSON.stringify(user));
       setCurrentUser(user);
@@ -327,7 +327,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
       console.info('[auth] login', { userId: sessionUser.id, username: sessionUser.email });
       setCurrentUser({
         id: sessionUser.id,
-        username: sessionUser.email?.split('@')[0] ?? 'user',
+        username: 'Manager',
         email: sessionUser.email ?? undefined,
         role: 'admin',
       });
