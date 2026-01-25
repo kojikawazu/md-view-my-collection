@@ -38,6 +38,7 @@
 - [x] Vercelプロジェクトを作成
 - [x] Vercel自動デプロイを設定（mainのみ、プレビューなし）
 - [x] 本番環境変数を整備（必要が出た場合のみ）
+- [x] 本番動作確認（Google OAuth/初期表示）
 
 ## 残タスク
 - [x] allowedDevOrigins 警告の対応
