@@ -21,7 +21,7 @@ const DetailPage: React.FC<DetailPageProps> = ({ theme, report, user, onDelete }
   const displayDate = report
     ? (report.publishDate || report.createdAt || '').split('T')[0]
     : '';
-  const displayAuthor = user?.username ?? report?.author ?? '';
+  const displayAuthor = user?.username ?? 'Manager';
 
   if (!report) {
     return (

@@ -67,7 +67,7 @@ const ListPage: React.FC<ListPageProps> = ({ theme, reports }) => {
 
       <div className="grid gap-8 grid-cols-1 lg:grid-cols-2">
         {visibleReports.map((report) => {
-          const displayAuthor = currentUser?.username ?? report.author;
+          const displayAuthor = currentUser?.username ?? 'Manager';
           return (
           <article
             key={report.id}

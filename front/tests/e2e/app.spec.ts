@@ -59,7 +59,7 @@ test.describe('Reports app', () => {
     const firstCard = page.locator('article').first();
     await expect(firstCard.getByRole('link', { name: 'Sample Report One' })).toBeVisible();
     await expect(firstCard.getByText('Summary for sample report one.')).toBeVisible();
-    await expect(firstCard.getByText('Editor One')).toBeVisible();
+    await expect(firstCard.getByText('Manager')).toBeVisible();
 
     await firstCard.getByRole('link', { name: 'Sample Report One' }).click();
     await expect(page).toHaveURL(/\/report\/1$/);
@@ -77,7 +77,7 @@ test.describe('Reports app', () => {
 
     await page.goto('/report/1');
     await expect(page.getByRole('heading', { name: 'Sample Report One' })).toBeVisible();
-    await expect(page.getByText('Editor One')).toBeVisible();
+    await expect(page.getByText('Manager')).toBeVisible();
     await expect(page.getByRole('article').getByText('#AI')).toBeVisible();
     await expect(page.getByRole('button', { name: '削除' })).toHaveCount(0);
     await expect(page.getByRole('link', { name: '編集' })).toHaveCount(0);

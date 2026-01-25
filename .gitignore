@@ -1,5 +1,6 @@
 .env.local
 .DS_Store
+.codex
 front/node_modules
 front/.next
 front/out
