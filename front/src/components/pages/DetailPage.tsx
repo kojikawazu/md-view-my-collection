@@ -21,6 +21,7 @@ const DetailPage: React.FC<DetailPageProps> = ({ theme, report, user, onDelete }
   const displayDate = report
     ? (report.publishDate || report.createdAt || '').split('T')[0]
     : '';
+  const displayAuthor = user?.username ?? report?.author ?? '';
 
   if (!report) {
     return (
@@ -57,10 +58,10 @@ const DetailPage: React.FC<DetailPageProps> = ({ theme, report, user, onDelete }
             <div
               className={`w-12 h-12 ${colors.accent} ${borderRadius} opacity-20 flex items-center justify-center font-bold text-xl`}
             >
-              {report.author.charAt(0)}
+              {displayAuthor.charAt(0)}
             </div>
             <div>
-              <p className={`font-bold ${colors.text}`}>{report.author}</p>
+              <p className={`font-bold ${colors.text}`}>{displayAuthor}</p>
               <p className={`text-xs ${colors.muted}`}>{displayDate}</p>
             </div>
           </div>

@@ -97,7 +97,7 @@ test.describe('Reports app', () => {
     await page.getByPlaceholder('Enter your password').fill('password');
     await page.getByRole('button', { name: 'Authenticate' }).click();
     await expect(page).toHaveURL(/\/$/);
-    await expect(page.getByText('Manager')).toBeVisible();
+    await expect(page.getByRole('navigation').getByText('Manager')).toBeVisible();
   });
 
   test('TC-009/010: unauth access redirects to login', async ({ page }) => {
