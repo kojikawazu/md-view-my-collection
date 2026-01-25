@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
+import AppLink from '../AppLink';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeSanitize from 'rehype-sanitize';
@@ -26,9 +26,9 @@ const DetailPage: React.FC<DetailPageProps> = ({ theme, report, user, onDelete }
     return (
       <div className="p-12 text-center">
         <h2 className="text-2xl font-bold mb-4">Report Not Found</h2>
-        <Link href="/" className="underline">
+        <AppLink href="/" className="underline">
           Go back to list
-        </Link>
+        </AppLink>
       </div>
     );
   }
@@ -37,9 +37,9 @@ const DetailPage: React.FC<DetailPageProps> = ({ theme, report, user, onDelete }
     <article className="max-w-4xl mx-auto p-8 md:p-12">
       <div className="mb-12">
         <div className="flex items-center gap-3 mb-6">
-          <Link href="/" className={`text-sm ${colors.muted} hover:opacity-70 transition-opacity`}>
+          <AppLink href="/" className={`text-sm ${colors.muted} hover:opacity-70 transition-opacity`}>
             &larr; All Reports
-          </Link>
+          </AppLink>
           <span className="opacity-20">|</span>
           <span
             className={`text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 ${colors.accent} text-white ${borderRadius}`}
@@ -67,12 +67,12 @@ const DetailPage: React.FC<DetailPageProps> = ({ theme, report, user, onDelete }
 
           {user && (
             <div className="flex gap-4">
-              <Link
+              <AppLink
                 href={`/report/${report.id}/edit`}
                 className={`px-4 py-2 border ${colors.border} text-sm font-bold hover:bg-black hover:text-white transition-all`}
               >
                 編集
-              </Link>
+              </AppLink>
               <button
                 onClick={() => setShowDeleteModal(true)}
                 className="px-4 py-2 bg-red-800 text-white text-sm font-bold hover:bg-red-950 transition-all"

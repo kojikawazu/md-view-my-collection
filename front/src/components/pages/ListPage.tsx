@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
+import AppLink from '../AppLink';
 import { DesignSystem, ReportItem } from '../../types';
 
 interface ListPageProps {
@@ -42,7 +42,7 @@ const ListPage: React.FC<ListPageProps> = ({ theme, reports }) => {
               <span className={`text-xs ${colors.muted}`}>{getDisplayDate(report)}</span>
             </div>
             <h2 className={`${fontHeader} text-2xl font-bold ${colors.text} mb-4 leading-tight group-hover:underline`}>
-              <Link href={`/report/${report.id}`}>{report.title}</Link>
+              <AppLink href={`/report/${report.id}`}>{report.title}</AppLink>
             </h2>
             <p className={`${fontPrimary} ${colors.text} opacity-80 mb-8 line-clamp-3 leading-relaxed`}>
               {report.summary}
@@ -61,12 +61,12 @@ const ListPage: React.FC<ListPageProps> = ({ theme, reports }) => {
                   </span>
                 </div>
               </div>
-              <Link
+              <AppLink
                 href={`/report/${report.id}`}
                 className={`${colors.text} text-sm font-bold border-b-2 border-transparent hover:border-current transition-all`}
               >
                 Read Report &rarr;
-              </Link>
+              </AppLink>
             </div>
           </article>
         ))}
