@@ -6,7 +6,7 @@ const reportsFixture = [
     title: 'Sample Report One',
     summary: 'Summary for sample report one.',
     content: '# Heading\n\nSome content.\n\n- Point A\n- Point B',
-    category: 'Strategy',
+    category: 'AI',
     author: 'Editor One',
     publishDate: '2024-11-20',
     createdAt: '2024-11-20T00:00:00.000Z',

@@ -10,6 +10,10 @@ interface AppState {
   theme: DesignSystem;
   reports: ReportItem[];
   tags: string[];
+  selectedCategory: string | null;
+  setSelectedCategory: (category: string | null) => void;
+  selectedTag: string | null;
+  setSelectedTag: (tag: string | null) => void;
   currentUser: User | null;
   isHydrated: boolean;
   login: (email: string, password: string) => Promise<string | null>;
@@ -33,6 +37,8 @@ export const useAppState = () => {
 export const AppStateProvider = ({ children }: { children: React.ReactNode }) => {
   const [reports, setReports] = useState<ReportItem[]>([]);
   const [tags, setTags] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
   const router = useRouter();
@@ -476,6 +482,10 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         theme,
         reports,
         tags,
+        selectedCategory,
+        setSelectedCategory,
+        selectedTag,
+        setSelectedTag,
         currentUser,
         isHydrated,
         login,

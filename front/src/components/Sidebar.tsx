@@ -7,15 +7,30 @@ import { CATEGORIES } from '../constants';
 interface SidebarProps {
   theme: DesignSystem;
   tags: string[];
+  selectedCategory: string | null;
+  onSelectCategory: (category: string | null) => void;
+  selectedTag: string | null;
+  onSelectTag: (tag: string | null) => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ theme, tags }) => {
+const Sidebar: React.FC<SidebarProps> = ({
+  theme,
+  tags,
+  selectedCategory,
+  onSelectCategory,
+  selectedTag,
+  onSelectTag,
+}) => {
   const { colors, fontHeader, sidebarStyle, borderRadius } = theme;
 
-  const visibleTags = tags
-    .map((tag) => tag.trim())
-    .filter(Boolean)
-    .map((tag) => tag.replace(/^#/, ''));
+  const normalizeTag = (tag: string) => tag.replace(/^#/, '').trim();
+  const normalizeTagValue = (tag: string) => normalizeTag(tag).toLowerCase();
+  const visibleTags = Array.from(
+    new Set(tags.map(normalizeTag).filter(Boolean)),
+  ).map((tag) => ({
+    label: tag,
+    value: normalizeTagValue(tag),
+  }));
 
   return (
     <aside
@@ -31,11 +46,16 @@ const Sidebar: React.FC<SidebarProps> = ({ theme, tags }) => {
           <ul className="space-y-4 text-sm">
             {CATEGORIES.map((cat) => (
               <li key={cat}>
-                <span
-                  className={`${colors.text} cursor-pointer hover:opacity-70 border-b border-transparent hover:border-current transition-all inline-block pb-1`}
+                <button
+                  type="button"
+                  aria-pressed={selectedCategory === cat}
+                  onClick={() => onSelectCategory(selectedCategory === cat ? null : cat)}
+                  className={`${colors.text} cursor-pointer hover:opacity-70 border-b border-transparent hover:border-current transition-all inline-block pb-1 ${
+                    selectedCategory === cat ? 'font-bold border-current' : 'opacity-70'
+                  }`}
                 >
                   {cat}
-                </span>
+                </button>
               </li>
             ))}
           </ul>
@@ -47,13 +67,20 @@ const Sidebar: React.FC<SidebarProps> = ({ theme, tags }) => {
           </h3>
           <div className="flex flex-wrap gap-2">
             {visibleTags.length > 0 ? (
-              visibleTags.map((tag) => (
-                <span
-                  key={tag}
-                  className={`text-[10px] px-2 py-1 ${colors.accent} text-white ${borderRadius} cursor-pointer hover:brightness-125 transition-all before:mr-0.5 before:content-['#']`}
+              visibleTags.map(({ label, value }) => (
+                <button
+                  key={value}
+                  type="button"
+                  aria-pressed={selectedTag === value}
+                  className={`text-[10px] px-2 py-1 ${colors.accent} text-white ${borderRadius} cursor-pointer hover:brightness-125 transition-all before:mr-0.5 before:content-['#'] ${
+                    selectedTag === value
+                      ? 'ring-2 ring-[#2a1b12] ring-offset-2 ring-offset-[#faf7f5] scale-[1.05] brightness-110 shadow-md'
+                      : 'opacity-70'
+                  }`}
+                  onClick={() => onSelectTag(selectedTag === value ? null : value)}
                 >
-                  {tag}
-                </span>
+                  {label}
+                </button>
               ))
             ) : (
               <span className={`text-[10px] ${colors.muted}`}>No tags</span>
