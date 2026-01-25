@@ -20,7 +20,7 @@ const Header: React.FC<HeaderProps> = ({ theme, user, onLogout }) => {
       } ${colors.surface} ${colors.border} border-b py-4 px-6 flex justify-between items-center transition-all duration-300`}
     >
       <AppLink href="/" className={`${fontHeader} text-2xl font-bold ${colors.primary}`}>
-        EarthyDesign <span className="text-sm font-normal opacity-60">Report Blog</span>
+        Report Viewer
       </AppLink>
       <nav className="flex items-center space-x-6 text-sm font-medium">
         <AppLink href="/" className={`${colors.text} hover:opacity-70 transition-opacity`}>
