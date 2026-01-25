@@ -9,7 +9,17 @@ import { LoadingProvider } from './LoadingContext';
 import { useAppState } from './AppStateProvider';
 
 const AppShell = ({ children }: { children: React.ReactNode }) => {
-  const { theme, currentUser, logout, isHydrated, tags } = useAppState();
+  const {
+    theme,
+    currentUser,
+    logout,
+    isHydrated,
+    tags,
+    selectedCategory,
+    setSelectedCategory,
+    selectedTag,
+    setSelectedTag,
+  } = useAppState();
   const pathname = usePathname();
   const [showLoading, setShowLoading] = useState(true);
   const [fadeOutLoading, setFadeOutLoading] = useState(false);
@@ -87,7 +97,14 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
         <div className={`transition-opacity duration-700 ${isHydrated ? 'opacity-100' : 'opacity-0'}`}>
           <Header theme={theme} user={currentUser} onLogout={logout} />
           <div className="flex flex-1 pt-24">
-            <Sidebar theme={theme} tags={tags} />
+            <Sidebar
+              theme={theme}
+              tags={tags}
+              selectedCategory={selectedCategory}
+              onSelectCategory={setSelectedCategory}
+              selectedTag={selectedTag}
+              onSelectTag={setSelectedTag}
+            />
             <main className="flex-1 overflow-x-hidden">
               {children}
               <Footer theme={theme} />

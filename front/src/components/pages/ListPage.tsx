@@ -1,7 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import AppLink from '../AppLink';
+import { useAppState } from '../AppStateProvider';
 import { DesignSystem, ReportItem } from '../../types';
 
 interface ListPageProps {
@@ -11,10 +12,25 @@ interface ListPageProps {
 
 const ListPage: React.FC<ListPageProps> = ({ theme, reports }) => {
   const { colors, fontHeader, fontPrimary, borderRadius } = theme;
+  const { selectedCategory, selectedTag, setSelectedCategory, setSelectedTag } = useAppState();
   const getDisplayDate = (report: ReportItem) => {
     const raw = report.publishDate || report.createdAt || '';
     return raw.includes('T') ? raw.split('T')[0] : raw;
   };
+
+  useEffect(() => {
+    setSelectedCategory(null);
+    setSelectedTag(null);
+  }, [setSelectedCategory, setSelectedTag]);
+  const normalizeTagValue = (tag: string) => tag.replace(/^#/, '').trim().toLowerCase();
+  const visibleReports = reports.filter((report) => {
+    if (selectedCategory && report.category !== selectedCategory) return false;
+    if (selectedTag) {
+      const normalizedTags = (report.tags ?? []).map(normalizeTagValue);
+      if (!normalizedTags.includes(selectedTag)) return false;
+    }
+    return true;
+  });
 
   return (
     <div className="p-8 md:p-12 transition-all duration-300">
@@ -22,10 +38,35 @@ const ListPage: React.FC<ListPageProps> = ({ theme, reports }) => {
         <h1 className={`${fontHeader} text-4xl md:text-5xl font-bold ${colors.primary} mb-4`}>
           Latest Reports
         </h1>
+        {(selectedCategory || selectedTag) && (
+          <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-widest">
+            <span className={`${colors.muted}`}>Filter</span>
+            {selectedCategory && (
+              <span className={`px-2 py-1 border ${colors.border} ${colors.text} ${borderRadius}`}>
+                {selectedCategory}
+              </span>
+            )}
+            {selectedTag && (
+              <span className={`px-2 py-1 border ${colors.border} ${colors.text} ${borderRadius}`}>
+                #{selectedTag}
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedCategory(null);
+                setSelectedTag(null);
+              }}
+              className={`text-[10px] ${colors.muted} hover:${colors.text} border-b border-transparent hover:border-current transition-all`}
+            >
+              Clear
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="grid gap-8 grid-cols-1 lg:grid-cols-2">
-        {reports.map((report) => (
+        {visibleReports.map((report) => (
           <article
             key={report.id}
             className={`${colors.surface} ${colors.border} border p-8 transition-all duration-300 shadow-sm hover:shadow-xl ${borderRadius} group`}
@@ -67,7 +108,7 @@ const ListPage: React.FC<ListPageProps> = ({ theme, reports }) => {
             </div>
           </article>
         ))}
-        {reports.length === 0 && (
+        {visibleReports.length === 0 && (
           <div className={`col-span-full py-24 text-center ${colors.muted}`}>
             <p className="text-xl italic">No reports found.</p>
           </div>

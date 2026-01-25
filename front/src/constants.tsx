@@ -21,5 +21,5 @@ export const ESPRESSO_THEME: DesignSystem = {
   borderRadius: 'rounded-none',
 };
 
-export const CATEGORIES = ['Strategy', 'Development', 'Visuals', 'Data Science'];
+export const CATEGORIES = ['Development', 'AI', 'Cloud', 'Linux', 'Container', 'Application', 'Program', 'Hobby'];
 export const TRENDING_TAGS = ['#AI', '#UIUX', '#Minimal', '#Nature'];
