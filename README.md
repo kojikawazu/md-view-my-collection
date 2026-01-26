@@ -18,7 +18,7 @@ npm run dev
 ```
 cd front
 npm run build
-npm run preview
+npm run start
 ```
 
 ## E2E（Playwright）
@@ -33,6 +33,7 @@ E2Eは `NEXT_PUBLIC_AUTH_MODE=local` / `NEXT_PUBLIC_DATA_MODE=local` を前提�
 ## 環境変数（本番）
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_SITE_URL`（Google OAuthリダイレクト用）
 
 ## ドキュメント
 - `docs/README.md` ドキュメントの目次
