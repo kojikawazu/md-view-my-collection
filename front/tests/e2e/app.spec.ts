@@ -72,6 +72,36 @@ test.describe('Reports app', () => {
     await expect(page.getByText('No reports found.')).toBeVisible();
   });
 
+  test('TC-003-2: category filter toggles list', async ({ page }) => {
+    await setStorage(page, { reports: reportsFixture, user: null });
+    await page.goto('/');
+
+    const sidebar = page.locator('aside');
+    const categorySection = sidebar.getByRole('heading', { name: 'Categories' }).locator('..');
+
+    await categorySection.getByRole('button', { name: 'AI', exact: true }).click();
+    await expect(page.getByRole('link', { name: 'Sample Report One' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Sample Report Two' })).toHaveCount(0);
+
+    await categorySection.getByRole('button', { name: 'AI', exact: true }).click();
+    await expect(page.getByRole('link', { name: 'Sample Report Two' })).toBeVisible();
+  });
+
+  test('TC-003-3: tag filter toggles list', async ({ page }) => {
+    await setStorage(page, { reports: reportsFixture, user: null });
+    await page.goto('/');
+
+    const sidebar = page.locator('aside');
+    const tagSection = sidebar.getByRole('heading', { name: 'Trending Tags' }).locator('..');
+
+    await tagSection.getByRole('button', { name: /Minimal/ }).click();
+    await expect(page.getByRole('link', { name: 'Sample Report Two' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Sample Report One' })).toHaveCount(0);
+
+    await tagSection.getByRole('button', { name: /Minimal/ }).click();
+    await expect(page.getByRole('link', { name: 'Sample Report One' })).toBeVisible();
+  });
+
   test('TC-004/005/006: detail view handles valid/invalid and hides admin controls', async ({ page }) => {
     await setStorage(page, { reports: reportsFixture, user: null });
 

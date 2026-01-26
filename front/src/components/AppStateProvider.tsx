@@ -315,6 +315,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
   useEffect(() => {
     if (dataMode === 'local') {
       localStorage.setItem('espresso_reports', JSON.stringify(reports));
+      setTags(deriveTagsFromReports(reports));
     }
   }, [reports, dataMode]);
 

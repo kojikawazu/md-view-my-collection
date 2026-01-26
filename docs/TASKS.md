@@ -75,6 +75,7 @@
 - [x] allowedDevOrigins 警告の対応
 - [x] Supabase DB連携の動作確認（実データCRUD）
 - [ ] 監査/ログの強化（必要なら）
+- [x] 一覧のカテゴリ/タグフィルタE2E（TC-003-2/TC-003-3）を追加
 - [x] Google OAuthのリダイレクト固定（`NEXT_PUBLIC_SITE_URL` を使用）
 - [x] ローディング画面のグラデーション/表示を調整
 - [x] ログイン中もローディング画面を表示
