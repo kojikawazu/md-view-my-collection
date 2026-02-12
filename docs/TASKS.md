@@ -75,6 +75,15 @@
 - [x] allowedDevOrigins 警告の対応
 - [x] Supabase DB連携の動作確認（実データCRUD）
 - [ ] 監査/ログの強化（必要なら）
+- [ ] ページング機能の追加
+- [ ] Markdown記事ドラッグ&ドロップ取り込みページの追加（例: `/report/import`）
+- [ ] ドロップしたMarkdown本文を既存Report項目へマッピングしてSupabaseへ保存する処理の追加（title/summary/content/category/tags/author）
+- [ ] 取り込み時のバリデーション/エラー表示/成功トーストと遷移導線（一覧または詳細）を実装
+- [ ] Markdown取り込み機能のE2Eケース追加（正常/準正常/異常: 空ファイル・必須欠落・非Markdown拡張子）
+- [ ] Markdown本文がプレーンテキスト表示になる不具合の原因調査（強調・見出し・リストが効かない）
+- [ ] Markdownレンダリング改善（強調/見出し/リスト/引用/コードブロックを表示反映）
+- [ ] Markdownレンダリング改善（リンク/画像を安全に許可しつつ表示反映）
+- [ ] Markdown表示崩れ防止のE2Eケース追加（記法ごとの描画検証）
 - [x] 一覧のカテゴリ/タグフィルタE2E（TC-003-2/TC-003-3）を追加
 - [x] Google OAuthのリダイレクト固定（`NEXT_PUBLIC_SITE_URL` を使用）
 - [x] ローディング画面のグラデーション/表示を調整
