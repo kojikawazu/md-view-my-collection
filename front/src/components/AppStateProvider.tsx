@@ -46,18 +46,34 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
   const authMode = process.env.NEXT_PUBLIC_AUTH_MODE ?? 'supabase';
   const dataMode = process.env.NEXT_PUBLIC_DATA_MODE ?? 'supabase';
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
-  const adminEmailConfig = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? process.env.ADMIN_EMAIL ?? '';
 
-  const getAllowedEmails = () =>
-    adminEmailConfig
-      .split(',')
-      .map((email) => email.trim().toLowerCase())
-      .filter(Boolean);
+  type AllowedEmailResponse = {
+    allowed?: boolean;
+  };
 
-  const isAllowedEmail = (email?: string | null) => {
-    const allowed = getAllowedEmails();
-    if (!email || allowed.length === 0) return false;
-    return allowed.includes(email.toLowerCase());
+  const checkAllowedEmail = async ({
+    email,
+    accessToken,
+  }: {
+    email?: string | null;
+    accessToken?: string | null;
+  }) => {
+    try {
+      const response = await fetch('/api/auth/is-allowed', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        },
+        body: JSON.stringify({ email: email ?? null }),
+      });
+      if (!response.ok) return false;
+      const result = (await response.json()) as AllowedEmailResponse;
+      return Boolean(result.allowed);
+    } catch (error) {
+      console.error('[auth] admin check failed', error);
+      return false;
+    }
   };
 
   type ReportTagRef = { name: string | null };
@@ -266,7 +282,8 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         if (savedUser) {
           try {
             const parsedUser = JSON.parse(savedUser) as User | null;
-            if (parsedUser?.email && !isAllowedEmail(parsedUser.email)) {
+            const allowed = await checkAllowedEmail({ email: parsedUser?.email });
+            if (parsedUser?.email && !allowed) {
               localStorage.setItem('espresso_user', JSON.stringify(null));
               setCurrentUser(null);
             } else {
@@ -288,9 +305,14 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
       }
 
       const { data } = await supabase.auth.getSession();
-      const sessionUser = data.session?.user ?? null;
+      const session = data.session ?? null;
+      const sessionUser = session?.user ?? null;
       if (sessionUser) {
-        if (!isAllowedEmail(sessionUser.email)) {
+        const allowed = await checkAllowedEmail({
+          email: sessionUser.email,
+          accessToken: session?.access_token,
+        });
+        if (!allowed) {
           await supabase.auth.signOut();
           setCurrentUser(null);
           router.push('/login?error=unauthorized');
@@ -329,23 +351,29 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
   useEffect(() => {
     if (authMode === 'local') return;
     const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
-      const sessionUser = session?.user ?? null;
-      if (sessionUser && !isAllowedEmail(sessionUser.email)) {
-        void supabase.auth.signOut();
-        setCurrentUser(null);
-        router.push('/login?error=unauthorized');
-        return;
-      }
-      setCurrentUser(
-        sessionUser
-          ? {
-              id: sessionUser.id,
-              username: 'Manager',
-              email: sessionUser.email ?? undefined,
-              role: 'admin',
-            }
-          : null,
-      );
+      void (async () => {
+        const sessionUser = session?.user ?? null;
+        if (!sessionUser) {
+          setCurrentUser(null);
+          return;
+        }
+        const allowed = await checkAllowedEmail({
+          email: sessionUser.email,
+          accessToken: session?.access_token,
+        });
+        if (!allowed) {
+          await supabase.auth.signOut();
+          setCurrentUser(null);
+          router.push('/login?error=unauthorized');
+          return;
+        }
+        setCurrentUser({
+          id: sessionUser.id,
+          username: 'Manager',
+          email: sessionUser.email ?? undefined,
+          role: 'admin',
+        });
+      })();
     });
     return () => subscription.subscription.unsubscribe();
   }, []);
@@ -353,7 +381,8 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
   const login = async (email: string, password: string) => {
     if (authMode === 'local') {
       const user = { id: '1', username: 'Manager', email, role: 'admin' as const };
-      if (!isAllowedEmail(user.email)) {
+      const allowed = await checkAllowedEmail({ email: user.email });
+      if (!allowed) {
         return '許可されていないメールアドレスです。';
       }
       console.info('[auth] login', { userId: user.id, username: user.username });
@@ -367,7 +396,11 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     if (error) return error.message;
     const sessionUser = data.user;
     if (sessionUser) {
-      if (!isAllowedEmail(sessionUser.email)) {
+      const allowed = await checkAllowedEmail({
+        email: sessionUser.email,
+        accessToken: data.session?.access_token,
+      });
+      if (!allowed) {
         await supabase.auth.signOut();
         return '許可されていないメールアドレスです。';
       }
