@@ -51,7 +51,7 @@
 - [x] 一覧/詳細の著者表示をログイン時はManagerに統一
 - [x] 未ログインの一覧画面でも著者表示をManagerに統一
 - [x] 未ログインの詳細画面でも著者表示をManagerに統一
-- [x] `NEXT_PUBLIC_ADMIN_EMAIL` を廃止し、`ADMIN_EMAIL` のサーバー判定API経由で管理者メール制御を実装（Issue #28）
+- [x] `NEXT_PUBLIC_ADMIN_EMAIL` を廃止し、`ADMIN_EMAIL` のサーバー判定API経由で管理者メール制御を実装（Issue #28 / PR #29 / 2026-02-12 動作確認OK）
 
 ## データ/永続化
 - [x] 保存先の確定（Supabase等）
