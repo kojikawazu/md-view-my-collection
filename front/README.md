@@ -28,7 +28,7 @@ npm run test:e2e
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `NEXT_PUBLIC_SITE_URL` (OAuth redirect, if needed)
-- `NEXT_PUBLIC_ADMIN_EMAIL` / `ADMIN_EMAIL`
+- `ADMIN_EMAIL` (comma-separated allowlist for admin login)
 - `NEXT_PUBLIC_AUTH_MODE` / `NEXT_PUBLIC_DATA_MODE` (local mode for E2E)
 
 ## Docs
