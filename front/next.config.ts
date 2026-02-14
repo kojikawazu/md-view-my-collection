@@ -3,6 +3,9 @@ import type { NextConfig } from 'next';
 const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
+  turbopack: {
+    root: process.cwd(),
+  },
   allowedDevOrigins: [
     '127.0.0.1',
     '127.0.0.1:3000',
