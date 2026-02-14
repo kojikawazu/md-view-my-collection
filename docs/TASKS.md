@@ -43,6 +43,7 @@
 - [x] カテゴリ/タグの選択状態を強調して未選択を減衰
 - [x] 一覧画面に戻るとフィルター状態をリセット
 - [x] allowedDevOrigins の警告対策を強化
+- [x] Turbopack の workspace root を `front/` に固定し `tailwindcss` 解決エラーを防止
 - [x] ログイン後の表示ユーザー名をManagerに固定
 - [x] 管理者メールの環境変数一致のみログイン許可
 - [x] ログインのURLエラー処理をwindow.location参照に変更（ビルド対策）
@@ -77,6 +78,7 @@
 - [x] Supabase DB連携の動作確認（実データCRUD）
 - [ ] 監査/ログの強化（必要なら）
 - [ ] ページング機能の追加
+- [ ] Markdown表示のビジュアル改善（見出し/本文/リスト/引用/コードブロック/表の可読性向上）（Issue #31）
 - [ ] Markdown記事ドラッグ&ドロップ取り込みページの追加（例: `/report/import`）
 - [ ] ドロップしたMarkdown本文を既存Report項目へマッピングしてSupabaseへ保存する処理の追加（title/summary/content/category/tags/author）
 - [ ] 取り込み時のバリデーション/エラー表示/成功トーストと遷移導線（一覧または詳細）を実装
@@ -107,3 +109,4 @@
 
 ## ドキュメント
 - [x] ドキュメントを最新状態に整理
+- [x] `npm run dev` 時の `tailwindcss` 解決エラーのバグレポートを起票（Issue #32 / 2026-02-14）
