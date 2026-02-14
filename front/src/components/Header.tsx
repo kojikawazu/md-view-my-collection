@@ -31,6 +31,9 @@ const Header: React.FC<HeaderProps> = ({ theme, user, onLogout }) => {
             <AppLink href="/report/new" className={`${colors.text} hover:opacity-70 transition-opacity`}>
               New Post
             </AppLink>
+            <AppLink href="/report/markdown-lab" className={`${colors.text} hover:opacity-70 transition-opacity`}>
+              Markdown Lab
+            </AppLink>
             <div className="flex items-center gap-4 ml-4 pl-4 border-l border-[#e5e1de]">
               <div className="flex flex-col items-end">
                 <span className={`text-[9px] uppercase tracking-tighter ${colors.muted} font-bold`}>

@@ -23,3 +23,4 @@ export const ESPRESSO_THEME: DesignSystem = {
 
 export const CATEGORIES = ['Development', 'AI', 'Cloud', 'Linux', 'Container', 'Application', 'Program', 'Hobby'];
 export const TRENDING_TAGS = ['#AI', '#UIUX', '#Minimal', '#Nature'];
+export const AUTH_COOKIE_NAME = 'report_viewer_auth';

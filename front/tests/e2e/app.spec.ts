@@ -1,5 +1,8 @@
 import { expect, test } from '@playwright/test';
 
+const AUTH_COOKIE_NAME = 'report_viewer_auth';
+const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:3000';
+
 const reportsFixture = [
   {
     id: '1',
@@ -39,6 +42,16 @@ const setStorage = async (
     user = null as typeof userFixture | null,
   }: { reports?: typeof reportsFixture; user?: typeof userFixture | null } = {},
 ) => {
+  if (user) {
+    await page.context().addCookies([
+      {
+        name: AUTH_COOKIE_NAME,
+        value: '1',
+        url: BASE_URL,
+      },
+    ]);
+  }
+
   await page.addInitScript(
     ({ reportsData, userData }) => {
       if (sessionStorage.getItem('seeded') === 'true') return;
@@ -138,6 +151,9 @@ test.describe('Reports app', () => {
 
     await page.goto('/report/1/edit');
     await expect(page).toHaveURL(/\/login$/);
+
+    await page.goto('/report/markdown-lab');
+    await expect(page).toHaveURL(/\/login$/);
   });
 
   test('TC-011/012/013/014: create report with validation and tag normalization', async ({ page }) => {
@@ -220,5 +236,18 @@ test.describe('Reports app', () => {
     await page.goto('/report/1');
     await expect(page.getByRole('button', { name: '削除' })).toHaveCount(0);
     await expect(page.getByRole('link', { name: '編集' })).toHaveCount(0);
+  });
+
+  test('TC-021/022: markdown lab requires auth and is reachable from header menu', async ({ page }) => {
+    await setStorage(page, { reports: reportsFixture, user: userFixture });
+
+    await page.goto('/report/markdown-lab');
+    await expect(page.getByRole('heading', { name: 'Markdown Style Lab' })).toBeVisible();
+    await expect(page.locator('.dot-bullet-list li').first()).toContainText('hoge');
+
+    await page.goto('/');
+    await page.getByRole('link', { name: 'Markdown Lab' }).click();
+    await expect(page).toHaveURL(/\/report\/markdown-lab$/);
+    await expect(page.getByRole('heading', { name: 'Pattern 07 - Code Focus' })).toBeVisible();
   });
 });

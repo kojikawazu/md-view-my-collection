@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ESPRESSO_THEME } from '../constants';
+import { AUTH_COOKIE_NAME, ESPRESSO_THEME } from '../constants';
 import { DesignSystem, ReportItem, User } from '../types';
 import { supabase } from '../lib/supabaseClient';
 
@@ -46,6 +46,15 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
   const authMode = process.env.NEXT_PUBLIC_AUTH_MODE ?? 'supabase';
   const dataMode = process.env.NEXT_PUBLIC_DATA_MODE ?? 'supabase';
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+
+  const setAuthFlagCookie = (isAuthenticated: boolean) => {
+    if (typeof document === 'undefined') return;
+    if (isAuthenticated) {
+      document.cookie = `${AUTH_COOKIE_NAME}=1; Path=/; Max-Age=604800; SameSite=Lax`;
+      return;
+    }
+    document.cookie = `${AUTH_COOKIE_NAME}=; Path=/; Max-Age=0; SameSite=Lax`;
+  };
 
   type AllowedEmailResponse = {
     allowed?: boolean;
@@ -349,6 +358,11 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
   }, [currentUser, authMode, isHydrated]);
 
   useEffect(() => {
+    if (!isHydrated) return;
+    setAuthFlagCookie(Boolean(currentUser));
+  }, [currentUser, isHydrated]);
+
+  useEffect(() => {
     if (authMode === 'local') return;
     const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
       void (async () => {
@@ -388,6 +402,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
       console.info('[auth] login', { userId: user.id, username: user.username });
       localStorage.setItem('espresso_user', JSON.stringify(user));
       setCurrentUser(user);
+      setAuthFlagCookie(true);
       router.push('/');
       return null;
     }
@@ -411,6 +426,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         email: sessionUser.email ?? undefined,
         role: 'admin',
       });
+      setAuthFlagCookie(true);
     }
     router.push('/');
     return null;
@@ -436,11 +452,13 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     if (authMode === 'local') {
       localStorage.setItem('espresso_user', JSON.stringify(null));
       setCurrentUser(null);
+      setAuthFlagCookie(false);
       router.push('/login');
       return;
     }
     await supabase.auth.signOut();
     setCurrentUser(null);
+    setAuthFlagCookie(false);
     router.push('/login');
   };
 

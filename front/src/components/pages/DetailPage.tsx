@@ -2,11 +2,9 @@
 
 import React, { useState } from 'react';
 import AppLink from '../AppLink';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import rehypeSanitize from 'rehype-sanitize';
 import { DesignSystem, ReportItem, User } from '../../types';
 import ConfirmationModal from '../ConfirmationModal';
+import ReportMarkdown from '../ReportMarkdown';
 
 interface DetailPageProps {
   theme: DesignSystem;
@@ -85,29 +83,7 @@ const DetailPage: React.FC<DetailPageProps> = ({ theme, report, user, onDelete }
         </div>
       </div>
 
-      <div className={`${fontPrimary} prose prose-stone max-w-none text-[#2a1b12] leading-loose space-y-6 text-lg`}>
-        <ReactMarkdown
-          remarkPlugins={[remarkGfm]}
-          rehypePlugins={[rehypeSanitize]}
-          components={{
-            h1: ({ children }) => (
-              <h1 className={`${fontHeader} text-3xl font-bold mt-12 mb-6`}>{children}</h1>
-            ),
-            h2: ({ children }) => (
-              <h2 className={`${fontHeader} text-2xl font-bold mt-10 mb-4`}>{children}</h2>
-            ),
-            h3: ({ children }) => (
-              <h3 className={`${fontHeader} text-xl font-bold mt-8 mb-3`}>{children}</h3>
-            ),
-            p: ({ children }) => <p>{children}</p>,
-            ul: ({ children }) => <ul className="ml-6 list-disc space-y-2">{children}</ul>,
-            ol: ({ children }) => <ol className="ml-6 list-decimal space-y-2">{children}</ol>,
-            li: ({ children }) => <li>{children}</li>,
-          }}
-        >
-          {report.content}
-        </ReactMarkdown>
-      </div>
+      <ReportMarkdown content={report.content} className={fontPrimary} />
 
       <div className="mt-16 pt-12 border-t border-inherit">
         <h4 className={`${fontHeader} text-xs uppercase tracking-widest ${colors.muted} mb-4`}>Tags</h4>
