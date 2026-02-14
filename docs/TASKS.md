@@ -82,7 +82,7 @@
 - [x] allowedDevOrigins 警告の対応
 - [x] Supabase DB連携の動作確認（実データCRUD）
 - [ ] 監査/ログの強化（必要なら）
-- [ ] ページング機能の追加
+- [x] ページング機能の追加（一覧: 10件/ページ、ページ番号最大5、`前へ`/`次へ`、フィルタ変更時の1ページ目リセット / Issue #24）
 - [x] Markdown表示のビジュアル改善（見出し/本文/リスト/引用/コードブロック/表の可読性向上）（Issue #31）
 - [ ] Markdown記事ドラッグ&ドロップ取り込みページの追加（例: `/report/import`）
 - [ ] ドロップしたMarkdown本文を既存Report項目へマッピングしてSupabaseへ保存する処理の追加（title/summary/content/category/tags/author）

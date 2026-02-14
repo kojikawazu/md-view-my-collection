@@ -28,6 +28,25 @@ const reportsFixture = [
   },
 ];
 
+const createPagedReportsFixture = (count: number) =>
+  Array.from({ length: count }, (_, index) => {
+    const order = index + 1;
+    const day = String((order % 28) + 1).padStart(2, '0');
+    return {
+      id: `p-${order}`,
+      title: `Paged Report ${order}`,
+      summary: `Summary for paged report ${order}.`,
+      content: `# Paged ${order}\n\nContent ${order}.`,
+      category: order % 2 === 0 ? 'AI' : 'Development',
+      author: `Editor ${order}`,
+      publishDate: `2024-12-${day}`,
+      createdAt: `2024-12-${day}T00:00:00.000Z`,
+      tags: order % 2 === 0 ? ['#AI'] : ['#Minimal'],
+    };
+  });
+
+const pagedReportsFixture = createPagedReportsFixture(60);
+
 const userFixture = {
   id: '1',
   username: 'tester',
@@ -113,6 +132,56 @@ test.describe('Reports app', () => {
 
     await tagSection.getByRole('button', { name: /Minimal/ }).click();
     await expect(page.getByRole('link', { name: 'Sample Report One' })).toBeVisible();
+  });
+
+  test('TC-023: list pagination shows 10 items and supports 前へ/次へ', async ({ page }) => {
+    await setStorage(page, { reports: pagedReportsFixture, user: null });
+    await page.goto('/');
+
+    await expect(page.locator('article')).toHaveCount(10);
+    await expect(page.getByRole('link', { name: 'Paged Report 1', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: '前へ' })).toBeDisabled();
+
+    await page.getByRole('button', { name: '次へ' }).click();
+    await expect(page.getByRole('link', { name: 'Paged Report 11', exact: true })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Paged Report 1', exact: true })).toHaveCount(0);
+
+    await page.getByRole('button', { name: '前へ' }).click();
+    await expect(page.getByRole('link', { name: 'Paged Report 1', exact: true })).toBeVisible();
+  });
+
+  test('TC-024: list pagination number buttons are capped at 5', async ({ page }) => {
+    await setStorage(page, { reports: pagedReportsFixture, user: null });
+    await page.goto('/');
+
+    const pageNumberButtons = page
+      .locator('nav[aria-label="ページネーション"] button')
+      .filter({ hasText: /^\d+$/ });
+
+    await expect(pageNumberButtons).toHaveCount(5);
+    await page.getByRole('button', { name: '5', exact: true }).click();
+    await expect(page.getByRole('button', { name: '5', exact: true })).toHaveAttribute('aria-current', 'page');
+
+    await page.getByRole('button', { name: '次へ' }).click();
+    await expect(page.getByRole('button', { name: '6', exact: true })).toHaveAttribute('aria-current', 'page');
+    await expect(page.getByRole('button', { name: '次へ' })).toBeDisabled();
+    await expect(pageNumberButtons).toHaveCount(5);
+  });
+
+  test('TC-025: category filter resets pagination to first page', async ({ page }) => {
+    await setStorage(page, { reports: pagedReportsFixture, user: null });
+    await page.goto('/');
+
+    await page.getByRole('button', { name: '次へ' }).click();
+    await expect(page.getByRole('button', { name: '2', exact: true })).toHaveAttribute('aria-current', 'page');
+
+    const sidebar = page.locator('aside');
+    const categorySection = sidebar.getByRole('heading', { name: 'Categories' }).locator('..');
+    await categorySection.getByRole('button', { name: 'AI', exact: true }).click();
+
+    await expect(page.getByRole('button', { name: '1', exact: true })).toHaveAttribute('aria-current', 'page');
+    await expect(page.getByRole('link', { name: 'Paged Report 2', exact: true })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Paged Report 22', exact: true })).toHaveCount(0);
   });
 
   test('TC-004/005/006: detail view handles valid/invalid and hides admin controls', async ({ page }) => {
