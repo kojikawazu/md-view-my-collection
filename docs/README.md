@@ -5,3 +5,4 @@
 - `03.requirements.md` : 要件定義（機能/データ/非機能/規約）
 - `04.e2e-cases.md` : E2Eテスト仕様（厳密版）
 - `TASKS.md` : 進捗/残タスク管理
+- `markdown-libs/` : Markdown ライブラリ調査レポート（react-markdown / remark-gfm / rehype-sanitize）
