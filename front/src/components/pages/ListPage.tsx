@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import AppLink from '../AppLink';
-import { useAppState } from '../AppStateProvider';
+import AppLink from '@/components/atoms/AppLink';
+import { useAppState } from '@/hooks/useAppState';
 import { DesignSystem, ReportItem } from '../../types';
 
 interface ListPageProps {

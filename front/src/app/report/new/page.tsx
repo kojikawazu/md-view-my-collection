@@ -2,7 +2,7 @@
 
 import AppShell from '../../../components/AppShell';
 import FormPage from '../../../components/pages/FormPage';
-import { useAppState } from '../../../components/AppStateProvider';
+import { useAppState } from '@/hooks/useAppState';
 
 export default function ReportNewPage() {
   const { theme, currentUser, addReport, isHydrated } = useAppState();

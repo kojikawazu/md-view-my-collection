@@ -3,7 +3,7 @@
 import { useParams } from 'next/navigation';
 import AppShell from '../../../../components/AppShell';
 import FormPage from '../../../../components/pages/FormPage';
-import { useAppState } from '../../../../components/AppStateProvider';
+import { useAppState } from '@/hooks/useAppState';
 
 export default function ReportEditPage() {
   const params = useParams();

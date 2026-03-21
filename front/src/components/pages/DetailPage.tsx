@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import AppLink from '../AppLink';
+import AppLink from '@/components/atoms/AppLink';
 import { DesignSystem, ReportItem, User } from '../../types';
 import ConfirmationModal from '../ConfirmationModal';
 import ReportMarkdown from '../ReportMarkdown';

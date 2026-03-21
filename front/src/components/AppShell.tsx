@@ -5,8 +5,8 @@ import { usePathname } from 'next/navigation';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import Footer from './Footer';
-import { LoadingProvider } from './LoadingContext';
-import { useAppState } from './AppStateProvider';
+import { LoadingProvider } from '@/providers/LoadingContext';
+import { useAppState } from '@/hooks/useAppState';
 
 const AppShell = ({ children }: { children: React.ReactNode }) => {
   const {

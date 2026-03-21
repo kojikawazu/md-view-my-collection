@@ -3,7 +3,7 @@
 import { useParams } from 'next/navigation';
 import AppShell from '../../../components/AppShell';
 import DetailPage from '../../../components/pages/DetailPage';
-import { useAppState } from '../../../components/AppStateProvider';
+import { useAppState } from '@/hooks/useAppState';
 
 export default function ReportDetailPage() {
   const params = useParams();

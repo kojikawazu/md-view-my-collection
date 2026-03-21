@@ -1,7 +1,7 @@
 'use client';
 
 import AppShell from '../../../components/AppShell';
-import { useAppState } from '../../../components/AppStateProvider';
+import { useAppState } from '@/hooks/useAppState';
 import MarkdownLabPage from '../../../components/pages/MarkdownLabPage';
 
 export default function ReportMarkdownLabRoute() {

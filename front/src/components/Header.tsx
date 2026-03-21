@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import AppLink from './AppLink';
+import AppLink from '@/components/atoms/AppLink';
 import { DesignSystem, User } from '../types';
 
 interface HeaderProps {
