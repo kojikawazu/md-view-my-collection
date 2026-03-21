@@ -1,8 +1,8 @@
 'use client';
 
-import AppShell from '../components/AppShell';
-import ListPage from '../components/pages/ListPage';
-import { useAppState } from '../components/AppStateProvider';
+import AppShell from '@/components/organisms/AppShell';
+import ListPage from '@/components/pages/ListPage';
+import { useAppState } from '@/hooks/useAppState';
 
 export default function HomePage() {
   const { theme, reports } = useAppState();

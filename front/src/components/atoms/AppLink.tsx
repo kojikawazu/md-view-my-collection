@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link, { LinkProps } from 'next/link';
-import { useLoading } from './LoadingContext';
+import { useLoading } from '@/hooks/useLoading';
 
 type AppLinkProps = LinkProps & React.AnchorHTMLAttributes<HTMLAnchorElement>;
 

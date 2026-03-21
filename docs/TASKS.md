@@ -113,6 +113,14 @@
 - [x] ルーティング: `/`, `/report/[id]`, `/report/new`, `/report/[id]/edit`, `/login` をApp Routerで構成。
 - [x] SupabaseログインにGoogle OAuthを追加（localはE2E用に維持）
 
+## アトミックデザイン移行（Issue #37）
+- [x] アトミックデザイン設計書を作成（`docs/05.atomic-design.md`）
+- [x] Phase 1: ディレクトリ作成 + providers/hooks分離 + Atoms抽出
+- [x] Phase 2: Molecules抽出
+- [x] Phase 3: Organisms再編成 + hooks抽出（usePagination/useReportForm/useLoginForm）
+- [x] Phase 4: Pages整理 + barrel export + 旧ファイル削除
+- [x] 全フェーズ完了後の最終E2E + ビルド確認
+
 ## ドキュメント
 - [x] ドキュメントを最新状態に整理
 - [x] `npm run dev` 時の `tailwindcss` 解決エラーのバグレポートを起票（Issue #32 / 2026-02-14）

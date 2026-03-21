@@ -1,8 +1,8 @@
 'use client';
 
-import AppShell from '../../../components/AppShell';
-import { useAppState } from '../../../components/AppStateProvider';
-import MarkdownLabPage from '../../../components/pages/MarkdownLabPage';
+import AppShell from '@/components/organisms/AppShell';
+import { useAppState } from '@/hooks/useAppState';
+import MarkdownLabPage from '@/components/pages/MarkdownLabPage';
 
 export default function ReportMarkdownLabRoute() {
   const { theme } = useAppState();

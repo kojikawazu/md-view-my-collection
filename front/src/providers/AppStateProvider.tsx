@@ -2,9 +2,9 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { AUTH_COOKIE_NAME, ESPRESSO_THEME } from '../constants';
-import { DesignSystem, ReportItem, User } from '../types';
-import { supabase } from '../lib/supabaseClient';
+import { AUTH_COOKIE_NAME, ESPRESSO_THEME } from '@/constants';
+import { DesignSystem, ReportItem, User } from '@/types';
+import { supabase } from '@/lib/supabaseClient';
 
 interface AppState {
   theme: DesignSystem;

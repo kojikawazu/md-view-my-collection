@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import AppLink from '../AppLink';
-import { DesignSystem, ReportItem, User } from '../../types';
-import ConfirmationModal from '../ConfirmationModal';
-import ReportMarkdown from '../ReportMarkdown';
+import AppLink from '@/components/atoms/AppLink';
+import AuthorInfo from '@/components/molecules/AuthorInfo';
+import { DesignSystem, ReportItem, User } from '@/types';
+import ConfirmationModal from '@/components/organisms/ConfirmationModal';
+import ReportMarkdown from '@/components/organisms/ReportMarkdown';
 
 interface DetailPageProps {
   theme: DesignSystem;
@@ -52,17 +53,14 @@ const DetailPage: React.FC<DetailPageProps> = ({ theme, report, user, onDelete }
         </h1>
 
         <div className="flex flex-wrap items-center justify-between gap-6 pb-8 border-b border-inherit">
-          <div className="flex items-center gap-4">
-            <div
-              className={`w-12 h-12 ${colors.accent} ${borderRadius} opacity-20 flex items-center justify-center font-bold text-xl`}
-            >
-              {displayAuthor.charAt(0)}
-            </div>
-            <div>
-              <p className={`font-bold ${colors.text}`}>{displayAuthor}</p>
-              <p className={`text-xs ${colors.muted}`}>{displayDate}</p>
-            </div>
-          </div>
+          <AuthorInfo
+            name={displayAuthor}
+            subtitle={displayDate}
+            avatarSize="md"
+            avatarClassName={`${colors.accent} ${borderRadius} text-xl`}
+            nameClassName={colors.text}
+            subtitleClassName={`text-xs ${colors.muted}`}
+          />
 
           {user && (
             <div className="flex gap-4">

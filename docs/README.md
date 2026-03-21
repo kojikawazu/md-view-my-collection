@@ -4,5 +4,6 @@
 - `02.ui-layout.md` : 最新UIレイアウト要求（base準拠）
 - `03.requirements.md` : 要件定義（機能/データ/非機能/規約）
 - `04.e2e-cases.md` : E2Eテスト仕様（厳密版）
+- `05.atomic-design.md` : アトミックデザイン設計書（移行計画・ディレクトリ構造・フェーズ定義）
 - `TASKS.md` : 進捗/残タスク管理
 - `markdown-libs/` : Markdown ライブラリ調査レポート（react-markdown / remark-gfm / rehype-sanitize）

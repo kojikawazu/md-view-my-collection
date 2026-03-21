@@ -1,8 +1,9 @@
 'use client';
 
 import React from 'react';
-import { DesignSystem } from '../types';
-import { CATEGORIES } from '../constants';
+import CategoryButton from '@/components/molecules/CategoryButton';
+import { DesignSystem } from '@/types';
+import { CATEGORIES } from '@/constants';
 
 interface SidebarProps {
   theme: DesignSystem;
@@ -46,16 +47,12 @@ const Sidebar: React.FC<SidebarProps> = ({
           <ul className="space-y-4 text-sm">
             {CATEGORIES.map((cat) => (
               <li key={cat}>
-                <button
-                  type="button"
-                  aria-pressed={selectedCategory === cat}
+                <CategoryButton
+                  category={cat}
+                  selected={selectedCategory === cat}
                   onClick={() => onSelectCategory(selectedCategory === cat ? null : cat)}
-                  className={`${colors.text} cursor-pointer hover:opacity-70 border-b border-transparent hover:border-current transition-all inline-block pb-1 ${
-                    selectedCategory === cat ? 'font-bold border-current' : 'opacity-70'
-                  }`}
-                >
-                  {cat}
-                </button>
+                  textClassName={colors.text}
+                />
               </li>
             ))}
           </ul>
