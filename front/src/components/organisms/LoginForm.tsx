@@ -39,10 +39,11 @@ const LoginForm: React.FC<LoginFormProps> = ({ theme, onLogin, onLoginWithGoogle
           {authMode === 'local' ? (
             <>
               <div className="space-y-2">
-                <label className={`block text-[10px] uppercase font-bold tracking-widest ${colors.text} opacity-80`}>
+                <label htmlFor="login-email" className={`block text-[10px] uppercase font-bold tracking-widest ${colors.text} opacity-80`}>
                   Email
                 </label>
                 <input
+                  id="login-email"
                   type="email"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
@@ -52,10 +53,11 @@ const LoginForm: React.FC<LoginFormProps> = ({ theme, onLogin, onLoginWithGoogle
                 />
               </div>
               <div className="space-y-2">
-                <label className={`block text-[10px] uppercase font-bold tracking-widest ${colors.text} opacity-80`}>
+                <label htmlFor="login-password" className={`block text-[10px] uppercase font-bold tracking-widest ${colors.text} opacity-80`}>
                   Password
                 </label>
                 <input
+                  id="login-password"
                   type="password"
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
