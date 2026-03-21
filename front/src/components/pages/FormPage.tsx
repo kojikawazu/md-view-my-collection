@@ -98,64 +98,79 @@ const FormPage: React.FC<FormPageProps> = ({
 
       <form onSubmit={handleSubmitAttempt} className="space-y-8">
         <FormField label="タイトル" labelClassName={fieldLabelClass}>
-          <input
-            type="text"
-            name="title"
-            value={formData.title}
-            onChange={handleChange}
-            required
-            className={`w-full bg-white border ${colors.border} p-4 text-xl ${fontHeader} focus:outline-none focus:ring-1 focus:ring-[#3d2b1f] ${borderRadius}`}
-            placeholder="魅力的な見出しを入力..."
-          />
+          {(id) => (
+            <input
+              id={id}
+              type="text"
+              name="title"
+              value={formData.title}
+              onChange={handleChange}
+              required
+              className={`w-full bg-white border ${colors.border} p-4 text-xl ${fontHeader} focus:outline-none focus:ring-1 focus:ring-[#3d2b1f] ${borderRadius}`}
+              placeholder="魅力的な見出しを入力..."
+            />
+          )}
         </FormField>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <FormField label="カテゴリー" labelClassName={fieldLabelClass}>
-            <select
-              name="category"
-              value={formData.category}
-              onChange={handleChange}
-              className={`w-full bg-white border ${colors.border} p-4 text-sm focus:outline-none ${borderRadius}`}
-            >
-              {CATEGORIES.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
+            {(id) => (
+              <select
+                id={id}
+                name="category"
+                value={formData.category}
+                onChange={handleChange}
+                className={`w-full bg-white border ${colors.border} p-4 text-sm focus:outline-none ${borderRadius}`}
+              >
+                {CATEGORIES.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+            )}
           </FormField>
           <FormField label="タグ (カンマ区切り)" labelClassName={fieldLabelClass} error={tagError}>
-            <input
-              type="text"
-              name="tags"
-              value={formData.tags.join(', ')}
-              onChange={handleTagsChange}
-              className={`w-full bg-white border ${colors.border} p-4 text-sm focus:outline-none ${borderRadius}`}
-              placeholder="例: デザイン, UI, 2024"
-            />
+            {(id) => (
+              <input
+                id={id}
+                type="text"
+                name="tags"
+                value={formData.tags.join(', ')}
+                onChange={handleTagsChange}
+                className={`w-full bg-white border ${colors.border} p-4 text-sm focus:outline-none ${borderRadius}`}
+                placeholder="例: デザイン, UI, 2024"
+              />
+            )}
           </FormField>
         </div>
 
         <FormField label="要約" labelClassName={fieldLabelClass}>
-          <textarea
-            name="summary"
-            value={formData.summary ?? ''}
-            onChange={handleChange}
-            required
-            className={`w-full bg-white border ${colors.border} p-4 text-sm focus:outline-none min-h-[100px] ${borderRadius}`}
-            placeholder="レポートの概要を簡潔に記述してください..."
-          />
+          {(id) => (
+            <textarea
+              id={id}
+              name="summary"
+              value={formData.summary ?? ''}
+              onChange={handleChange}
+              required
+              className={`w-full bg-white border ${colors.border} p-4 text-sm focus:outline-none min-h-[100px] ${borderRadius}`}
+              placeholder="レポートの概要を簡潔に記述してください..."
+            />
+          )}
         </FormField>
 
         <FormField label="本文 (Markdown)" labelClassName={fieldLabelClass}>
-          <textarea
-            name="content"
-            value={formData.content}
-            onChange={handleChange}
-            required
-            className={`w-full bg-white border ${colors.border} p-6 font-mono text-sm focus:outline-none min-h-[400px] leading-relaxed ${borderRadius}`}
-            placeholder="# 見出しから始める..."
-          />
+          {(id) => (
+            <textarea
+              id={id}
+              name="content"
+              value={formData.content}
+              onChange={handleChange}
+              required
+              className={`w-full bg-white border ${colors.border} p-6 font-mono text-sm focus:outline-none min-h-[400px] leading-relaxed ${borderRadius}`}
+              placeholder="# 見出しから始める..."
+            />
+          )}
         </FormField>
 
         <div className="pt-8 flex justify-end gap-4 border-t border-inherit">
