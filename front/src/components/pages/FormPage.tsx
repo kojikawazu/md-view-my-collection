@@ -2,10 +2,10 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { DesignSystem, ReportItem, User } from '../../types';
-import { CATEGORIES } from '../../constants';
+import { DesignSystem, ReportItem, User } from '@/types';
+import { CATEGORIES } from '@/constants';
 import FormField from '@/components/molecules/FormField';
-import ConfirmationModal from '../ConfirmationModal';
+import ConfirmationModal from '@/components/organisms/ConfirmationModal';
 
 interface FormPageProps {
   theme: DesignSystem;

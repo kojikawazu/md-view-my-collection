@@ -2,8 +2,8 @@
 
 import React from 'react';
 import CategoryButton from '@/components/molecules/CategoryButton';
-import { DesignSystem } from '../types';
-import { CATEGORIES } from '../constants';
+import { DesignSystem } from '@/types';
+import { CATEGORIES } from '@/constants';
 
 interface SidebarProps {
   theme: DesignSystem;

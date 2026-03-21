@@ -3,9 +3,9 @@
 import React, { useState } from 'react';
 import AppLink from '@/components/atoms/AppLink';
 import AuthorInfo from '@/components/molecules/AuthorInfo';
-import { DesignSystem, ReportItem, User } from '../../types';
-import ConfirmationModal from '../ConfirmationModal';
-import ReportMarkdown from '../ReportMarkdown';
+import { DesignSystem, ReportItem, User } from '@/types';
+import ConfirmationModal from '@/components/organisms/ConfirmationModal';
+import ReportMarkdown from '@/components/organisms/ReportMarkdown';
 
 interface DetailPageProps {
   theme: DesignSystem;

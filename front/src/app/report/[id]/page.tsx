@@ -1,8 +1,8 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import AppShell from '../../../components/AppShell';
-import DetailPage from '../../../components/pages/DetailPage';
+import AppShell from '@/components/organisms/AppShell';
+import DetailPage from '@/components/pages/DetailPage';
 import { useAppState } from '@/hooks/useAppState';
 
 export default function ReportDetailPage() {

@@ -7,7 +7,7 @@ import ReportCardMeta from '@/components/molecules/ReportCardMeta';
 import AuthorInfo from '@/components/molecules/AuthorInfo';
 import FilterIndicator from '@/components/molecules/FilterIndicator';
 import PaginationNav from '@/components/molecules/PaginationNav';
-import { DesignSystem, ReportItem } from '../../types';
+import { DesignSystem, ReportItem } from '@/types';
 
 interface ListPageProps {
   theme: DesignSystem;

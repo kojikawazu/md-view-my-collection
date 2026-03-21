@@ -1,7 +1,7 @@
 'use client';
 
-import AppShell from '../../../components/AppShell';
-import FormPage from '../../../components/pages/FormPage';
+import AppShell from '@/components/organisms/AppShell';
+import FormPage from '@/components/pages/FormPage';
 import { useAppState } from '@/hooks/useAppState';
 
 export default function ReportNewPage() {

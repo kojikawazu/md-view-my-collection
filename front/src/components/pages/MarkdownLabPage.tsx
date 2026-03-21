@@ -2,8 +2,8 @@
 
 import React from 'react';
 import AppLink from '@/components/atoms/AppLink';
-import { DesignSystem } from '../../types';
-import ReportMarkdown from '../ReportMarkdown';
+import { DesignSystem } from '@/types';
+import ReportMarkdown from '@/components/organisms/ReportMarkdown';
 
 interface MarkdownLabPageProps {
   theme: DesignSystem;

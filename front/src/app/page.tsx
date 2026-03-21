@@ -1,7 +1,7 @@
 'use client';
 
-import AppShell from '../components/AppShell';
-import ListPage from '../components/pages/ListPage';
+import AppShell from '@/components/organisms/AppShell';
+import ListPage from '@/components/pages/ListPage';
 import { useAppState } from '@/hooks/useAppState';
 
 export default function HomePage() {

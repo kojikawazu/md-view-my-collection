@@ -1,6 +1,6 @@
 'use client';
 
-import LoginPage from '../../components/pages/LoginPage';
+import LoginPage from '@/components/pages/LoginPage';
 import { useAppState } from '@/hooks/useAppState';
 
 export default function LoginRoute() {

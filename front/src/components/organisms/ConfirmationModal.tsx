@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { DesignSystem } from '../types';
+import { DesignSystem } from '@/types';
 
 interface ConfirmationModalProps {
   theme: DesignSystem;
