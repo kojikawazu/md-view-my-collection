@@ -3,6 +3,10 @@
 import React, { useEffect, useState } from 'react';
 import AppLink from '@/components/atoms/AppLink';
 import { useAppState } from '@/hooks/useAppState';
+import ReportCardMeta from '@/components/molecules/ReportCardMeta';
+import AuthorInfo from '@/components/molecules/AuthorInfo';
+import FilterIndicator from '@/components/molecules/FilterIndicator';
+import PaginationNav from '@/components/molecules/PaginationNav';
 import { DesignSystem, ReportItem } from '../../types';
 
 interface ListPageProps {
@@ -63,31 +67,16 @@ const ListPage: React.FC<ListPageProps> = ({ theme, reports }) => {
         <h1 className={`${fontHeader} text-4xl md:text-5xl font-bold ${colors.primary} mb-4`}>
           Latest Reports
         </h1>
-        {(selectedCategory || selectedTag) && (
-          <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-widest">
-            <span className={`${colors.muted}`}>Filter</span>
-            {selectedCategory && (
-              <span className={`px-2 py-1 border ${colors.border} ${colors.text} ${borderRadius}`}>
-                {selectedCategory}
-              </span>
-            )}
-            {selectedTag && (
-              <span className={`px-2 py-1 border ${colors.border} ${colors.text} ${borderRadius}`}>
-                #{selectedTag}
-              </span>
-            )}
-            <button
-              type="button"
-              onClick={() => {
-                setSelectedCategory(null);
-                setSelectedTag(null);
-              }}
-              className={`text-[10px] ${colors.muted} hover:${colors.text} border-b border-transparent hover:border-current transition-all`}
-            >
-              Clear
-            </button>
-          </div>
-        )}
+        <FilterIndicator
+          category={selectedCategory}
+          tag={selectedTag}
+          onClear={() => {
+            setSelectedCategory(null);
+            setSelectedTag(null);
+          }}
+          badgeClassName={`${colors.border} ${colors.text} ${borderRadius}`}
+          mutedClassName={colors.muted}
+        />
       </div>
 
       <div className="grid gap-8 grid-cols-1 lg:grid-cols-2">
@@ -98,14 +87,12 @@ const ListPage: React.FC<ListPageProps> = ({ theme, reports }) => {
               key={report.id}
               className={`${colors.surface} ${colors.border} border p-8 transition-all duration-300 shadow-sm hover:shadow-xl ${borderRadius} group`}
             >
-              <div className="flex items-center gap-4 mb-4">
-                <span
-                  className={`text-[10px] uppercase font-bold tracking-widest px-3 py-1 ${colors.accent} text-white ${borderRadius}`}
-                >
-                  {report.category}
-                </span>
-                <span className={`text-xs ${colors.muted}`}>{getDisplayDate(report)}</span>
-              </div>
+              <ReportCardMeta
+                category={report.category}
+                date={getDisplayDate(report)}
+                badgeClassName={`${colors.accent} text-white ${borderRadius}`}
+                dateClassName={colors.muted}
+              />
               <h2 className={`${fontHeader} text-2xl font-bold ${colors.text} mb-4 leading-tight group-hover:underline`}>
                 <AppLink href={`/report/${report.id}`}>{report.title}</AppLink>
               </h2>
@@ -113,19 +100,13 @@ const ListPage: React.FC<ListPageProps> = ({ theme, reports }) => {
                 {report.summary}
               </p>
               <div className="flex items-center justify-between border-t pt-6 border-inherit">
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`w-10 h-10 ${colors.accent} ${borderRadius} opacity-20 flex items-center justify-center font-bold text-[#3d2b1f]`}
-                  >
-                    {displayAuthor.charAt(0)}
-                  </div>
-                  <div>
-                    <span className={`block text-sm font-bold ${colors.text}`}>{displayAuthor}</span>
-                    <span className={`block text-[10px] tracking-wider uppercase ${colors.muted} font-medium`}>
-                      Research Fellow
-                    </span>
-                  </div>
-                </div>
+                <AuthorInfo
+                  name={displayAuthor}
+                  role="Research Fellow"
+                  avatarClassName={`${colors.accent} ${borderRadius} text-[#3d2b1f]`}
+                  nameClassName={`text-sm ${colors.text}`}
+                  subtitleClassName={colors.muted}
+                />
                 <AppLink
                   href={`/report/${report.id}`}
                   className={`${colors.text} text-sm font-bold border-b-2 border-transparent hover:border-current transition-all`}
@@ -143,47 +124,17 @@ const ListPage: React.FC<ListPageProps> = ({ theme, reports }) => {
         )}
       </div>
 
-      {safeTotalPages > 1 && (
-        <nav aria-label="ページネーション" className="mt-10 flex items-center justify-center gap-2">
-          <button
-            type="button"
-            onClick={() => updatePage(currentPage - 1)}
-            disabled={currentPage === 1}
-            className={`min-w-[4.5rem] px-3 py-2 text-sm border ${colors.border} ${borderRadius} transition-all ${
-              currentPage === 1 ? 'opacity-40 cursor-not-allowed' : `${colors.surface} ${colors.text}`
-            }`}
-          >
-            前へ
-          </button>
-
-          {pageNumbers.map((pageNumber) => (
-            <button
-              key={pageNumber}
-              type="button"
-              onClick={() => updatePage(pageNumber)}
-              aria-current={pageNumber === currentPage ? 'page' : undefined}
-              className={`w-10 h-10 text-sm border ${borderRadius} transition-all ${
-                pageNumber === currentPage
-                  ? `${colors.accent} text-white border-transparent`
-                  : `${colors.surface} ${colors.text} ${colors.border}`
-              }`}
-            >
-              {pageNumber}
-            </button>
-          ))}
-
-          <button
-            type="button"
-            onClick={() => updatePage(currentPage + 1)}
-            disabled={currentPage === safeTotalPages}
-            className={`min-w-[4.5rem] px-3 py-2 text-sm border ${colors.border} ${borderRadius} transition-all ${
-              currentPage === safeTotalPages ? 'opacity-40 cursor-not-allowed' : `${colors.surface} ${colors.text}`
-            }`}
-          >
-            次へ
-          </button>
-        </nav>
-      )}
+      <PaginationNav
+        currentPage={currentPage}
+        totalPages={safeTotalPages}
+        pageNumbers={pageNumbers}
+        onPageChange={updatePage}
+        borderClassName={colors.border}
+        borderRadius={borderRadius}
+        surfaceClassName={colors.surface}
+        textClassName={colors.text}
+        accentClassName={colors.accent}
+      />
     </div>
   );
 };

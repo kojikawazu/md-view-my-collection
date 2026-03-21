@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { DesignSystem, ReportItem, User } from '../../types';
 import { CATEGORIES } from '../../constants';
+import FormField from '@/components/molecules/FormField';
 import ConfirmationModal from '../ConfirmationModal';
 
 interface FormPageProps {
@@ -87,6 +88,8 @@ const FormPage: React.FC<FormPageProps> = ({
     onSubmit(formData);
   };
 
+  const fieldLabelClass = colors.muted;
+
   return (
     <div className="max-w-3xl mx-auto p-8 md:p-12">
       <h1 className={`${fontHeader} text-4xl font-bold ${colors.primary} mb-12`}>
@@ -94,8 +97,7 @@ const FormPage: React.FC<FormPageProps> = ({
       </h1>
 
       <form onSubmit={handleSubmitAttempt} className="space-y-8">
-        <div className="space-y-2">
-          <label className={`text-xs uppercase tracking-widest ${colors.muted} font-bold`}>タイトル</label>
+        <FormField label="タイトル" labelClassName={fieldLabelClass}>
           <input
             type="text"
             name="title"
@@ -105,11 +107,10 @@ const FormPage: React.FC<FormPageProps> = ({
             className={`w-full bg-white border ${colors.border} p-4 text-xl ${fontHeader} focus:outline-none focus:ring-1 focus:ring-[#3d2b1f] ${borderRadius}`}
             placeholder="魅力的な見出しを入力..."
           />
-        </div>
+        </FormField>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="space-y-2">
-            <label className={`text-xs uppercase tracking-widest ${colors.muted} font-bold`}>カテゴリー</label>
+          <FormField label="カテゴリー" labelClassName={fieldLabelClass}>
             <select
               name="category"
               value={formData.category}
@@ -122,11 +123,8 @@ const FormPage: React.FC<FormPageProps> = ({
                 </option>
               ))}
             </select>
-          </div>
-          <div className="space-y-2">
-            <label className={`text-xs uppercase tracking-widest ${colors.muted} font-bold`}>
-              タグ (カンマ区切り)
-            </label>
+          </FormField>
+          <FormField label="タグ (カンマ区切り)" labelClassName={fieldLabelClass} error={tagError}>
             <input
               type="text"
               name="tags"
@@ -135,12 +133,10 @@ const FormPage: React.FC<FormPageProps> = ({
               className={`w-full bg-white border ${colors.border} p-4 text-sm focus:outline-none ${borderRadius}`}
               placeholder="例: デザイン, UI, 2024"
             />
-            {tagError && <p className="text-xs text-red-700">{tagError}</p>}
-          </div>
+          </FormField>
         </div>
 
-        <div className="space-y-2">
-          <label className={`text-xs uppercase tracking-widest ${colors.muted} font-bold`}>要約</label>
+        <FormField label="要約" labelClassName={fieldLabelClass}>
           <textarea
             name="summary"
             value={formData.summary ?? ''}
@@ -149,10 +145,9 @@ const FormPage: React.FC<FormPageProps> = ({
             className={`w-full bg-white border ${colors.border} p-4 text-sm focus:outline-none min-h-[100px] ${borderRadius}`}
             placeholder="レポートの概要を簡潔に記述してください..."
           />
-        </div>
+        </FormField>
 
-        <div className="space-y-2">
-          <label className={`text-xs uppercase tracking-widest ${colors.muted} font-bold`}>本文 (Markdown)</label>
+        <FormField label="本文 (Markdown)" labelClassName={fieldLabelClass}>
           <textarea
             name="content"
             value={formData.content}
@@ -161,7 +156,7 @@ const FormPage: React.FC<FormPageProps> = ({
             className={`w-full bg-white border ${colors.border} p-6 font-mono text-sm focus:outline-none min-h-[400px] leading-relaxed ${borderRadius}`}
             placeholder="# 見出しから始める..."
           />
-        </div>
+        </FormField>
 
         <div className="pt-8 flex justify-end gap-4 border-t border-inherit">
           <button

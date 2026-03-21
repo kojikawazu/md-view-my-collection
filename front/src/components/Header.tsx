@@ -2,6 +2,8 @@
 
 import React from 'react';
 import AppLink from '@/components/atoms/AppLink';
+import NavLink from '@/components/molecules/NavLink';
+import UserAuthSection from '@/components/molecules/UserAuthSection';
 import { DesignSystem, User } from '../types';
 
 interface HeaderProps {
@@ -23,31 +25,25 @@ const Header: React.FC<HeaderProps> = ({ theme, user, onLogout }) => {
         Report Viewer
       </AppLink>
       <nav className="flex items-center space-x-6 text-sm font-medium">
-        <AppLink href="/" className={`${colors.text} hover:opacity-70 transition-opacity`}>
+        <NavLink href="/" className={colors.text}>
           Reports
-        </AppLink>
+        </NavLink>
         {user ? (
           <>
-            <AppLink href="/report/new" className={`${colors.text} hover:opacity-70 transition-opacity`}>
+            <NavLink href="/report/new" className={colors.text}>
               New Post
-            </AppLink>
-            <AppLink href="/report/markdown-lab" className={`${colors.text} hover:opacity-70 transition-opacity`}>
+            </NavLink>
+            <NavLink href="/report/markdown-lab" className={colors.text}>
               Markdown Lab
-            </AppLink>
-            <div className="flex items-center gap-4 ml-4 pl-4 border-l border-[#e5e1de]">
-              <div className="flex flex-col items-end">
-                <span className={`text-[9px] uppercase tracking-tighter ${colors.muted} font-bold`}>
-                  Authenticated as
-                </span>
-                <span className={`text-xs font-bold ${colors.text}`}>{user.username}</span>
-              </div>
-              <button
-                onClick={onLogout}
-                className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest ${colors.accent} text-white hover:brightness-125 transition-all cursor-pointer ${borderRadius} shadow-sm active:scale-95`}
-              >
-                Logout
-              </button>
-            </div>
+            </NavLink>
+            <UserAuthSection
+              username={user.username}
+              onLogout={onLogout}
+              mutedClassName={colors.muted}
+              textClassName={colors.text}
+              accentClassName={colors.accent}
+              borderRadius={borderRadius}
+            />
           </>
         ) : (
           <AppLink
