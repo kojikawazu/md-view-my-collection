@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React from 'react';
 import { DesignSystem, ReportItem, User } from '@/types';
 import { CATEGORIES } from '@/constants';
+import { useReportForm } from '@/hooks/useReportForm';
 import FormField from '@/components/molecules/FormField';
 import ConfirmationModal from '@/components/organisms/ConfirmationModal';
 
@@ -24,69 +24,20 @@ const FormPage: React.FC<FormPageProps> = ({
   reportId,
   isHydrated = true,
 }) => {
-  const router = useRouter();
   const { colors, fontHeader, borderRadius } = theme;
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [tagError, setTagError] = useState<string | null>(null);
-
-  const [formData, setFormData] = useState<Omit<ReportItem, 'id'>>({
-    title: '',
-    summary: '',
-    content: '',
-    category: CATEGORIES[0],
-    author: user?.username || 'Guest Editor',
-    publishDate: new Date().toISOString().split('T')[0],
-    tags: [],
-  });
-
-  useEffect(() => {
-    if (!isHydrated) return;
-    if (!user) {
-      router.push('/login');
-    }
-      if (reportId && reports) {
-        const existing = reports.find((report) => report.id === reportId);
-        if (existing) {
-          const { id: _, ...rest } = existing;
-          setFormData({ ...rest, summary: rest.summary ?? '' });
-        }
-      }
-  }, [reportId, reports, user, router, isHydrated]);
+  const {
+    formData,
+    tagError,
+    showConfirmModal,
+    setShowConfirmModal,
+    handleChange,
+    handleTagsChange,
+    handleSubmitAttempt,
+    handleConfirmSubmit,
+    goBack,
+  } = useReportForm({ user, reportId, reports, onSubmit, isHydrated });
 
   if (!isHydrated) return null;
-
-  const handleChange = (
-    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
-  ) => {
-    const { name, value } = event.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleTagsChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const tags = event.target.value
-      .split(',')
-      .map((tag) => {
-        const trimmed = tag.trim();
-        if (!trimmed) return '';
-        return trimmed.startsWith('#') ? trimmed : `#${trimmed}`;
-      })
-      .filter(Boolean);
-    setFormData((prev) => ({ ...prev, tags }));
-    if (tags.length > 0) setTagError(null);
-  };
-
-  const handleSubmitAttempt = (event: React.FormEvent) => {
-    event.preventDefault();
-    if (formData.tags.length === 0) {
-      setTagError('タグを入力してください。');
-      return;
-    }
-    setShowConfirmModal(true);
-  };
-
-  const handleConfirmSubmit = () => {
-    onSubmit(formData);
-  };
 
   const fieldLabelClass = colors.muted;
 
@@ -176,7 +127,7 @@ const FormPage: React.FC<FormPageProps> = ({
         <div className="pt-8 flex justify-end gap-4 border-t border-inherit">
           <button
             type="button"
-            onClick={() => router.back()}
+            onClick={goBack}
             className={`px-8 py-3 text-sm font-bold ${colors.muted} hover:text-black transition-colors`}
           >
             キャンセル

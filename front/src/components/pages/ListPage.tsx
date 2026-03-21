@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import AppLink from '@/components/atoms/AppLink';
 import { useAppState } from '@/hooks/useAppState';
+import { usePagination } from '@/hooks/usePagination';
 import ReportCardMeta from '@/components/molecules/ReportCardMeta';
 import AuthorInfo from '@/components/molecules/AuthorInfo';
 import FilterIndicator from '@/components/molecules/FilterIndicator';
@@ -14,26 +15,15 @@ interface ListPageProps {
   reports: ReportItem[];
 }
 
-const ITEMS_PER_PAGE = 10;
-const MAX_PAGE_BUTTONS = 5;
-
 const ListPage: React.FC<ListPageProps> = ({ theme, reports }) => {
   const { colors, fontHeader, fontPrimary, borderRadius } = theme;
   const { selectedCategory, selectedTag, setSelectedCategory, setSelectedTag, currentUser } = useAppState();
-  const filterKey = `${selectedCategory ?? ''}|${selectedTag ?? ''}`;
-  const [paginationState, setPaginationState] = useState(() => ({
-    page: 1,
-    filterKey,
-  }));
-  const getDisplayDate = (report: ReportItem) => {
-    const raw = report.publishDate || report.createdAt || '';
-    return raw.includes('T') ? raw.split('T')[0] : raw;
-  };
 
   useEffect(() => {
     setSelectedCategory(null);
     setSelectedTag(null);
   }, [setSelectedCategory, setSelectedTag]);
+
   const normalizeTagValue = (tag: string) => tag.replace(/^#/, '').trim().toLowerCase();
   const visibleReports = reports.filter((report) => {
     if (selectedCategory && report.category !== selectedCategory) return false;
@@ -43,22 +33,15 @@ const ListPage: React.FC<ListPageProps> = ({ theme, reports }) => {
     }
     return true;
   });
-  const totalPages = Math.ceil(visibleReports.length / ITEMS_PER_PAGE);
-  const safeTotalPages = Math.max(1, totalPages);
-  const currentPage =
-    paginationState.filterKey === filterKey ? Math.min(paginationState.page, safeTotalPages) : 1;
-  const paginatedReports = visibleReports.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
-  const pageStart = Math.max(
-    1,
-    Math.min(currentPage - Math.floor(MAX_PAGE_BUTTONS / 2), safeTotalPages - MAX_PAGE_BUTTONS + 1),
-  );
-  const pageEnd = Math.min(safeTotalPages, pageStart + MAX_PAGE_BUTTONS - 1);
-  const pageNumbers = Array.from({ length: pageEnd - pageStart + 1 }, (_, index) => pageStart + index);
-  const updatePage = (nextPage: number) => {
-    setPaginationState({
-      page: Math.min(Math.max(nextPage, 1), safeTotalPages),
-      filterKey,
-    });
+
+  const filterKey = `${selectedCategory ?? ''}|${selectedTag ?? ''}`;
+  const { currentPage, totalPages, pageNumbers, updatePage, paginateSlice } =
+    usePagination(visibleReports.length, filterKey);
+  const paginatedReports = paginateSlice(visibleReports);
+
+  const getDisplayDate = (report: ReportItem) => {
+    const raw = report.publishDate || report.createdAt || '';
+    return raw.includes('T') ? raw.split('T')[0] : raw;
   };
 
   return (
@@ -126,7 +109,7 @@ const ListPage: React.FC<ListPageProps> = ({ theme, reports }) => {
 
       <PaginationNav
         currentPage={currentPage}
-        totalPages={safeTotalPages}
+        totalPages={totalPages}
         pageNumbers={pageNumbers}
         onPageChange={updatePage}
         borderClassName={colors.border}
