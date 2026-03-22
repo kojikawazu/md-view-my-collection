@@ -133,11 +133,12 @@
   - DJ-6: カテゴリ固定リストバリデーション追加（constants.tsx 直接import、分離不要）
   - DJ-7: /api/auth/admin はboolean判定専用（requireAdmin()不使用、非管理者は200）
   - DJ-8: API統合テストDB方針をテスト用Supabase実DBに確定（Prismaモック不採用）
-- [ ] Phase 1: 基盤ファイル追加（`lib/auth-server.ts`, `lib/db.ts`, `lib/validation.ts`, `MutationResult` 型）
-- [ ] Phase 2: APIルート追加 + API統合テスト（`api/auth/admin`, `api/reports`, `api/reports/[id]`, `api/tags` + 14ケース）
-- [ ] Phase 3: クライアント側の接続切り替え（AppStateProvider → fetch APIルート、accessToken復元、エラーUI伝播）
+- [x] Phase 1: 基盤ファイル追加（`lib/auth-server.ts`, `lib/db.ts`, `lib/validation.ts`, `MutationResult` 型 / 2026-03-22）
+- [x] Phase 2: APIルート追加（`api/auth/admin`, `api/reports`, `api/reports/[id]`, `api/tags` / Prisma v6ダウングレード / 2026-03-22）
+- [x] Phase 3: クライアント側の接続切り替え（AppStateProvider → fetch APIルート、accessToken復元、MutationResult返却、不要コード削除 / 2026-03-22）
 - [ ] Phase 4: 認証エンドポイント統一（`is-allowed` → `admin`、任意）
-- [ ] E2Eテスト全パス確認 + API統合テスト全パス + ビルド確認
+- [ ] API統合テスト追加（14ケース）
+- [x] E2Eテスト全パス確認 + ビルド確認（2026-03-22）
 
 ## ドキュメント
 - [x] ドキュメントを最新状態に整理
