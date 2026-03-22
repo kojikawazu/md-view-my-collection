@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { DesignSystem } from '@/types';
 
 interface ConfirmationModalProps {
@@ -24,6 +24,8 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   confirmLabel,
   confirmVariant = 'primary',
 }) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   if (!isOpen) return null;
 
   const { colors, fontHeader, borderRadius } = theme;
@@ -40,20 +42,28 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
         <div className="flex justify-end gap-4">
           <button
             onClick={onClose}
-            className={`px-6 py-2 text-sm font-bold ${colors.muted} hover:text-black transition-colors`}
+            disabled={isSubmitting}
+            className={`px-6 py-2 text-sm font-bold ${colors.muted} hover:text-black transition-colors disabled:opacity-50`}
           >
             キャンセル
           </button>
           <button
+            disabled={isSubmitting}
             onClick={async () => {
-              await onConfirm();
-              onClose();
+              if (isSubmitting) return;
+              setIsSubmitting(true);
+              try {
+                await onConfirm();
+                onClose();
+              } finally {
+                setIsSubmitting(false);
+              }
             }}
-            className={`px-8 py-2 text-sm font-bold text-white transition-all hover:brightness-125 ${borderRadius} ${
+            className={`px-8 py-2 text-sm font-bold text-white transition-all hover:brightness-125 disabled:opacity-50 disabled:cursor-not-allowed ${borderRadius} ${
               confirmVariant === 'danger' ? 'bg-red-800' : colors.accent
             }`}
           >
-            {confirmLabel}
+            {isSubmitting ? '処理中...' : confirmLabel}
           </button>
         </div>
       </div>

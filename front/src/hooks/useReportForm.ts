@@ -21,6 +21,8 @@ export const useReportForm = ({
   const router = useRouter();
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [tagError, setTagError] = useState<string | null>(null);
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const [formData, setFormData] = useState<Omit<ReportItem, 'id'>>({
     title: '',
@@ -51,6 +53,13 @@ export const useReportForm = ({
   ) => {
     const { name, value } = event.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next[name];
+        return next;
+      });
+    }
   };
 
   const handleTagsChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -64,6 +73,13 @@ export const useReportForm = ({
       .filter(Boolean);
     setFormData((prev) => ({ ...prev, tags }));
     if (tags.length > 0) setTagError(null);
+    if (fieldErrors.tags) {
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next.tags;
+        return next;
+      });
+    }
   };
 
   const handleSubmitAttempt = (event: React.FormEvent) => {
@@ -75,14 +91,15 @@ export const useReportForm = ({
     setShowConfirmModal(true);
   };
 
-  const [serverError, setServerError] = useState<string | null>(null);
-
   const handleConfirmSubmit = async () => {
     setServerError(null);
+    setFieldErrors({});
     const result = await onSubmit(formData);
     if (!result.ok) {
       if (result.status === 401 || result.status === 403) {
         router.push('/login');
+      } else if (result.fieldErrors) {
+        setFieldErrors(result.fieldErrors);
       } else {
         setServerError(result.error);
       }
@@ -93,6 +110,7 @@ export const useReportForm = ({
     formData,
     tagError,
     serverError,
+    fieldErrors,
     showConfirmModal,
     setShowConfirmModal,
     handleChange,
