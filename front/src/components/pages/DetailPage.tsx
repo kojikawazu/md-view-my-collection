@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import AppLink from '@/components/atoms/AppLink';
 import AuthorInfo from '@/components/molecules/AuthorInfo';
-import { DesignSystem, ReportItem, User } from '@/types';
+import { DesignSystem, MutationResult, ReportItem, User } from '@/types';
 import ConfirmationModal from '@/components/organisms/ConfirmationModal';
 import ReportMarkdown from '@/components/organisms/ReportMarkdown';
 
@@ -11,11 +12,13 @@ interface DetailPageProps {
   theme: DesignSystem;
   report?: ReportItem;
   user: User | null;
-  onDelete: (id: string) => void;
+  onDelete: (id: string) => Promise<MutationResult>;
 }
 
 const DetailPage: React.FC<DetailPageProps> = ({ theme, report, user, onDelete }) => {
+  const router = useRouter();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const { colors, fontHeader, fontPrimary, borderRadius } = theme;
   const displayDate = report
     ? (report.publishDate || report.createdAt || '').split('T')[0]
@@ -81,6 +84,12 @@ const DetailPage: React.FC<DetailPageProps> = ({ theme, report, user, onDelete }
         </div>
       </div>
 
+      {deleteError && (
+        <div className="mb-8 p-4 bg-red-50 border border-red-200 text-red-800 text-sm rounded">
+          {deleteError}
+        </div>
+      )}
+
       <ReportMarkdown content={report.content} className={fontPrimary} />
 
       <div className="mt-16 pt-12 border-t border-inherit">
@@ -98,7 +107,17 @@ const DetailPage: React.FC<DetailPageProps> = ({ theme, report, user, onDelete }
         theme={theme}
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
-        onConfirm={() => onDelete(report.id)}
+        onConfirm={async () => {
+          setDeleteError(null);
+          const result = await onDelete(report.id);
+          if (!result.ok) {
+            if (result.status === 401 || result.status === 403) {
+              router.push('/login');
+            } else {
+              setDeleteError(result.error);
+            }
+          }
+        }}
         title="レポートの削除"
         message="このレポートを完全に削除してもよろしいですか？この操作は取り消せません。"
         confirmLabel="削除する"

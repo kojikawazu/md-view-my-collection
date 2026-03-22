@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AUTH_COOKIE_NAME, ESPRESSO_THEME } from '@/constants';
-import { DesignSystem, ReportItem, User } from '@/types';
+import { DesignSystem, MutationResult, ReportItem, User } from '@/types';
 import { supabase } from '@/lib/supabaseClient';
 
 interface AppState {
@@ -19,9 +19,9 @@ interface AppState {
   login: (email: string, password: string) => Promise<string | null>;
   loginWithGoogle: () => Promise<string | null>;
   logout: () => Promise<void>;
-  addReport: (report: Omit<ReportItem, 'id'>) => void;
-  updateReport: (id: string, updatedData: Partial<ReportItem>) => void;
-  deleteReport: (id: string) => void;
+  addReport: (report: Omit<ReportItem, 'id'>) => Promise<MutationResult>;
+  updateReport: (id: string, updatedData: Partial<ReportItem>) => Promise<MutationResult>;
+  deleteReport: (id: string) => Promise<MutationResult>;
 }
 
 const AppStateContext = createContext<AppState | undefined>(undefined);
@@ -40,6 +40,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
   const router = useRouter();
   const theme = ESPRESSO_THEME;
@@ -56,171 +57,41 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     document.cookie = `${AUTH_COOKIE_NAME}=; Path=/; Max-Age=0; SameSite=Lax`;
   };
 
-  type AllowedEmailResponse = {
-    allowed?: boolean;
-  };
-
   const checkAllowedEmail = async ({
     email,
-    accessToken,
+    accessToken: token,
   }: {
     email?: string | null;
     accessToken?: string | null;
   }) => {
     try {
-      const response = await fetch('/api/auth/is-allowed', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-        },
-        body: JSON.stringify({ email: email ?? null }),
+      if (authMode === 'local') {
+        const response = await fetch('/api/auth/is-allowed', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email ?? null }),
+        });
+        if (!response.ok) return false;
+        const result = (await response.json()) as { allowed?: boolean };
+        return Boolean(result.allowed);
+      }
+
+      if (!token) return false;
+      const response = await fetch('/api/auth/admin', {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (!response.ok) return false;
-      const result = (await response.json()) as AllowedEmailResponse;
-      return Boolean(result.allowed);
+      const result = (await response.json()) as { isAdmin?: boolean };
+      return Boolean(result.isAdmin);
     } catch (error) {
       console.error('[auth] admin check failed', error);
       return false;
     }
   };
 
-  type ReportTagRef = { name: string | null };
-
-  type ReportRow = Omit<ReportItem, 'tags'> & {
-    ReportTagMapping?: {
-      id: string;
-      reportTagId: string;
-      ReportTag?: ReportTagRef | ReportTagRef[] | null;
-    }[];
-  };
-
-  type ReportTagMappingRow = {
-    id: string;
-    reportTagId: string;
-    ReportTag?: ReportTagRef | ReportTagRef[] | null;
-  };
-
-  const normalizeReport = (report: ReportItem) => ({
-    ...report,
-    publishDate: report.publishDate ?? null,
-    tags: report.tags ?? [],
-    summary: report.summary ?? null,
-  });
-
-  const toReportPayload = (report: Partial<ReportItem>) => {
-    const payload = {
-      title: report.title,
-      summary: report.summary ?? null,
-      content: report.content,
-      category: report.category,
-      author: report.author,
-      publishDate: report.publishDate ?? null,
-    };
-    return Object.fromEntries(Object.entries(payload).filter(([, value]) => value !== undefined));
-  };
-
-  const normalizeTagNames = (tags: string[]) =>
-    Array.from(new Set(tags.map((tag) => tag.trim()).filter(Boolean)));
-
   const deriveTagsFromReports = (items: ReportItem[]) =>
-    normalizeTagNames(items.flatMap((report) => report.tags ?? []));
-
-  const mapReportFromDb = (report: ReportRow): ReportItem => {
-    const tagMappings = report.ReportTagMapping ?? [];
-    const tags = tagMappings
-      .map((mapping) => {
-        const reportTag = Array.isArray(mapping.ReportTag) ? mapping.ReportTag[0] : mapping.ReportTag;
-        return reportTag?.name ?? null;
-      })
-      .filter((tag): tag is string => Boolean(tag));
-    const { ReportTagMapping: _ignored, ...rest } = report;
-    return normalizeReport({ ...(rest as ReportItem), tags });
-  };
-
-  const ensureTags = async (tags: string[]) => {
-    const normalized = normalizeTagNames(tags);
-    if (normalized.length === 0) return [];
-    const { data: existing, error } = await supabase
-      .from('ReportTag')
-      .select('id, name')
-      .in('name', normalized);
-    if (error) {
-      console.error('[tags] fetch failed', error.message);
-      return null;
-    }
-    const existingTags = existing ?? [];
-    const existingNames = new Set(existingTags.map((tag) => tag.name));
-    const missing = normalized.filter((name) => !existingNames.has(name));
-    if (missing.length === 0) return existingTags;
-    const newTags = missing.map((name) => ({ id: crypto.randomUUID(), name }));
-    const { data: inserted, error: insertError } = await supabase
-      .from('ReportTag')
-      .insert(newTags)
-      .select('id, name');
-    if (insertError) {
-      console.error('[tags] create failed', insertError.message);
-      return null;
-    }
-    return [...existingTags, ...(inserted ?? newTags)];
-  };
-
-  const syncReportTags = async (reportId: string, tags: string[]) => {
-    const normalized = normalizeTagNames(tags);
-    if (normalized.length === 0) {
-      const { error } = await supabase.from('ReportTagMapping').delete().eq('reportId', reportId);
-      if (error) {
-        console.error('[tags] clear failed', error.message);
-      }
-      return [];
-    }
-
-    const tagRows = await ensureTags(normalized);
-    if (!tagRows) return null;
-    const tagIdByName = new Map(tagRows.map((tag) => [tag.name, tag.id]));
-    const desiredTagIds = normalized.map((name) => tagIdByName.get(name)).filter(Boolean) as string[];
-
-    const { data: existingMappings, error } = await supabase
-      .from('ReportTagMapping')
-      .select('id, reportTagId, ReportTag(name)')
-      .eq('reportId', reportId);
-    if (error) {
-      console.error('[tags] mapping fetch failed', error.message);
-      return null;
-    }
-
-    const existing = (existingMappings ?? []) as ReportTagMappingRow[];
-    const existingTagIds = new Set(existing.map((mapping) => mapping.reportTagId));
-
-    const toInsert = desiredTagIds
-      .filter((tagId) => !existingTagIds.has(tagId))
-      .map((reportTagId) => ({ id: crypto.randomUUID(), reportId, reportTagId }));
-    const toDeleteIds = existing
-      .filter((mapping) => {
-        const reportTag = Array.isArray(mapping.ReportTag) ? mapping.ReportTag[0] : mapping.ReportTag;
-        const name = reportTag?.name ?? '';
-        return name && !normalized.includes(name);
-      })
-      .map((mapping) => mapping.id);
-
-    if (toDeleteIds.length > 0) {
-      const { error: deleteError } = await supabase.from('ReportTagMapping').delete().in('id', toDeleteIds);
-      if (deleteError) {
-        console.error('[tags] mapping delete failed', deleteError.message);
-        return null;
-      }
-    }
-
-    if (toInsert.length > 0) {
-      const { error: insertError } = await supabase.from('ReportTagMapping').insert(toInsert);
-      if (insertError) {
-        console.error('[tags] mapping create failed', insertError.message);
-        return null;
-      }
-    }
-
-    return normalized;
-  };
+    Array.from(new Set(items.flatMap((report) => report.tags ?? []).filter(Boolean)));
 
   const fetchReports = async () => {
     if (dataMode === 'local') {
@@ -242,16 +113,19 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
       return;
     }
 
-    const { data, error } = await supabase
-      .from('Report')
-      .select('*, ReportTagMapping(ReportTag(name))')
-      .order('createdAt', { ascending: false });
-    if (error) {
-      console.error('[reports] fetch failed', error.message);
+    try {
+      const res = await fetch('/api/reports');
+      if (!res.ok) {
+        console.error('[reports] fetch failed', res.status);
+        setReports([]);
+        return;
+      }
+      const data = (await res.json()) as ReportItem[];
+      setReports(data);
+    } catch (error) {
+      console.error('[reports] fetch failed', error);
       setReports([]);
-      return;
     }
-    setReports((data ?? []).map(mapReportFromDb));
   };
 
   const fetchTags = async () => {
@@ -271,14 +145,19 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
       return;
     }
 
-    const { data, error } = await supabase.from('ReportTag').select('name').order('name');
-    if (error) {
-      console.error('[tags] fetch failed', error.message);
+    try {
+      const res = await fetch('/api/tags');
+      if (!res.ok) {
+        console.error('[tags] fetch failed', res.status);
+        setTags([]);
+        return;
+      }
+      const data = (await res.json()) as string[];
+      setTags(data);
+    } catch (error) {
+      console.error('[tags] fetch failed', error);
       setTags([]);
-      return;
     }
-    const names = (data ?? []).map((tag) => tag.name).filter(Boolean) as string[];
-    setTags(names);
   };
 
   useEffect(() => {
@@ -324,6 +203,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         if (!allowed) {
           await supabase.auth.signOut();
           setCurrentUser(null);
+          setAccessToken(null);
           router.push('/login?error=unauthorized');
           setIsHydrated(true);
           return;
@@ -334,8 +214,10 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
           email: sessionUser.email ?? undefined,
           role: 'admin',
         });
+        setAccessToken(session?.access_token ?? null);
       } else {
         setCurrentUser(null);
+        setAccessToken(null);
       }
       setIsHydrated(true);
     };
@@ -369,6 +251,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         const sessionUser = session?.user ?? null;
         if (!sessionUser) {
           setCurrentUser(null);
+          setAccessToken(null);
           return;
         }
         const allowed = await checkAllowedEmail({
@@ -378,6 +261,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         if (!allowed) {
           await supabase.auth.signOut();
           setCurrentUser(null);
+          setAccessToken(null);
           router.push('/login?error=unauthorized');
           return;
         }
@@ -387,6 +271,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
           email: sessionUser.email ?? undefined,
           role: 'admin',
         });
+        setAccessToken(session?.access_token ?? null);
       })();
     });
     return () => subscription.subscription.unsubscribe();
@@ -426,6 +311,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         email: sessionUser.email ?? undefined,
         role: 'admin',
       });
+      setAccessToken(data.session?.access_token ?? null);
       setAuthFlagCookie(true);
     }
     router.push('/');
@@ -452,17 +338,19 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     if (authMode === 'local') {
       localStorage.setItem('espresso_user', JSON.stringify(null));
       setCurrentUser(null);
+      setAccessToken(null);
       setAuthFlagCookie(false);
       router.push('/login');
       return;
     }
     await supabase.auth.signOut();
     setCurrentUser(null);
+    setAccessToken(null);
     setAuthFlagCookie(false);
     router.push('/login');
   };
 
-  const addReport = (report: Omit<ReportItem, 'id'>) => {
+  const addReport = async (report: Omit<ReportItem, 'id'>): Promise<MutationResult> => {
     if (dataMode === 'local') {
       const newReport = { ...report, id: Date.now().toString() };
       console.info('[reports] create', { reportId: newReport.id, title: newReport.title });
@@ -472,36 +360,45 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         return nextReports;
       });
       router.push('/');
-      return;
+      return { ok: true };
     }
 
-    const create = async () => {
-      const payload = {
-        id: crypto.randomUUID(),
-        updatedAt: new Date().toISOString(),
-        ...toReportPayload(report),
-      };
-      const { data, error } = await supabase
-        .from('Report')
-        .insert(payload)
-        .select('*')
-        .single();
-      if (error) {
-        console.error('[reports] create failed', error.message);
-        return;
+    try {
+      const res = await fetch('/api/reports', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        },
+        body: JSON.stringify(report),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        return {
+          ok: false,
+          status: res.status,
+          error: body.error ?? 'Create failed',
+          fieldErrors: body.errors,
+        };
       }
-      if (data) {
-        const syncedTags = await syncReportTags(data.id, report.tags ?? []);
-        const tags = syncedTags ?? normalizeTagNames(report.tags ?? []);
-        setReports((prev) => [normalizeReport({ ...data, tags }), ...prev]);
-        await fetchTags();
-        router.push('/');
-      }
-    };
-    void create();
+
+      const created = (await res.json()) as ReportItem;
+      console.info('[reports] create', { reportId: created.id, title: created.title });
+      setReports((prev) => [created, ...prev]);
+      await fetchTags();
+      router.push('/');
+      return { ok: true };
+    } catch (error) {
+      console.error('[reports] create failed', error);
+      return { ok: false, status: 500, error: 'Network error' };
+    }
   };
 
-  const updateReport = (id: string, updatedData: Partial<ReportItem>) => {
+  const updateReport = async (
+    id: string,
+    updatedData: Partial<ReportItem>,
+  ): Promise<MutationResult> => {
     if (dataMode === 'local') {
       console.info('[reports] update', { reportId: id });
       setReports((prev) => {
@@ -512,44 +409,42 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         return nextReports;
       });
       router.push(`/report/${id}`);
-      return;
+      return { ok: true };
     }
 
-    const update = async () => {
-      const payload = toReportPayload(updatedData);
-      const { data, error } = await supabase
-        .from('Report')
-        .update(payload)
-        .eq('id', id)
-        .select('*')
-        .single();
-      if (error) {
-        console.error('[reports] update failed', error.message);
-        return;
+    try {
+      const res = await fetch(`/api/reports/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        },
+        body: JSON.stringify(updatedData),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        return {
+          ok: false,
+          status: res.status,
+          error: body.error ?? 'Update failed',
+          fieldErrors: body.errors,
+        };
       }
-      if (data) {
-        let syncedTags: string[] | null = null;
-        if (Array.isArray(updatedData.tags)) {
-          syncedTags = await syncReportTags(id, updatedData.tags);
-        }
-        console.info('[reports] update', { reportId: id });
-        setReports((prev) =>
-          prev.map((reportItem) => {
-            if (reportItem.id !== id) return reportItem;
-            const tags = Array.isArray(updatedData.tags)
-              ? syncedTags ?? normalizeTagNames(updatedData.tags)
-              : reportItem.tags;
-            return normalizeReport({ ...data, tags });
-          }),
-        );
-        await fetchTags();
-        router.push(`/report/${id}`);
-      }
-    };
-    void update();
+
+      const updated = (await res.json()) as ReportItem;
+      console.info('[reports] update', { reportId: id });
+      setReports((prev) => prev.map((report) => (report.id === id ? updated : report)));
+      await fetchTags();
+      router.push(`/report/${id}`);
+      return { ok: true };
+    } catch (error) {
+      console.error('[reports] update failed', error);
+      return { ok: false, status: 500, error: 'Network error' };
+    }
   };
 
-  const deleteReport = (id: string) => {
+  const deleteReport = async (id: string): Promise<MutationResult> => {
     if (dataMode === 'local') {
       console.info('[reports] delete', { reportId: id });
       setReports((prev) => {
@@ -558,20 +453,35 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         return nextReports;
       });
       router.push('/');
-      return;
+      return { ok: true };
     }
 
-    const remove = async () => {
-      const { error } = await supabase.from('Report').delete().eq('id', id);
-      if (error) {
-        console.error('[reports] delete failed', error.message);
-        return;
+    try {
+      const res = await fetch(`/api/reports/${id}`, {
+        method: 'DELETE',
+        headers: {
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        },
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        return {
+          ok: false,
+          status: res.status,
+          error: body.error ?? 'Delete failed',
+        };
       }
+
       console.info('[reports] delete', { reportId: id });
       setReports((prev) => prev.filter((report) => report.id !== id));
+      await fetchTags();
       router.push('/');
-    };
-    void remove();
+      return { ok: true };
+    } catch (error) {
+      console.error('[reports] delete failed', error);
+      return { ok: false, status: 500, error: 'Network error' };
+    }
   };
 
   return (
