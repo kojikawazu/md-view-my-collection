@@ -161,10 +161,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
   };
 
   useEffect(() => {
-    const init = async () => {
-      await fetchReports();
-      await fetchTags();
-
+    const initAuth = async () => {
       if (authMode === 'local') {
         const savedUser = localStorage.getItem('espresso_user');
         if (savedUser) {
@@ -188,7 +185,6 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             setCurrentUser(null);
           }
         }
-        setIsHydrated(true);
         return;
       }
 
@@ -205,7 +201,6 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
           setCurrentUser(null);
           setAccessToken(null);
           router.push('/login?error=unauthorized');
-          setIsHydrated(true);
           return;
         }
         setCurrentUser({
@@ -219,6 +214,10 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         setCurrentUser(null);
         setAccessToken(null);
       }
+    };
+
+    const init = async () => {
+      await Promise.all([fetchReports(), fetchTags(), initAuth()]);
       setIsHydrated(true);
     };
 
