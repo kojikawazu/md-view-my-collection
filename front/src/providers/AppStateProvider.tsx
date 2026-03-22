@@ -57,10 +57,6 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     document.cookie = `${AUTH_COOKIE_NAME}=; Path=/; Max-Age=0; SameSite=Lax`;
   };
 
-  type AllowedEmailResponse = {
-    allowed?: boolean;
-  };
-
   const checkAllowedEmail = async ({
     email,
     accessToken: token,
@@ -69,17 +65,25 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     accessToken?: string | null;
   }) => {
     try {
-      const response = await fetch('/api/auth/is-allowed', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({ email: email ?? null }),
+      if (authMode === 'local') {
+        const response = await fetch('/api/auth/is-allowed', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email ?? null }),
+        });
+        if (!response.ok) return false;
+        const result = (await response.json()) as { allowed?: boolean };
+        return Boolean(result.allowed);
+      }
+
+      if (!token) return false;
+      const response = await fetch('/api/auth/admin', {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (!response.ok) return false;
-      const result = (await response.json()) as AllowedEmailResponse;
-      return Boolean(result.allowed);
+      const result = (await response.json()) as { isAdmin?: boolean };
+      return Boolean(result.isAdmin);
     } catch (error) {
       console.error('[auth] admin check failed', error);
       return false;
