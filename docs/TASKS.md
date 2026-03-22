@@ -122,6 +122,23 @@
 - [x] Phase 4: Pages整理 + barrel export + 旧ファイル削除
 - [x] 全フェーズ完了後の最終E2E + ビルド確認
 
+## APIルート移行（認証認可・DB操作 / youtube-my-collection踏襲 / Issue #42）
+- [x] APIルート設計書を作成（`docs/06.api-routes-design.md` / 2026-03-22）
+- [x] 設計レビュー指摘対応: DJ-1〜DJ-8 を設計書に反映（2026-03-22）
+  - DJ-1: クライアント側全件保持を維持（GET /api/reports はデフォルト全件返却）
+  - DJ-2: タグ canonical form は `#` 付きで維持
+  - DJ-3: Provider関数を async / MutationResult 返却に変更
+  - DJ-4: accessToken のリロード時復元を設計に追加
+  - DJ-5: API統合テストスイート新規追加（14ケース、テスト用Supabase実DB）
+  - DJ-6: カテゴリ固定リストバリデーション追加（constants.tsx 直接import、分離不要）
+  - DJ-7: /api/auth/admin はboolean判定専用（requireAdmin()不使用、非管理者は200）
+  - DJ-8: API統合テストDB方針をテスト用Supabase実DBに確定（Prismaモック不採用）
+- [ ] Phase 1: 基盤ファイル追加（`lib/auth-server.ts`, `lib/db.ts`, `lib/validation.ts`, `MutationResult` 型）
+- [ ] Phase 2: APIルート追加 + API統合テスト（`api/auth/admin`, `api/reports`, `api/reports/[id]`, `api/tags` + 14ケース）
+- [ ] Phase 3: クライアント側の接続切り替え（AppStateProvider → fetch APIルート、accessToken復元、エラーUI伝播）
+- [ ] Phase 4: 認証エンドポイント統一（`is-allowed` → `admin`、任意）
+- [ ] E2Eテスト全パス確認 + API統合テスト全パス + ビルド確認
+
 ## ドキュメント
 - [x] ドキュメントを最新状態に整理
 - [x] `npm run dev` 時の `tailwindcss` 解決エラーのバグレポートを起票（Issue #32 / 2026-02-14）
