@@ -64,6 +64,7 @@
 - [x] Report/Userスキーマを確定
 - [x] 投稿/編集/削除のデータ連携
 - [x] Prismaスキーマは既存テーブルを `prisma db pull` で取得し、新規設計は `schema.prisma` に記述（マイグレーション禁止）
+- [x] RLSポリシーを全テーブル（Report/ReportTag/ReportTagMapping）に設定（公開閲覧 + 認証ユーザーのみ書き込み / 2026-03-22）
 
 ## テスト
 - [x] E2Eテスト基盤を導入
