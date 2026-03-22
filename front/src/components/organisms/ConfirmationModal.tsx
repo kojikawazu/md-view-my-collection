@@ -7,7 +7,7 @@ interface ConfirmationModalProps {
   theme: DesignSystem;
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: () => void | Promise<void>;
   title: string;
   message: string;
   confirmLabel: string;
@@ -45,8 +45,8 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
             キャンセル
           </button>
           <button
-            onClick={() => {
-              onConfirm();
+            onClick={async () => {
+              await onConfirm();
               onClose();
             }}
             className={`px-8 py-2 text-sm font-bold text-white transition-all hover:brightness-125 ${borderRadius} ${

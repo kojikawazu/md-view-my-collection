@@ -471,6 +471,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
 
       console.info('[reports] delete', { reportId: id });
       setReports((prev) => prev.filter((report) => report.id !== id));
+      await fetchTags();
       router.push('/');
       return { ok: true };
     } catch (error) {

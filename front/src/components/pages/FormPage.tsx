@@ -28,6 +28,7 @@ const FormPage: React.FC<FormPageProps> = ({
   const {
     formData,
     tagError,
+    serverError,
     showConfirmModal,
     setShowConfirmModal,
     handleChange,
@@ -46,6 +47,12 @@ const FormPage: React.FC<FormPageProps> = ({
       <h1 className={`${fontHeader} text-4xl font-bold ${colors.primary} mb-12`}>
         {reportId ? 'レポートを編集' : '新しいレポートを投稿'}
       </h1>
+
+      {serverError && (
+        <div className="mb-8 p-4 bg-red-50 border border-red-200 text-red-800 text-sm rounded">
+          {serverError}
+        </div>
+      )}
 
       <form onSubmit={handleSubmitAttempt} className="space-y-8">
         <FormField label="タイトル" labelClassName={fieldLabelClass}>

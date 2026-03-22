@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import AppLink from '@/components/atoms/AppLink';
 import AuthorInfo from '@/components/molecules/AuthorInfo';
 import { DesignSystem, MutationResult, ReportItem, User } from '@/types';
@@ -15,7 +16,9 @@ interface DetailPageProps {
 }
 
 const DetailPage: React.FC<DetailPageProps> = ({ theme, report, user, onDelete }) => {
+  const router = useRouter();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const { colors, fontHeader, fontPrimary, borderRadius } = theme;
   const displayDate = report
     ? (report.publishDate || report.createdAt || '').split('T')[0]
@@ -81,6 +84,12 @@ const DetailPage: React.FC<DetailPageProps> = ({ theme, report, user, onDelete }
         </div>
       </div>
 
+      {deleteError && (
+        <div className="mb-8 p-4 bg-red-50 border border-red-200 text-red-800 text-sm rounded">
+          {deleteError}
+        </div>
+      )}
+
       <ReportMarkdown content={report.content} className={fontPrimary} />
 
       <div className="mt-16 pt-12 border-t border-inherit">
@@ -99,9 +108,14 @@ const DetailPage: React.FC<DetailPageProps> = ({ theme, report, user, onDelete }
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
         onConfirm={async () => {
+          setDeleteError(null);
           const result = await onDelete(report.id);
           if (!result.ok) {
-            alert(result.error);
+            if (result.status === 401 || result.status === 403) {
+              router.push('/login');
+            } else {
+              setDeleteError(result.error);
+            }
           }
         }}
         title="レポートの削除"
