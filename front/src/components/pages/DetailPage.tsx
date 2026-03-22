@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import AppLink from '@/components/atoms/AppLink';
 import AuthorInfo from '@/components/molecules/AuthorInfo';
-import { DesignSystem, ReportItem, User } from '@/types';
+import { DesignSystem, MutationResult, ReportItem, User } from '@/types';
 import ConfirmationModal from '@/components/organisms/ConfirmationModal';
 import ReportMarkdown from '@/components/organisms/ReportMarkdown';
 
@@ -11,7 +11,7 @@ interface DetailPageProps {
   theme: DesignSystem;
   report?: ReportItem;
   user: User | null;
-  onDelete: (id: string) => void;
+  onDelete: (id: string) => Promise<MutationResult>;
 }
 
 const DetailPage: React.FC<DetailPageProps> = ({ theme, report, user, onDelete }) => {
@@ -98,7 +98,12 @@ const DetailPage: React.FC<DetailPageProps> = ({ theme, report, user, onDelete }
         theme={theme}
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
-        onConfirm={() => onDelete(report.id)}
+        onConfirm={async () => {
+          const result = await onDelete(report.id);
+          if (!result.ok) {
+            alert(result.error);
+          }
+        }}
         title="レポートの削除"
         message="このレポートを完全に削除してもよろしいですか？この操作は取り消せません。"
         confirmLabel="削除する"

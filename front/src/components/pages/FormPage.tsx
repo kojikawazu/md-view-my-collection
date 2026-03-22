@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { DesignSystem, ReportItem, User } from '@/types';
+import { DesignSystem, MutationResult, ReportItem, User } from '@/types';
 import { CATEGORIES } from '@/constants';
 import { useReportForm } from '@/hooks/useReportForm';
 import FormField from '@/components/molecules/FormField';
@@ -10,7 +10,7 @@ import ConfirmationModal from '@/components/organisms/ConfirmationModal';
 interface FormPageProps {
   theme: DesignSystem;
   reports?: ReportItem[];
-  onSubmit: (data: Omit<ReportItem, 'id'>) => void;
+  onSubmit: (data: Omit<ReportItem, 'id'>) => Promise<MutationResult>;
   user: User | null;
   reportId?: string;
   isHydrated?: boolean;

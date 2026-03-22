@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ReportItem, User } from '@/types';
+import { MutationResult, ReportItem, User } from '@/types';
 import { CATEGORIES } from '@/constants';
 
 interface UseReportFormOptions {
   user: User | null;
   reportId?: string;
   reports?: ReportItem[];
-  onSubmit: (data: Omit<ReportItem, 'id'>) => void;
+  onSubmit: (data: Omit<ReportItem, 'id'>) => Promise<MutationResult>;
   isHydrated?: boolean;
 }
 
@@ -75,13 +75,24 @@ export const useReportForm = ({
     setShowConfirmModal(true);
   };
 
-  const handleConfirmSubmit = () => {
-    onSubmit(formData);
+  const [serverError, setServerError] = useState<string | null>(null);
+
+  const handleConfirmSubmit = async () => {
+    setServerError(null);
+    const result = await onSubmit(formData);
+    if (!result.ok) {
+      if (result.status === 401 || result.status === 403) {
+        router.push('/login');
+      } else {
+        setServerError(result.error);
+      }
+    }
   };
 
   return {
     formData,
     tagError,
+    serverError,
     showConfirmModal,
     setShowConfirmModal,
     handleChange,
