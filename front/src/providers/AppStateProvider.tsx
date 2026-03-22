@@ -161,10 +161,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
   };
 
   useEffect(() => {
-    const init = async () => {
-      await fetchReports();
-      await fetchTags();
-
+    const initAuth = async () => {
       if (authMode === 'local') {
         const savedUser = localStorage.getItem('espresso_user');
         if (savedUser) {
@@ -188,7 +185,6 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
             setCurrentUser(null);
           }
         }
-        setIsHydrated(true);
         return;
       }
 
@@ -205,7 +201,6 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
           setCurrentUser(null);
           setAccessToken(null);
           router.push('/login?error=unauthorized');
-          setIsHydrated(true);
           return;
         }
         setCurrentUser({
@@ -219,6 +214,10 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         setCurrentUser(null);
         setAccessToken(null);
       }
+    };
+
+    const init = async () => {
+      await Promise.all([fetchReports(), fetchTags(), initAuth()]);
       setIsHydrated(true);
     };
 
@@ -386,7 +385,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
       const created = (await res.json()) as ReportItem;
       console.info('[reports] create', { reportId: created.id, title: created.title });
       setReports((prev) => [created, ...prev]);
-      await fetchTags();
+      void fetchTags();
       router.push('/');
       return { ok: true };
     } catch (error) {
@@ -435,7 +434,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
       const updated = (await res.json()) as ReportItem;
       console.info('[reports] update', { reportId: id });
       setReports((prev) => prev.map((report) => (report.id === id ? updated : report)));
-      await fetchTags();
+      void fetchTags();
       router.push(`/report/${id}`);
       return { ok: true };
     } catch (error) {
@@ -475,7 +474,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
 
       console.info('[reports] delete', { reportId: id });
       setReports((prev) => prev.filter((report) => report.id !== id));
-      await fetchTags();
+      void fetchTags();
       router.push('/');
       return { ok: true };
     } catch (error) {
