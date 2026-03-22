@@ -162,7 +162,8 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
 
   useEffect(() => {
     const init = async () => {
-      await Promise.all([fetchReports(), fetchTags()]);
+      await fetchReports();
+      await fetchTags();
 
       if (authMode === 'local') {
         const savedUser = localStorage.getItem('espresso_user');
