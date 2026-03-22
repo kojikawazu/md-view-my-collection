@@ -38,3 +38,7 @@ export interface User {
   email?: string;
   role: 'admin' | 'user';
 }
+
+export type MutationResult =
+  | { ok: true }
+  | { ok: false; status: number; error: string; fieldErrors?: Record<string, string> };
