@@ -89,6 +89,8 @@
 - [x] POST/PATCHトランザクション最適化: 不要クエリ削除 + upsert結果直接利用（DB呼び出し数 N+5→N+2 / 2026-03-23）
 - [x] requireAdmin()の認証結果をメモリキャッシュ（同一トークンの2回目以降はSupabase HTTP往復スキップ / 2026-03-23）
 - [x] mutation後のfetchTags()を廃止しderiveTagsFromReportsに統一（不要なAPI呼び出し排除 / 2026-03-23）
+- [x] #47レビュー指摘対応: 設計書のPrisma/Supabaseシングルトン記述を実装に合わせて更新（`docs/06.api-routes-design.md` / 2026-03-23）
+- [x] #47レビュー指摘対応: AppShellのローディング300ms定数を一元管理に変更（2026-03-23）
 
 ## 残タスク
 - [x] allowedDevOrigins 警告の対応
