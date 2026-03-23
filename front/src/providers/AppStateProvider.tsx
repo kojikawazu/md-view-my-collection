@@ -384,8 +384,11 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
 
       const created = (await res.json()) as ReportItem;
       console.info('[reports] create', { reportId: created.id, title: created.title });
-      setReports((prev) => [created, ...prev]);
-      void fetchTags();
+      setReports((prev) => {
+        const nextReports = [created, ...prev];
+        setTags(deriveTagsFromReports(nextReports));
+        return nextReports;
+      });
       router.push('/');
       return { ok: true };
     } catch (error) {
@@ -433,8 +436,11 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
 
       const updated = (await res.json()) as ReportItem;
       console.info('[reports] update', { reportId: id });
-      setReports((prev) => prev.map((report) => (report.id === id ? updated : report)));
-      void fetchTags();
+      setReports((prev) => {
+        const nextReports = prev.map((report) => (report.id === id ? updated : report));
+        setTags(deriveTagsFromReports(nextReports));
+        return nextReports;
+      });
       router.push(`/report/${id}`);
       return { ok: true };
     } catch (error) {
@@ -473,8 +479,11 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
       }
 
       console.info('[reports] delete', { reportId: id });
-      setReports((prev) => prev.filter((report) => report.id !== id));
-      void fetchTags();
+      setReports((prev) => {
+        const nextReports = prev.filter((report) => report.id !== id);
+        setTags(deriveTagsFromReports(nextReports));
+        return nextReports;
+      });
       router.push('/');
       return { ok: true };
     } catch (error) {
