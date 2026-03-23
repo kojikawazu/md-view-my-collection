@@ -4,9 +4,13 @@ import { prisma } from '@/lib/db';
 import { validateReportInput } from '@/lib/validation';
 import { requireAdmin } from '@/lib/auth-server';
 
-type ReportWithTags = Report & {
-  ReportTagMapping: (ReportTagMapping & { ReportTag: ReportTag })[];
-};
+type TagMapping = ReportTagMapping & { ReportTag: ReportTag };
+
+type ReportWithTags = Report & { ReportTagMapping: TagMapping[] };
+
+type ReportListRow = Omit<Report, 'content'> & { ReportTagMapping: TagMapping[] };
+
+const mapTags = (mappings: TagMapping[]) => mappings.map((m) => m.ReportTag.name);
 
 const toReportItem = (report: ReportWithTags) => ({
   id: report.id,
@@ -18,7 +22,20 @@ const toReportItem = (report: ReportWithTags) => ({
   publishDate: report.publishDate?.toISOString() ?? null,
   createdAt: report.createdAt.toISOString(),
   updatedAt: report.updatedAt.toISOString(),
-  tags: report.ReportTagMapping.map((m) => m.ReportTag.name),
+  tags: mapTags(report.ReportTagMapping),
+});
+
+const toReportListItem = (report: ReportListRow) => ({
+  id: report.id,
+  title: report.title,
+  summary: report.summary ?? null,
+  content: '',
+  category: report.category,
+  author: report.author,
+  publishDate: report.publishDate?.toISOString() ?? null,
+  createdAt: report.createdAt.toISOString(),
+  updatedAt: report.updatedAt.toISOString(),
+  tags: mapTags(report.ReportTagMapping),
 });
 
 const parseNumber = (value: string | null, range: { min?: number; max?: number } = {}) => {
@@ -43,7 +60,15 @@ export async function GET(request: NextRequest) {
         orderBy: { createdAt: 'desc' },
         ...(limit !== undefined ? { take: limit } : {}),
         skip: offset,
-        include: {
+        select: {
+          id: true,
+          title: true,
+          summary: true,
+          category: true,
+          author: true,
+          publishDate: true,
+          createdAt: true,
+          updatedAt: true,
           ReportTagMapping: {
             include: { ReportTag: true },
           },
@@ -59,7 +84,8 @@ export async function GET(request: NextRequest) {
       headers['x-offset'] = String(offset);
     }
 
-    return NextResponse.json(reports.map(toReportItem), { headers });
+    headers['Cache-Control'] = 's-maxage=60, stale-while-revalidate=300';
+    return NextResponse.json(reports.map(toReportListItem), { headers });
   } catch (error) {
     console.error('[api/reports] GET failed', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
