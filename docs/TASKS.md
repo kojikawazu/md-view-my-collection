@@ -151,6 +151,15 @@
 - [x] Phase 4: 認証エンドポイント統一（supabaseモード: `/api/auth/admin` (GET)、localモード: `/api/auth/is-allowed` (POST) 維持 / 2026-03-23）
 - [x] E2Eテスト全パス確認 + ビルド確認（2026-03-22）
 
+## データ品質
+- [x] Reportテーブル全229件のハルシネーション・品質チェック実施（`docs/07.hallucination-check-report.md` / 2026-03-24）
+- [x] MongoDB 9.0 ハルシネーション修正（3件 → MongoDB 8.x）
+- [x] Milvus 2.5 ミスリード修正（1件 → Milvus 2.6.x）
+- [x] カテゴリ誤分類修正（4件）
+- [x] タイトル書式不備修正（2件）
+- [x] Gemini 3 → Gemini 3.1 Pro / Starcloud記述修正（2件）
+- [ ] Gemini記事にソースURL必須化（現状85%がURL無し）
+
 ## ドキュメント
 - [x] ドキュメントを最新状態に整理
 - [x] `npm run dev` 時の `tailwindcss` 解決エラーのバグレポートを起票（Issue #32 / 2026-02-14）
