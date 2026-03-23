@@ -27,6 +27,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
   const loadingStartRef = useRef<number | null>(null);
   const loadingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastManualTriggerRef = useRef<number | null>(null);
+  /** ローディング最短表示時間（ms）— 手動トリガー抑止の閾値と共用 */
   const minDurationMs = 300;
 
   useEffect(() => {
@@ -63,7 +64,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const now = Date.now();
-    if (lastManualTriggerRef.current && now - lastManualTriggerRef.current < 300) {
+    if (lastManualTriggerRef.current && now - lastManualTriggerRef.current < minDurationMs) {
       return;
     }
     startLoading();
