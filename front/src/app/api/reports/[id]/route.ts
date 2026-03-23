@@ -79,23 +79,24 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         },
       });
 
+      let tags: string[] | undefined;
       if (hasDataField(data, 'tags') && data.tags) {
         const tagNames = data.tags;
 
         await tx.reportTagMapping.deleteMany({ where: { reportId: id } });
 
+        let tagRecords: { id: string; name: string }[] = [];
         if (tagNames.length > 0) {
-          for (const tagName of tagNames) {
-            await tx.reportTag.upsert({
-              where: { name: tagName },
-              create: { id: crypto.randomUUID(), name: tagName },
-              update: {},
-            });
-          }
-
-          const tagRecords = await tx.reportTag.findMany({
-            where: { name: { in: tagNames } },
-          });
+          tagRecords = await Promise.all(
+            tagNames.map((tagName) =>
+              tx.reportTag.upsert({
+                where: { name: tagName },
+                create: { id: crypto.randomUUID(), name: tagName },
+                update: {},
+                select: { id: true, name: true },
+              }),
+            ),
+          );
 
           await tx.reportTagMapping.createMany({
             data: tagRecords.map((tag) => ({
@@ -105,19 +106,36 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
             })),
           });
         }
+        tags = tagRecords.map((t) => t.name);
       }
 
-      return tx.report.findUniqueOrThrow({
-        where: { id: report.id },
-        include: {
-          ReportTagMapping: {
-            include: { ReportTag: true },
-          },
-        },
-      });
+      return { report, tags };
     });
 
-    return NextResponse.json(toReportItem(result));
+    // If tags were not updated, fetch current tags
+    const tags =
+      result.tags ??
+      (
+        await prisma.reportTagMapping.findMany({
+          where: { reportId: id },
+          include: { ReportTag: true },
+        })
+      ).map((m) => m.ReportTag.name);
+
+    const item = {
+      id: result.report.id,
+      title: result.report.title,
+      summary: result.report.summary ?? null,
+      content: result.report.content,
+      category: result.report.category,
+      author: result.report.author,
+      publishDate: result.report.publishDate?.toISOString() ?? null,
+      createdAt: result.report.createdAt.toISOString(),
+      updatedAt: result.report.updatedAt.toISOString(),
+      tags,
+    };
+
+    return NextResponse.json(item);
   } catch (error) {
     console.error('[api/reports/[id]] PATCH failed', error);
     const code = typeof error === 'object' && error !== null && 'code' in error ? error.code : null;

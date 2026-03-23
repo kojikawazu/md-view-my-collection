@@ -86,6 +86,7 @@
 - [x] 詳細・編集ページをSSG（静的生成）に変更しCDNキャッシュ配信に移行（`/report/[id]`, `/report/[id]/edit` / 2026-03-23）
 - [x] 一覧APIからcontent除外（2.2MB→~76KB）+ 詳細を`useReport`フックで個別取得（2026-03-23）
 - [x] GET API（reports/tags/reports/[id]）にCDNキャッシュヘッダー追加（`s-maxage=60, stale-while-revalidate=300` / 2026-03-23）
+- [x] POST/PATCHトランザクション最適化: 不要クエリ削除 + upsert結果直接利用（DB呼び出し数 N+5→N+2 / 2026-03-23）
 
 ## 残タスク
 - [x] allowedDevOrigins 警告の対応

@@ -118,18 +118,18 @@ export async function POST(request: NextRequest) {
         },
       });
 
+      let tagRecords: { id: string; name: string }[] = [];
       if (tagNames.length > 0) {
-        for (const tagName of tagNames) {
-          await tx.reportTag.upsert({
-            where: { name: tagName },
-            create: { id: crypto.randomUUID(), name: tagName },
-            update: {},
-          });
-        }
-
-        const tagRecords = await tx.reportTag.findMany({
-          where: { name: { in: tagNames } },
-        });
+        tagRecords = await Promise.all(
+          tagNames.map((tagName) =>
+            tx.reportTag.upsert({
+              where: { name: tagName },
+              create: { id: crypto.randomUUID(), name: tagName },
+              update: {},
+              select: { id: true, name: true },
+            }),
+          ),
+        );
 
         await tx.reportTagMapping.createMany({
           data: tagRecords.map((tag) => ({
@@ -140,17 +140,23 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      return tx.report.findUniqueOrThrow({
-        where: { id: report.id },
-        include: {
-          ReportTagMapping: {
-            include: { ReportTag: true },
-          },
-        },
-      });
+      return { report, tags: tagRecords.map((t) => t.name) };
     });
 
-    return NextResponse.json(toReportItem(result), { status: 201 });
+    const item = {
+      id: result.report.id,
+      title: result.report.title,
+      summary: result.report.summary ?? null,
+      content: result.report.content,
+      category: result.report.category,
+      author: result.report.author,
+      publishDate: result.report.publishDate?.toISOString() ?? null,
+      createdAt: result.report.createdAt.toISOString(),
+      updatedAt: result.report.updatedAt.toISOString(),
+      tags: result.tags,
+    };
+
+    return NextResponse.json(item, { status: 201 });
   } catch (error) {
     console.error('[api/reports] POST failed', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
