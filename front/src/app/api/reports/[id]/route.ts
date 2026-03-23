@@ -87,16 +87,15 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
         let tagRecords: { id: string; name: string }[] = [];
         if (tagNames.length > 0) {
-          tagRecords = await Promise.all(
-            tagNames.map((tagName) =>
-              tx.reportTag.upsert({
-                where: { name: tagName },
-                create: { id: crypto.randomUUID(), name: tagName },
-                update: {},
-                select: { id: true, name: true },
-              }),
-            ),
-          );
+          for (const tagName of tagNames) {
+            const tag = await tx.reportTag.upsert({
+              where: { name: tagName },
+              create: { id: crypto.randomUUID(), name: tagName },
+              update: {},
+              select: { id: true, name: true },
+            });
+            tagRecords.push(tag);
+          }
 
           await tx.reportTagMapping.createMany({
             data: tagRecords.map((tag) => ({
