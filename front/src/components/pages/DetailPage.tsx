@@ -90,7 +90,13 @@ const DetailPage: React.FC<DetailPageProps> = ({ theme, report, user, onDelete }
         </div>
       )}
 
-      <ReportMarkdown content={report.content} className={fontPrimary} />
+      {report.content ? (
+        <ReportMarkdown content={report.content} className={fontPrimary} />
+      ) : (
+        <div className="flex justify-center py-16">
+          <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin opacity-30" />
+        </div>
+      )}
 
       <div className="mt-16 pt-12 border-t border-inherit">
         <h4 className={`${fontHeader} text-xs uppercase tracking-widest ${colors.muted} mb-4`}>Tags</h4>
