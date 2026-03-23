@@ -6,5 +6,6 @@
 - `04.e2e-cases.md` : E2Eテスト仕様（厳密版）
 - `05.atomic-design.md` : アトミックデザイン設計書（移行計画・ディレクトリ構造・フェーズ定義）
 - `06.api-routes-design.md` : APIルート設計書（認証認可・DB操作の移行、youtube-my-collection踏襲）
+- `07.hallucination-check-report.md` : Reportテーブル ハルシネーション・品質チェックレポート（2026-03-24実施）
 - `TASKS.md` : 進捗/残タスク管理
 - `markdown-libs/` : Markdown ライブラリ調査レポート（react-markdown / remark-gfm / rehype-sanitize）
