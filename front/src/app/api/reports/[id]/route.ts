@@ -41,7 +41,9 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
-    return NextResponse.json(toReportItem(report));
+    return NextResponse.json(toReportItem(report), {
+      headers: { 'Cache-Control': 's-maxage=60, stale-while-revalidate=300' },
+    });
   } catch (error) {
     console.error('[api/reports/[id]] GET failed', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

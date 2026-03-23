@@ -84,6 +84,8 @@
 - [x] PrismaClientを本番でもグローバル再利用に変更（コールドスタート時のDB再接続削減 / 2026-03-23）
 - [x] Supabaseクライアントをモジュールスコープで初期化に変更（`auth-server.ts`, `api/auth/admin` / 2026-03-23）
 - [x] 詳細・編集ページをSSG（静的生成）に変更しCDNキャッシュ配信に移行（`/report/[id]`, `/report/[id]/edit` / 2026-03-23）
+- [x] 一覧APIからcontent除外（2.2MB→~76KB）+ 詳細を`useReport`フックで個別取得（2026-03-23）
+- [x] GET API（reports/tags/reports/[id]）にCDNキャッシュヘッダー追加（`s-maxage=60, stale-while-revalidate=300` / 2026-03-23）
 
 ## 残タスク
 - [x] allowedDevOrigins 警告の対応
