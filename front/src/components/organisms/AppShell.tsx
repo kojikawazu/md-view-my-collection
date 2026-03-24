@@ -58,7 +58,9 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (!isHydrated) return;
     const elapsed = Date.now() - (loadingStartRef.current ?? Date.now());
-    const remaining = Math.max(0, minDurationMs - elapsed);
+    /** コンテンツfade-inが先行するよう、オーバーレイfade-outに最低200msの猶予を確保 */
+    const renderBufferMs = 200;
+    const remaining = Math.max(renderBufferMs, minDurationMs - elapsed);
     scheduleFadeOut(remaining);
   }, [isHydrated]);
 
