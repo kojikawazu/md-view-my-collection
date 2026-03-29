@@ -14,6 +14,10 @@ const reportsFixture = [
     publishDate: '2024-11-20',
     createdAt: '2024-11-20T00:00:00.000Z',
     tags: ['#AI', '#UIUX'],
+    externalUrls: [
+      { id: 'eu-1', url: 'https://example.com/note1', label: 'Note記事' },
+      { id: 'eu-2', url: 'https://zenn.dev/sample', label: null },
+    ],
   },
   {
     id: '2',
@@ -25,6 +29,7 @@ const reportsFixture = [
     publishDate: '2024-11-18',
     createdAt: '2024-11-18T00:00:00.000Z',
     tags: ['#Minimal'],
+    externalUrls: [],
   },
 ];
 
@@ -42,6 +47,7 @@ const createPagedReportsFixture = (count: number) =>
       publishDate: `2024-12-${day}`,
       createdAt: `2024-12-${day}T00:00:00.000Z`,
       tags: order % 2 === 0 ? ['#AI'] : ['#Minimal'],
+      externalUrls: [],
     };
   });
 
@@ -318,5 +324,97 @@ test.describe('Reports app', () => {
     await page.getByRole('link', { name: 'Markdown Lab' }).click();
     await expect(page).toHaveURL(/\/report\/markdown-lab$/);
     await expect(page.getByRole('heading', { name: 'Pattern 07 - Code Focus' })).toBeVisible();
+  });
+
+  test('TC-026: detail with 0 external URLs hides link section', async ({ page }) => {
+    await setStorage(page, { reports: reportsFixture, user: null });
+    await page.goto('/report/2');
+    await expect(page.getByRole('heading', { name: 'Sample Report Two' })).toBeVisible();
+    await expect(page.getByText('External Links')).toHaveCount(0);
+  });
+
+  test('TC-027: detail with multiple external URLs shows links', async ({ page }) => {
+    await setStorage(page, { reports: reportsFixture, user: null });
+    await page.goto('/report/1');
+    await expect(page.getByText('External Links')).toBeVisible();
+    await expect(page.getByRole('link', { name: /Note記事/ })).toBeVisible();
+    await expect(page.getByRole('link', { name: /zenn\.dev/ })).toBeVisible();
+
+    const noteLink = page.getByRole('link', { name: /Note記事/ });
+    await expect(noteLink).toHaveAttribute('href', 'https://example.com/note1');
+    await expect(noteLink).toHaveAttribute('target', '_blank');
+  });
+
+  test('TC-028: create report with external URLs', async ({ page }) => {
+    await setStorage(page, { reports: reportsFixture, user: userFixture });
+    await page.goto('/report/new');
+
+    await page.locator('input[name="title"]').fill('URL Test Report');
+    await page.locator('textarea[name="summary"]').fill('Summary with URLs.');
+    await page.locator('textarea[name="content"]').fill('# Content');
+    await page.locator('input[name="tags"]').fill('test');
+
+    await page.getByRole('button', { name: '+ URL追加' }).click();
+    const urlInputs = page.locator('input[placeholder="https://..."]');
+    const labelInputs = page.locator('input[placeholder="ラベル（任意）"]');
+    await urlInputs.first().fill('https://note.com/article1');
+    await labelInputs.first().fill('My Note');
+
+    await page.getByRole('button', { name: '+ URL追加' }).click();
+    await urlInputs.nth(1).fill('https://qiita.com/post');
+
+    await page.getByRole('button', { name: 'レポートを投稿' }).click();
+    await expect(page.getByText('レポートの投稿確認')).toBeVisible();
+    await page.getByRole('button', { name: '投稿する' }).click();
+
+    await expect(page).toHaveURL(/\/$/);
+    await page.getByRole('link', { name: 'URL Test Report' }).click();
+    await expect(page.getByText('External Links')).toBeVisible();
+    await expect(page.getByRole('link', { name: /My Note/ })).toBeVisible();
+    await expect(page.getByRole('link', { name: /qiita\.com/ })).toBeVisible();
+  });
+
+  test('TC-029: edit report add and remove external URLs', async ({ page }) => {
+    await setStorage(page, { reports: reportsFixture, user: userFixture });
+    await page.goto('/report/1/edit');
+
+    const urlInputs = page.locator('input[placeholder="https://..."]');
+    await expect(urlInputs).toHaveCount(2);
+    await expect(urlInputs.first()).toHaveValue('https://example.com/note1');
+
+    await page.locator('button:text("✕")').first().click();
+    await expect(urlInputs).toHaveCount(1);
+
+    await page.getByRole('button', { name: '+ URL追加' }).click();
+    await urlInputs.nth(1).fill('https://hatena.blog/new');
+
+    await page.getByRole('button', { name: '変更を保存' }).click();
+    await expect(page.getByText('変更の保存確認')).toBeVisible();
+    await page.getByRole('button', { name: '保存する' }).click();
+
+    await expect(page).toHaveURL(/\/report\/1$/);
+    await expect(page.getByRole('link', { name: /zenn\.dev/ })).toBeVisible();
+    await expect(page.getByRole('link', { name: /hatena\.blog/ })).toBeVisible();
+    await expect(page.getByRole('link', { name: /Note記事/ })).toHaveCount(0);
+  });
+
+  test('TC-030: invalid URL input shows validation error', async ({ page }) => {
+    await setStorage(page, { reports: reportsFixture, user: userFixture });
+    await page.goto('/report/new');
+
+    await page.locator('input[name="title"]').fill('Invalid URL Test');
+    await page.locator('textarea[name="summary"]').fill('Summary.');
+    await page.locator('textarea[name="content"]').fill('# Content');
+    await page.locator('input[name="tags"]').fill('test');
+
+    await page.getByRole('button', { name: '+ URL追加' }).click();
+    await page.locator('input[placeholder="https://..."]').first().fill('not-a-url');
+
+    await page.getByRole('button', { name: 'レポートを投稿' }).click();
+    await expect(page.getByText('レポートの投稿確認')).toBeVisible();
+    await page.getByRole('button', { name: '投稿する' }).click();
+
+    await expect(page.getByText('http://またはhttps://で始まる必要があります')).toBeVisible();
+    await expect(page).not.toHaveURL(/\/$/);
   });
 });

@@ -19,6 +19,17 @@ export interface DesignSystem {
   borderRadius: string;
 }
 
+export interface ExternalUrlItem {
+  id: string;
+  url: string;
+  label: string | null;
+}
+
+export interface ExternalUrlInput {
+  url: string;
+  label: string;
+}
+
 export interface ReportItem {
   id: string;
   title: string;
@@ -30,6 +41,7 @@ export interface ReportItem {
   createdAt?: string;
   updatedAt?: string;
   tags: string[];
+  externalUrls: ExternalUrlItem[];
 }
 
 export interface User {

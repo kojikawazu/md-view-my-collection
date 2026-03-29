@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import AppLink from '@/components/atoms/AppLink';
 import AuthorInfo from '@/components/molecules/AuthorInfo';
 import { DesignSystem, MutationResult, ReportItem, User } from '@/types';
+import ExternalUrlLinks from '@/components/molecules/ExternalUrlLinks';
 import ConfirmationModal from '@/components/organisms/ConfirmationModal';
 import ReportMarkdown from '@/components/organisms/ReportMarkdown';
 
@@ -95,6 +96,16 @@ const DetailPage: React.FC<DetailPageProps> = ({ theme, report, user, onDelete }
       ) : (
         <div className="flex justify-center py-16">
           <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin opacity-30" />
+        </div>
+      )}
+
+      {(report.externalUrls ?? []).length > 0 && (
+        <div className="mt-16 pt-12 border-t border-inherit">
+          <ExternalUrlLinks
+            urls={report.externalUrls}
+            labelClassName={`${fontHeader} ${colors.muted}`}
+            linkClassName={colors.text}
+          />
         </div>
       )}
 

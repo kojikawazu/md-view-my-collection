@@ -98,7 +98,10 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
       const savedReports = localStorage.getItem('espresso_reports');
       if (savedReports) {
         try {
-          const parsedReports = JSON.parse(savedReports) as ReportItem[];
+          const parsedReports = (JSON.parse(savedReports) as ReportItem[]).map((r) => ({
+            ...r,
+            externalUrls: r.externalUrls ?? [],
+          }));
           setReports(parsedReports);
           setTags(deriveTagsFromReports(parsedReports));
           return;
@@ -351,7 +354,15 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
 
   const addReport = async (report: Omit<ReportItem, 'id'>): Promise<MutationResult> => {
     if (dataMode === 'local') {
-      const newReport = { ...report, id: Date.now().toString() };
+      const newReport = {
+        ...report,
+        id: Date.now().toString(),
+        externalUrls: (report.externalUrls ?? []).map((eu, i) => ({
+          id: `eu-${Date.now()}-${i}`,
+          url: eu.url,
+          label: eu.label ?? null,
+        })),
+      };
       console.info('[reports] create', { reportId: newReport.id, title: newReport.title });
       setReports((prev) => {
         const nextReports = [newReport, ...prev];
@@ -403,6 +414,16 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
   ): Promise<MutationResult> => {
     if (dataMode === 'local') {
       console.info('[reports] update', { reportId: id });
+      if (updatedData.externalUrls) {
+        updatedData = {
+          ...updatedData,
+          externalUrls: updatedData.externalUrls.map((eu, i) => ({
+            id: eu.id || `eu-${Date.now()}-${i}`,
+            url: eu.url,
+            label: eu.label ?? null,
+          })),
+        };
+      }
       setReports((prev) => {
         const nextReports = prev.map((report) =>
           report.id === id ? { ...report, ...updatedData } : report,

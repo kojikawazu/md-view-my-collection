@@ -5,6 +5,7 @@ import { DesignSystem, MutationResult, ReportItem, User } from '@/types';
 import { CATEGORIES } from '@/constants';
 import { useReportForm } from '@/hooks/useReportForm';
 import FormField from '@/components/molecules/FormField';
+import ExternalUrlFieldList from '@/components/molecules/ExternalUrlFieldList';
 import ConfirmationModal from '@/components/organisms/ConfirmationModal';
 
 interface FormPageProps {
@@ -36,6 +37,10 @@ const FormPage: React.FC<FormPageProps> = ({
     handleTagsChange,
     handleSubmitAttempt,
     handleConfirmSubmit,
+    externalUrls,
+    addExternalUrl,
+    removeExternalUrl,
+    updateExternalUrl,
     goBack,
   } = useReportForm({ user, reportId, reports, onSubmit, isHydrated });
 
@@ -131,6 +136,18 @@ const FormPage: React.FC<FormPageProps> = ({
             />
           )}
         </FormField>
+
+        <ExternalUrlFieldList
+          urls={externalUrls}
+          fieldErrors={fieldErrors}
+          onAdd={addExternalUrl}
+          onRemove={removeExternalUrl}
+          onChangeUrl={(i, v) => updateExternalUrl(i, 'url', v)}
+          onChangeLabel={(i, v) => updateExternalUrl(i, 'label', v)}
+          labelClassName={fieldLabelClass}
+          borderClass={colors.border}
+          borderRadiusClass={borderRadius}
+        />
 
         <div className="pt-8 flex justify-end gap-4 border-t border-inherit">
           <button
