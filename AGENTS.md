@@ -30,7 +30,7 @@ Configuration:
 
 ## Testing Guidelines
 - E2E-only strategy (no unit tests). Tooling target: Playwright.
-- Test specification is in `docs/04.e2e-cases.md` (normal/edge/error cases are all required).
+- Test specification is in `docs/spec/04.e2e-cases.md` (normal/edge/error cases are all required).
 
 ## Commit & Pull Request Guidelines
 - This snapshot does not include Git history, so no established commit message convention is visible.

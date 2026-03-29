@@ -37,10 +37,8 @@ E2Eは `NEXT_PUBLIC_AUTH_MODE=local` / `NEXT_PUBLIC_DATA_MODE=local` を前提�
 
 ## ドキュメント
 - `docs/README.md` ドキュメントの目次
-- `docs/01.pre-requirements.md` 初期要求整理（読み取り専用）
-- `docs/02.ui-layout.md` 最新UIレイアウト要求
-- `docs/03.requirements.md` 要件定義（機能/非機能/規約）
-- `docs/04.e2e-cases.md` E2Eテスト仕様（厳密版）
+- `docs/spec/` 仕様書（要件定義・UIレイアウト・E2Eテスト仕様）
+- `docs/design/` 設計書（アトミックデザイン・APIルート・外部URL管理）
 - `docs/TASKS.md` タスク一覧
 
 ## 注意

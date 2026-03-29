@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import type { Report, ReportTagMapping, ReportTag } from '@prisma/client';
+import type { Report, ReportTagMapping, ReportTag, ExternalUrl } from '@prisma/client';
 import { prisma } from '@/lib/db';
-import { validateReportInput } from '@/lib/validation';
+import { validateReportInput, validateExternalUrls } from '@/lib/validation';
 import { requireAdmin } from '@/lib/auth-server';
 
 type RouteParams = {
@@ -10,6 +10,7 @@ type RouteParams = {
 
 type ReportWithTags = Report & {
   ReportTagMapping: (ReportTagMapping & { ReportTag: ReportTag })[];
+  ExternalUrl: ExternalUrl[];
 };
 
 const toReportItem = (report: ReportWithTags) => ({
@@ -23,6 +24,7 @@ const toReportItem = (report: ReportWithTags) => ({
   createdAt: report.createdAt.toISOString(),
   updatedAt: report.updatedAt.toISOString(),
   tags: report.ReportTagMapping.map((m) => m.ReportTag.name),
+  externalUrls: report.ExternalUrl.map((eu) => ({ id: eu.id, url: eu.url, label: eu.label })),
 });
 
 export async function GET(_request: NextRequest, { params }: RouteParams) {
@@ -34,6 +36,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
         ReportTagMapping: {
           include: { ReportTag: true },
         },
+        ExternalUrl: true,
       },
     });
 
@@ -58,9 +61,14 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     const { id } = await params;
     const body = await request.json();
     const { data, errors } = validateReportInput(body, { partial: true });
+    const hasExternalUrls = Array.isArray(body.externalUrls);
+    const { data: externalUrls, errors: urlErrors } = hasExternalUrls
+      ? validateExternalUrls(body.externalUrls)
+      : { data: [], errors: {} };
 
-    if (Object.keys(errors).length > 0) {
-      return NextResponse.json({ errors }, { status: 400 });
+    const allErrors = { ...errors, ...urlErrors };
+    if (Object.keys(allErrors).length > 0) {
+      return NextResponse.json({ errors: allErrors }, { status: 400 });
     }
 
     const hasDataField = <T extends object, K extends keyof T>(target: T, key: K) =>
@@ -108,10 +116,27 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         tags = tagRecords.map((t) => t.name);
       }
 
-      return { report, tags };
+      let euRecords: { id: string; url: string; label: string | null }[] | undefined;
+      if (hasExternalUrls) {
+        await tx.externalUrl.deleteMany({ where: { reportId: id } });
+        if (externalUrls.length > 0) {
+          await tx.externalUrl.createMany({
+            data: externalUrls.map((eu) => ({
+              reportId: id,
+              url: eu.url,
+              label: eu.label || null,
+            })),
+          });
+        }
+        euRecords = await tx.externalUrl.findMany({
+          where: { reportId: id },
+          select: { id: true, url: true, label: true },
+        });
+      }
+
+      return { report, tags, externalUrls: euRecords };
     });
 
-    // If tags were not updated, fetch current tags
     const tags =
       result.tags ??
       (
@@ -120,6 +145,15 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
           include: { ReportTag: true },
         })
       ).map((m) => m.ReportTag.name);
+
+    const euList =
+      result.externalUrls ??
+      (
+        await prisma.externalUrl.findMany({
+          where: { reportId: id },
+          select: { id: true, url: true, label: true },
+        })
+      );
 
     const item = {
       id: result.report.id,
@@ -132,6 +166,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       createdAt: result.report.createdAt.toISOString(),
       updatedAt: result.report.updatedAt.toISOString(),
       tags,
+      externalUrls: euList,
     };
 
     return NextResponse.json(item);

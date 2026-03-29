@@ -1,4 +1,5 @@
 import { CATEGORIES } from '@/constants';
+import type { ExternalUrlInput } from '@/types';
 
 export type ValidationErrors = {
   title?: string;
@@ -169,6 +170,42 @@ export const validateReportInput = (
     if (publishDate !== undefined) {
       data.publishDate = publishDate;
     }
+  }
+
+  return { data, errors };
+};
+
+const MAX_LABEL_LENGTH = 200;
+const URL_PATTERN = /^https?:\/\//;
+
+export const validateExternalUrls = (
+  urls: unknown,
+): { data: ExternalUrlInput[]; errors: Record<string, string> } => {
+  const errors: Record<string, string> = {};
+  const data: ExternalUrlInput[] = [];
+
+  if (urls === undefined || urls === null) return { data, errors };
+  if (!Array.isArray(urls)) {
+    errors['externalUrls'] = '外部URLは配列で指定してください。';
+    return { data, errors };
+  }
+
+  for (let i = 0; i < urls.length; i++) {
+    const item = urls[i];
+    const url = typeof item?.url === 'string' ? item.url.trim() : '';
+    const label = typeof item?.label === 'string' ? item.label.trim() : '';
+
+    if (!url) {
+      errors[`externalUrls.${i}.url`] = 'URLは必須です。';
+    } else if (!URL_PATTERN.test(url)) {
+      errors[`externalUrls.${i}.url`] = 'URLはhttp://またはhttps://で始まる必要があります。';
+    }
+
+    if (label.length > MAX_LABEL_LENGTH) {
+      errors[`externalUrls.${i}.label`] = `ラベルは${MAX_LABEL_LENGTH}文字以内です。`;
+    }
+
+    data.push({ url, label });
   }
 
   return { data, errors };

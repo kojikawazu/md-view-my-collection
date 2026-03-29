@@ -1,16 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import type { Report, ReportTagMapping, ReportTag } from '@prisma/client';
+import type { Report, ReportTagMapping, ReportTag, ExternalUrl } from '@prisma/client';
 import { prisma } from '@/lib/db';
-import { validateReportInput } from '@/lib/validation';
+import { validateReportInput, validateExternalUrls } from '@/lib/validation';
 import { requireAdmin } from '@/lib/auth-server';
 
 type TagMapping = ReportTagMapping & { ReportTag: ReportTag };
 
-type ReportWithTags = Report & { ReportTagMapping: TagMapping[] };
+type ReportWithTags = Report & { ReportTagMapping: TagMapping[]; ExternalUrl: ExternalUrl[] };
 
-type ReportListRow = Omit<Report, 'content'> & { ReportTagMapping: TagMapping[] };
+type ReportListRow = Omit<Report, 'content'> & { ReportTagMapping: TagMapping[]; ExternalUrl: ExternalUrl[] };
 
 const mapTags = (mappings: TagMapping[]) => mappings.map((m) => m.ReportTag.name);
+
+const mapExternalUrls = (urls: ExternalUrl[]) =>
+  urls.map((eu) => ({ id: eu.id, url: eu.url, label: eu.label }));
 
 const toReportItem = (report: ReportWithTags) => ({
   id: report.id,
@@ -23,6 +26,7 @@ const toReportItem = (report: ReportWithTags) => ({
   createdAt: report.createdAt.toISOString(),
   updatedAt: report.updatedAt.toISOString(),
   tags: mapTags(report.ReportTagMapping),
+  externalUrls: mapExternalUrls(report.ExternalUrl),
 });
 
 const toReportListItem = (report: ReportListRow) => ({
@@ -36,6 +40,7 @@ const toReportListItem = (report: ReportListRow) => ({
   createdAt: report.createdAt.toISOString(),
   updatedAt: report.updatedAt.toISOString(),
   tags: mapTags(report.ReportTagMapping),
+  externalUrls: mapExternalUrls(report.ExternalUrl),
 });
 
 const parseNumber = (value: string | null, range: { min?: number; max?: number } = {}) => {
@@ -72,6 +77,7 @@ export async function GET(request: NextRequest) {
           ReportTagMapping: {
             include: { ReportTag: true },
           },
+          ExternalUrl: true,
         },
       }),
     ]);
@@ -99,9 +105,11 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { data, errors } = validateReportInput(body);
+    const { data: externalUrls, errors: urlErrors } = validateExternalUrls(body.externalUrls);
 
-    if (Object.keys(errors).length > 0) {
-      return NextResponse.json({ errors }, { status: 400 });
+    const allErrors = { ...errors, ...urlErrors };
+    if (Object.keys(allErrors).length > 0) {
+      return NextResponse.json({ errors: allErrors }, { status: 400 });
     }
 
     const tagNames = data.tags ?? [];
@@ -139,7 +147,22 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      return { report, tags: tagRecords.map((t) => t.name) };
+      let euRecords: { id: string; url: string; label: string | null }[] = [];
+      if (externalUrls.length > 0) {
+        await tx.externalUrl.createMany({
+          data: externalUrls.map((eu) => ({
+            reportId: report.id,
+            url: eu.url,
+            label: eu.label || null,
+          })),
+        });
+        euRecords = await tx.externalUrl.findMany({
+          where: { reportId: report.id },
+          select: { id: true, url: true, label: true },
+        });
+      }
+
+      return { report, tags: tagRecords.map((t) => t.name), externalUrls: euRecords };
     });
 
     const item = {
@@ -153,6 +176,7 @@ export async function POST(request: NextRequest) {
       createdAt: result.report.createdAt.toISOString(),
       updatedAt: result.report.updatedAt.toISOString(),
       tags: result.tags,
+      externalUrls: result.externalUrls,
     };
 
     return NextResponse.json(item, { status: 201 });

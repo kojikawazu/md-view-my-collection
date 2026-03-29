@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { MutationResult, ReportItem, User } from '@/types';
+import { ExternalUrlInput, MutationResult, ReportItem, User } from '@/types';
 import { CATEGORIES } from '@/constants';
 
 interface UseReportFormOptions {
@@ -23,6 +23,7 @@ export const useReportForm = ({
   const [tagError, setTagError] = useState<string | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [externalUrls, setExternalUrls] = useState<ExternalUrlInput[]>([]);
 
   const [formData, setFormData] = useState<Omit<ReportItem, 'id'>>({
     title: '',
@@ -32,6 +33,7 @@ export const useReportForm = ({
     author: user?.username || 'Guest Editor',
     publishDate: new Date().toISOString().split('T')[0],
     tags: [],
+    externalUrls: [],
   });
 
   useEffect(() => {
@@ -44,6 +46,12 @@ export const useReportForm = ({
       if (existing) {
         const { id: _, ...rest } = existing;
         setFormData({ ...rest, summary: rest.summary ?? '' });
+        setExternalUrls(
+          (existing.externalUrls ?? []).map((eu) => ({
+            url: eu.url,
+            label: eu.label ?? '',
+          })),
+        );
       }
     }
   }, [reportId, reports, user, router, isHydrated]);
@@ -91,10 +99,68 @@ export const useReportForm = ({
     setShowConfirmModal(true);
   };
 
+  const addExternalUrl = () =>
+    setExternalUrls((prev) => [...prev, { url: '', label: '' }]);
+
+  const removeExternalUrl = (index: number) => {
+    setExternalUrls((prev) => prev.filter((_, i) => i !== index));
+    setFieldErrors((prev) => {
+      const next: Record<string, string> = {};
+      for (const [key, val] of Object.entries(prev)) {
+        const match = key.match(/^externalUrls\.(\d+)\.(.+)$/);
+        if (!match) {
+          next[key] = val;
+          continue;
+        }
+        const idx = Number(match[1]);
+        if (idx === index) continue;
+        const newIdx = idx > index ? idx - 1 : idx;
+        next[`externalUrls.${newIdx}.${match[2]}`] = val;
+      }
+      return next;
+    });
+  };
+
+  const updateExternalUrl = (index: number, field: 'url' | 'label', value: string) => {
+    setExternalUrls((prev) => prev.map((eu, i) => (i === index ? { ...eu, [field]: value } : eu)));
+    const errorKey = `externalUrls.${index}.${field}`;
+    if (fieldErrors[errorKey]) {
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next[errorKey];
+        return next;
+      });
+    }
+  };
+
   const handleConfirmSubmit = async () => {
     setServerError(null);
     setFieldErrors({});
-    const result = await onSubmit(formData);
+    const urlErrors: Record<string, string> = {};
+    externalUrls.forEach((eu, i) => {
+      const trimmedUrl = eu.url.trim();
+      const trimmedLabel = eu.label.trim();
+      const hasInput = trimmedUrl || trimmedLabel;
+      if (!hasInput) return;
+      if (!trimmedUrl) {
+        urlErrors[`externalUrls.${i}.url`] = 'URLは必須です。';
+      } else if (!/^https?:\/\//.test(trimmedUrl)) {
+        urlErrors[`externalUrls.${i}.url`] = 'URLはhttp://またはhttps://で始まる必要があります。';
+      }
+      if (trimmedLabel.length > 200) {
+        urlErrors[`externalUrls.${i}.label`] = 'ラベルは200文字以内です。';
+      }
+    });
+    if (Object.keys(urlErrors).length > 0) {
+      setFieldErrors(urlErrors);
+      return;
+    }
+
+    const activeUrls = externalUrls
+      .filter((eu) => eu.url.trim())
+      .map((eu) => ({ url: eu.url.trim(), label: eu.label.trim() }));
+    const submitData = { ...formData, externalUrls: activeUrls };
+    const result = await onSubmit(submitData as Omit<ReportItem, 'id'>);
     if (!result.ok) {
       if (result.status === 401 || result.status === 403) {
         router.push('/login');
@@ -111,12 +177,16 @@ export const useReportForm = ({
     tagError,
     serverError,
     fieldErrors,
+    externalUrls,
     showConfirmModal,
     setShowConfirmModal,
     handleChange,
     handleTagsChange,
     handleSubmitAttempt,
     handleConfirmSubmit,
+    addExternalUrl,
+    removeExternalUrl,
+    updateExternalUrl,
     goBack: () => router.back(),
   };
 };

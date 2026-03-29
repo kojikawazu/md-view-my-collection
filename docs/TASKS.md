@@ -1,9 +1,9 @@
 # Tasks
 
 ## 要件定義
-- [x] 最新UIレイアウト要求を作成（`docs/02.ui-layout.md`）
-- [x] 要件定義ドラフトを作成（`docs/03.requirements.md`）
-- [x] コーディング規約を明文化（`docs/03.requirements.md`）
+- [x] 最新UIレイアウト要求を作成（`docs/spec/02.ui-layout.md`）
+- [x] 要件定義ドラフトを作成（`docs/spec/03.requirements.md`）
+- [x] コーディング規約を明文化（`docs/spec/03.requirements.md`）
 - [x] E2Eツールを選定（Playwright）
 - [x] 認証方式を決定（Supabase Auth）
 - [x] Markdownサニタイズ方針を確定（react-markdown/remark-gfm/rehype-sanitize）
@@ -69,7 +69,7 @@
 ## テスト
 - [x] E2Eテスト基盤を導入
 - [x] 主要導線のE2Eテスト作成（一覧/詳細/投稿/編集/削除/ログイン）
-- [x] E2Eテスト仕様（正常/準正常/異常）を定義（`docs/04.e2e-cases.md`）
+- [x] E2Eテスト仕様（正常/準正常/異常）を定義（`docs/spec/04.e2e-cases.md`）
 - [x] GitHub ActionsでE2E自動実行を追加
 - [x] GitHub ActionsのE2E実行成功を確認
 
@@ -89,7 +89,7 @@
 - [x] POST/PATCHトランザクション最適化: 不要クエリ削除 + upsert結果直接利用（DB呼び出し数 N+5→N+2 / 2026-03-23）
 - [x] requireAdmin()の認証結果をメモリキャッシュ（同一トークンの2回目以降はSupabase HTTP往復スキップ / 2026-03-23）
 - [x] mutation後のfetchTags()を廃止しderiveTagsFromReportsに統一（不要なAPI呼び出し排除 / 2026-03-23）
-- [x] #47レビュー指摘対応: 設計書のPrisma/Supabaseシングルトン記述を実装に合わせて更新（`docs/06.api-routes-design.md` / 2026-03-23）
+- [x] #47レビュー指摘対応: 設計書のPrisma/Supabaseシングルトン記述を実装に合わせて更新（`docs/design/06.api-routes-design.md` / 2026-03-23）
 - [x] #47レビュー指摘対応: AppShellのローディング300ms定数を一元管理に変更（2026-03-23）
 
 ## 残タスク
@@ -128,7 +128,7 @@
 - [x] SupabaseログインにGoogle OAuthを追加（localはE2E用に維持）
 
 ## アトミックデザイン移行（Issue #37）
-- [x] アトミックデザイン設計書を作成（`docs/05.atomic-design.md`）
+- [x] アトミックデザイン設計書を作成（`docs/design/05.atomic-design.md`）
 - [x] Phase 1: ディレクトリ作成 + providers/hooks分離 + Atoms抽出
 - [x] Phase 2: Molecules抽出
 - [x] Phase 3: Organisms再編成 + hooks抽出（usePagination/useReportForm/useLoginForm）
@@ -136,7 +136,7 @@
 - [x] 全フェーズ完了後の最終E2E + ビルド確認
 
 ## APIルート移行（認証認可・DB操作 / youtube-my-collection踏襲 / Issue #42）
-- [x] APIルート設計書を作成（`docs/06.api-routes-design.md` / 2026-03-22）
+- [x] APIルート設計書を作成（`docs/design/06.api-routes-design.md` / 2026-03-22）
 - [x] 設計レビュー指摘対応: DJ-1〜DJ-8 を設計書に反映（2026-03-22）
   - DJ-1: クライアント側全件保持を維持（GET /api/reports はデフォルト全件返却）
   - DJ-2: タグ canonical form は `#` 付きで維持
