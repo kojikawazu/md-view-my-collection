@@ -37,7 +37,7 @@ npm run format       # Prettier整形
 
 ## Testing
 - E2Eのみ（ユニットテストは行わない）
-- テスト仕様: `docs/04.e2e-cases.md`（正常/準正常/異常すべて必須）
+- テスト仕様: `docs/spec/04.e2e-cases.md`（正常/準正常/異常すべて必須）
 ```
 cd front
 npx playwright install   # 初回のみ
