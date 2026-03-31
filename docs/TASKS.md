@@ -92,6 +92,10 @@
 - [x] #47レビュー指摘対応: 設計書のPrisma/Supabaseシングルトン記述を実装に合わせて更新（`docs/design/06.api-routes-design.md` / 2026-03-23）
 - [x] #47レビュー指摘対応: AppShellのローディング300ms定数を一元管理に変更（2026-03-23）
 
+## UIバグ修正
+
+- [x] サイドバーの TRENDING TAGS が横長になる問題を修正（`Sidebar.tsx` の `<aside>` に固定幅 `w-64` + `shrink-0` を追加 / Issue #60）
+
 ## 残タスク
 - [x] allowedDevOrigins 警告の対応
 - [x] Supabase DB連携の動作確認（実データCRUD）
