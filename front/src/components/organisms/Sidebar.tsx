@@ -37,7 +37,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     <aside
       className={`${
         sidebarStyle === 'full-height' ? 'h-full border-r' : 'py-8'
-      } ${colors.border} px-6 transition-all duration-300 min-w-[240px] hidden md:block`}
+      } ${colors.border} px-6 transition-all duration-300 w-64 shrink-0 hidden md:block`}
     >
       <div className="space-y-12 sticky top-32 mt-4">
         <div>
