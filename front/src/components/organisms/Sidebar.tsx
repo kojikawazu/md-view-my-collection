@@ -69,7 +69,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                   key={value}
                   type="button"
                   aria-pressed={selectedTag === value}
-                  className={`text-[10px] px-2 py-1 ${colors.accent} text-white ${borderRadius} cursor-pointer hover:brightness-125 transition-all before:mr-0.5 before:content-['#'] ${
+                  className={`text-[10px] px-2 py-1 max-w-full truncate ${colors.accent} text-white ${borderRadius} cursor-pointer hover:brightness-125 transition-all before:mr-0.5 before:content-['#'] ${
                     selectedTag === value
                       ? 'ring-2 ring-[#2a1b12] ring-offset-2 ring-offset-[#faf7f5] scale-[1.05] brightness-110 shadow-md'
                       : 'opacity-70'
