@@ -28,11 +28,11 @@ Markdownレポートの保存・閲覧UIを提供するNext.jsアプリ。
 ## Build & Dev Commands
 すべて `front/` ディレクトリで実行:
 ```
-npm install          # 依存インストール
-npm run dev          # 開発サーバー起動
-npm run build        # プロダクションビルド
-npm run start        # プロダクションビルド配信
-npm run format       # Prettier整形
+pnpm install         # 依存インストール
+pnpm dev             # 開発サーバー起動
+pnpm build           # プロダクションビルド
+pnpm start           # プロダクションビルド配信
+pnpm format          # Prettier整形
 ```
 
 ## Testing
@@ -42,12 +42,12 @@ npm run format       # Prettier整形
 - テスト仕様: `docs/spec/04.e2e-cases.md`
 ```
 cd front
-npm run test             # ユニットテスト実行
-npm run test:watch       # ユニットテスト（watchモード）
-npx playwright install   # 初回のみ
-npm run test:e2e         # E2Eテスト実行
-npm run test:e2e:ui      # UIモード
-npm run test:e2e:report  # レポート表示
+pnpm test                    # ユニットテスト実行
+pnpm test:watch              # ユニットテスト（watchモード）
+pnpm exec playwright install # 初回のみ
+pnpm test:e2e                # E2Eテスト実行
+pnpm test:e2e:ui             # UIモード
+pnpm test:e2e:report         # レポート表示
 ```
 - ユニットテスト配置: `src/<module>/__tests__/` ディレクトリ
 - E2Eは `NEXT_PUBLIC_AUTH_MODE=local` / `NEXT_PUBLIC_DATA_MODE=local` で動作
