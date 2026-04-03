@@ -1,4 +1,4 @@
-import { test } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
 export const AUTH_COOKIE_NAME = 'report_viewer_auth';
 export const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:3000';
@@ -61,7 +61,7 @@ export const userFixture = {
 };
 
 export const setStorage = async (
-  page: Parameters<typeof test>[0]['page'],
+  page: Page,
   {
     reports = reportsFixture,
     user = null as typeof userFixture | null,
