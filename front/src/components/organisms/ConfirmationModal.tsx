@@ -55,6 +55,8 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
               try {
                 await onConfirm();
                 onClose();
+              } catch {
+                // onConfirm rejected; isSubmitting is reset via finally
               } finally {
                 setIsSubmitting(false);
               }

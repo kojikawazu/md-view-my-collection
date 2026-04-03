@@ -140,45 +140,26 @@ describe('ConfirmationModal', () => {
 
   it('should reset isSubmitting when onConfirm throws (M-A-1)', async () => {
     const user = userEvent.setup();
-    // Use a sync throw inside an async mock to test error recovery.
-    // The component's onClick has try/finally without catch, so the rejection
-    // propagates as unhandled. We catch it at the process level.
-    const onConfirm = vi.fn().mockImplementation(async () => {
-      throw new Error('Fail');
-    });
+    const onConfirm = vi.fn().mockRejectedValue(new Error('Fail'));
     const props = makeProps({ onConfirm });
-
-    const rejections: Error[] = [];
-    const handler = (reason: unknown) => { rejections.push(reason as Error); };
-    process.on('unhandledRejection', handler);
 
     render(<ConfirmationModal {...props} />);
     await user.click(screen.getByRole('button', { name: '実行する' }));
 
-    // Allow microtask queue to flush the rejection
-    await new Promise((r) => setTimeout(r, 50));
-
     const btn = await screen.findByRole('button', { name: '実行する' });
     expect(btn).not.toBeDisabled();
     expect(props.onClose).not.toHaveBeenCalled();
-    expect(rejections.some((e) => e.message === 'Fail')).toBe(true);
-
-    process.removeListener('unhandledRejection', handler);
   });
 
   it('should allow retry after onConfirm error (M-A-2)', async () => {
     const user = userEvent.setup();
     const onConfirm = vi.fn()
-      .mockImplementationOnce(async () => { throw new Error('First fail'); })
+      .mockRejectedValueOnce(new Error('First fail'))
       .mockResolvedValueOnce(undefined);
     const props = makeProps({ onConfirm });
 
-    const handler = () => {}; // Suppress unhandled rejection
-    process.on('unhandledRejection', handler);
-
     render(<ConfirmationModal {...props} />);
     await user.click(screen.getByRole('button', { name: '実行する' }));
-    await new Promise((r) => setTimeout(r, 50));
 
     const btn = await screen.findByRole('button', { name: '実行する' });
     expect(btn).not.toBeDisabled();
@@ -186,7 +167,5 @@ describe('ConfirmationModal', () => {
     await user.click(btn);
     expect(onConfirm).toHaveBeenCalledTimes(2);
     expect(props.onClose).toHaveBeenCalledOnce();
-
-    process.removeListener('unhandledRejection', handler);
   });
 });

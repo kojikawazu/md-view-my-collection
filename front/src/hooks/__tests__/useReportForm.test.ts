@@ -284,7 +284,7 @@ describe('useReportForm', () => {
     expect(result.current.serverError).toBe('Server Error');
   });
 
-  it('should re-index field errors after removeExternalUrl (RF-S-9)', () => {
+  it('should re-index field errors after removeExternalUrl (RF-S-9)', async () => {
     const { result } = renderHook(() =>
       useReportForm({ user: testUser, onSubmit: mockOnSubmit }),
     );
@@ -293,21 +293,26 @@ describe('useReportForm', () => {
       result.current.addExternalUrl();
       result.current.addExternalUrl();
     });
-    // Simulate field errors on items 0, 1, 2
     act(() => {
       result.current.updateExternalUrl(0, 'url', 'bad');
       result.current.updateExternalUrl(1, 'url', 'bad');
       result.current.updateExternalUrl(2, 'url', 'bad');
     });
 
-    // Manually set field errors to simulate server response
-    act(() => {
-      // Force errors via confirm submit with invalid URLs
+    // Trigger validation to set field errors on all 3 items
+    await act(async () => {
+      await result.current.handleConfirmSubmit();
     });
+    expect(result.current.fieldErrors['externalUrls.0.url']).toBeDefined();
+    expect(result.current.fieldErrors['externalUrls.1.url']).toBeDefined();
+    expect(result.current.fieldErrors['externalUrls.2.url']).toBeDefined();
 
-    // Remove middle item (index 1)
+    // Remove middle item (index 1); errors should re-index: old[2] → new[1]
     act(() => result.current.removeExternalUrl(1));
     expect(result.current.externalUrls).toHaveLength(2);
+    expect(result.current.fieldErrors['externalUrls.0.url']).toBeDefined();
+    expect(result.current.fieldErrors['externalUrls.1.url']).toBeDefined();
+    expect(result.current.fieldErrors['externalUrls.2.url']).toBeUndefined();
   });
 
   // --- 異常系 ---
