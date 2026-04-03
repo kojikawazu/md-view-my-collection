@@ -1,4 +1,4 @@
-name: E2E
+name: Test
 
 on:
   pull_request:
@@ -35,6 +35,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Run unit tests
+        run: npm run test
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium

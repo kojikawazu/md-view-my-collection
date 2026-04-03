@@ -36,15 +36,20 @@ npm run format       # Prettier整形
 ```
 
 ## Testing
-- E2Eのみ（ユニットテストは行わない）
-- テスト仕様: `docs/spec/04.e2e-cases.md`（正常/準正常/異常すべて必須）
+- ユニットテスト: Vitest + @testing-library/react（hooks・コンポーネント・バリデーション）
+- E2E: Playwright（正常/準正常/異常すべて必須）
+- テスト設計: `docs/test-design/`（テストケース洗い出し → 実装の2段階）
+- テスト仕様: `docs/spec/04.e2e-cases.md`
 ```
 cd front
+npm run test             # ユニットテスト実行
+npm run test:watch       # ユニットテスト（watchモード）
 npx playwright install   # 初回のみ
-npm run test:e2e         # テスト実行
+npm run test:e2e         # E2Eテスト実行
 npm run test:e2e:ui      # UIモード
 npm run test:e2e:report  # レポート表示
 ```
+- ユニットテスト配置: `src/<module>/__tests__/` ディレクトリ
 - E2Eは `NEXT_PUBLIC_AUTH_MODE=local` / `NEXT_PUBLIC_DATA_MODE=local` で動作
 - CI (GitHub Actions) ではダミーの `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` を使用
 

@@ -14,6 +14,13 @@
 - `design/06.api-routes-design.md` : APIルート設計書（認証認可・DB操作の移行、youtube-my-collection踏襲）
 - `design/08.external-url.md` : 外部URL管理機能 設計書
 
+## test-design/（テスト設計書）
+
+- `test-design/01-unit-validation.md` : validation.ts ユニットテスト設計（31ケース）
+- `test-design/02-unit-hooks.md` : hooks ユニットテスト設計（40ケース）
+- `test-design/03-unit-modal.md` : ConfirmationModal ユニットテスト設計（12ケース）
+- `test-design/04-e2e-enhancements.md` : E2Eテスト強化設計（helpers分離 + 新規ケース）
+
 ## その他
 
 - `07.hallucination-check-report.md` : Reportテーブル ハルシネーション・品質チェックレポート（2026-03-24実施）

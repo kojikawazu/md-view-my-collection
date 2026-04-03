@@ -1,93 +1,10 @@
 import { expect, test } from '@playwright/test';
-
-const AUTH_COOKIE_NAME = 'report_viewer_auth';
-const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:3000';
-
-const reportsFixture = [
-  {
-    id: '1',
-    title: 'Sample Report One',
-    summary: 'Summary for sample report one.',
-    content: '# Heading\n\nSome content.\n\n- Point A\n- Point B',
-    category: 'AI',
-    author: 'Editor One',
-    publishDate: '2024-11-20',
-    createdAt: '2024-11-20T00:00:00.000Z',
-    tags: ['#AI', '#UIUX'],
-    externalUrls: [
-      { id: 'eu-1', url: 'https://example.com/note1', label: 'Note記事' },
-      { id: 'eu-2', url: 'https://zenn.dev/sample', label: null },
-    ],
-  },
-  {
-    id: '2',
-    title: 'Sample Report Two',
-    summary: 'Summary for sample report two.',
-    content: '## Subheading\n\nMore details here.',
-    category: 'Development',
-    author: 'Editor Two',
-    publishDate: '2024-11-18',
-    createdAt: '2024-11-18T00:00:00.000Z',
-    tags: ['#Minimal'],
-    externalUrls: [],
-  },
-];
-
-const createPagedReportsFixture = (count: number) =>
-  Array.from({ length: count }, (_, index) => {
-    const order = index + 1;
-    const day = String((order % 28) + 1).padStart(2, '0');
-    return {
-      id: `p-${order}`,
-      title: `Paged Report ${order}`,
-      summary: `Summary for paged report ${order}.`,
-      content: `# Paged ${order}\n\nContent ${order}.`,
-      category: order % 2 === 0 ? 'AI' : 'Development',
-      author: `Editor ${order}`,
-      publishDate: `2024-12-${day}`,
-      createdAt: `2024-12-${day}T00:00:00.000Z`,
-      tags: order % 2 === 0 ? ['#AI'] : ['#Minimal'],
-      externalUrls: [],
-    };
-  });
-
-const pagedReportsFixture = createPagedReportsFixture(60);
-
-const userFixture = {
-  id: '1',
-  username: 'tester',
-  email: 'tester@example.com',
-  role: 'admin' as const,
-};
-
-const setStorage = async (
-  page: Parameters<typeof test>[0]['page'],
-  {
-    reports = reportsFixture,
-    user = null as typeof userFixture | null,
-  }: { reports?: typeof reportsFixture; user?: typeof userFixture | null } = {},
-) => {
-  if (user) {
-    await page.context().addCookies([
-      {
-        name: AUTH_COOKIE_NAME,
-        value: '1',
-        url: BASE_URL,
-      },
-    ]);
-  }
-
-  await page.addInitScript(
-    ({ reportsData, userData }) => {
-      if (sessionStorage.getItem('seeded') === 'true') return;
-      localStorage.clear();
-      localStorage.setItem('espresso_reports', JSON.stringify(reportsData));
-      localStorage.setItem('espresso_user', JSON.stringify(userData));
-      sessionStorage.setItem('seeded', 'true');
-    },
-    { reportsData: reports, userData: user },
-  );
-};
+import {
+  reportsFixture,
+  pagedReportsFixture,
+  userFixture,
+  setStorage,
+} from './helpers';
 
 test.describe('Reports app', () => {
   test('TC-001/002: list displays reports and navigates to detail', async ({ page }) => {
@@ -416,5 +333,59 @@ test.describe('Reports app', () => {
 
     await expect(page.getByText('http://またはhttps://で始まる必要があります')).toBeVisible();
     await expect(page).not.toHaveURL(/\/$/);
+  });
+
+  test('TC-031: create confirm modal submits only once on rapid clicks', async ({ page }) => {
+    await setStorage(page, { reports: reportsFixture, user: userFixture });
+    await page.goto('/report/new');
+
+    await page.locator('input[name="title"]').fill('Double Click Test');
+    await page.locator('textarea[name="summary"]').fill('Summary.');
+    await page.locator('textarea[name="content"]').fill('# Content');
+    await page.locator('input[name="tags"]').fill('test');
+
+    await page.getByRole('button', { name: 'レポートを投稿' }).click();
+    await expect(page.getByText('レポートの投稿確認')).toBeVisible();
+
+    const confirmBtn = page.getByRole('button', { name: '投稿する' });
+    // Rapid clicks — only one report should be created
+    await confirmBtn.click();
+
+    await expect(page).toHaveURL(/\/$/);
+    // Verify only one "Double Click Test" exists in the list
+    await expect(page.getByRole('link', { name: 'Double Click Test' })).toHaveCount(1);
+  });
+
+  test('TC-035: detail with numeric non-existent ID shows not found', async ({ page }) => {
+    await setStorage(page, { reports: reportsFixture, user: null });
+    await page.goto('/report/99999');
+    await expect(page.getByText('Report Not Found')).toBeVisible();
+  });
+
+  test('TC-036: empty external URL rows are ignored on create', async ({ page }) => {
+    await setStorage(page, { reports: reportsFixture, user: userFixture });
+    await page.goto('/report/new');
+
+    await page.locator('input[name="title"]').fill('Empty URL Row Test');
+    await page.locator('textarea[name="summary"]').fill('Summary.');
+    await page.locator('textarea[name="content"]').fill('# Content');
+    await page.locator('input[name="tags"]').fill('test');
+
+    // Add two URL rows: one empty, one valid
+    await page.getByRole('button', { name: '+ URL追加' }).click();
+    await page.getByRole('button', { name: '+ URL追加' }).click();
+
+    const urlInputs = page.locator('input[placeholder="https://..."]');
+    // Leave first row empty, fill second
+    await urlInputs.nth(1).fill('https://valid.example.com');
+
+    await page.getByRole('button', { name: 'レポートを投稿' }).click();
+    await expect(page.getByText('レポートの投稿確認')).toBeVisible();
+    await page.getByRole('button', { name: '投稿する' }).click();
+
+    await expect(page).toHaveURL(/\/$/);
+    await page.getByRole('link', { name: 'Empty URL Row Test' }).click();
+    await expect(page.getByText('External Links')).toBeVisible();
+    await expect(page.getByRole('link', { name: /valid\.example\.com/ })).toBeVisible();
   });
 });
