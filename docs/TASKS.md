@@ -72,6 +72,13 @@
 - [x] E2Eテスト仕様（正常/準正常/異常）を定義（`docs/spec/04.e2e-cases.md`）
 - [x] GitHub ActionsでE2E自動実行を追加
 - [x] GitHub ActionsのE2E実行成功を確認
+- [x] ユニットテスト基盤を導入（Vitest + @testing-library/react + happy-dom / 2026-04-03）
+- [x] テスト設計ドキュメントを作成（`docs/test-design/` 4ファイル / 2026-04-03）
+- [x] validation.ts ユニットテスト作成（45件: validateReportInput + normalizeTags + validateExternalUrls / 2026-04-03）
+- [x] hooks ユニットテスト作成（28件: usePagination + useReportForm + useLoginForm + useLoading + useReport / 2026-04-03）
+- [x] ConfirmationModal ユニットテスト作成（12件: 描画・二重クリック防止・エラー復帰 / 2026-04-03）
+- [x] E2Eテスト強化（TC-026〜TC-031, TC-035, TC-036 追加 + helpers.ts 共通化 / 2026-04-03）
+- [x] GitHub ActionsにVitestユニットテスト実行を追加（E2Eの前にUT実行する構成 / 2026-04-03）
 
 ## デプロイ/運用
 - [x] Vercelプロジェクトを作成

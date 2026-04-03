@@ -28,23 +28,28 @@ Markdownレポートの保存・閲覧UIを提供するNext.jsアプリ。
 ## Build & Dev Commands
 すべて `front/` ディレクトリで実行:
 ```
-npm install          # 依存インストール
-npm run dev          # 開発サーバー起動
-npm run build        # プロダクションビルド
-npm run start        # プロダクションビルド配信
-npm run format       # Prettier整形
+pnpm install         # 依存インストール
+pnpm dev             # 開発サーバー起動
+pnpm build           # プロダクションビルド
+pnpm start           # プロダクションビルド配信
+pnpm format          # Prettier整形
 ```
 
 ## Testing
-- E2Eのみ（ユニットテストは行わない）
-- テスト仕様: `docs/spec/04.e2e-cases.md`（正常/準正常/異常すべて必須）
+- ユニットテスト: Vitest + @testing-library/react（hooks・コンポーネント・バリデーション）
+- E2E: Playwright（正常/準正常/異常すべて必須）
+- テスト設計: `docs/test-design/`（テストケース洗い出し → 実装の2段階）
+- テスト仕様: `docs/spec/04.e2e-cases.md`
 ```
 cd front
-npx playwright install   # 初回のみ
-npm run test:e2e         # テスト実行
-npm run test:e2e:ui      # UIモード
-npm run test:e2e:report  # レポート表示
+pnpm test                    # ユニットテスト実行
+pnpm test:watch              # ユニットテスト（watchモード）
+pnpm exec playwright install # 初回のみ
+pnpm test:e2e                # E2Eテスト実行
+pnpm test:e2e:ui             # UIモード
+pnpm test:e2e:report         # レポート表示
 ```
+- ユニットテスト配置: `src/<module>/__tests__/` ディレクトリ
 - E2Eは `NEXT_PUBLIC_AUTH_MODE=local` / `NEXT_PUBLIC_DATA_MODE=local` で動作
 - CI (GitHub Actions) ではダミーの `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` を使用
 

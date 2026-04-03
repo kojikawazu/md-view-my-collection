@@ -1,16 +1,16 @@
-name: E2E
+name: Test
 
 on:
   pull_request:
     paths:
       - "front/**"
-      - ".github/workflows/e2e.yml"
+      - ".github/workflows/test.yml"
   push:
     branches:
       - main
     paths:
       - "front/**"
-      - ".github/workflows/e2e.yml"
+      - ".github/workflows/test.yml"
 
 permissions:
   contents: read
@@ -26,24 +26,32 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: "npm"
-          cache-dependency-path: front/package-lock.json
+          cache: "pnpm"
+          cache-dependency-path: front/pnpm-lock.yaml
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
+
+      - name: Run unit tests
+        run: pnpm test
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+        run: pnpm exec playwright install --with-deps chromium
 
       - name: Run E2E tests
         env:
           NEXT_PUBLIC_SUPABASE_URL: "http://localhost:54321"
           NEXT_PUBLIC_SUPABASE_ANON_KEY: "e2e-placeholder-anon-key"
-        run: npm run test:e2e
+        run: pnpm test:e2e
 
       - name: Upload Playwright report
         if: failure()

@@ -10,22 +10,22 @@ Markdownレポートの保存・閲覧UIを提供するNext.jsアプリです。
 ## 開発セットアップ
 ```
 cd front
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
 ## ビルド
 ```
 cd front
-npm run build
-npm run start
+pnpm build
+pnpm start
 ```
 
 ## E2E（Playwright）
 ```
 cd front
-npx playwright install
-npm run test:e2e
+pnpm exec playwright install
+pnpm test:e2e
 ```
 
 E2Eは `NEXT_PUBLIC_AUTH_MODE=local` / `NEXT_PUBLIC_DATA_MODE=local` を前提に動作します（`front/playwright.config.ts` で設定）。
