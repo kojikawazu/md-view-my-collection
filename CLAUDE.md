@@ -36,29 +36,18 @@ pnpm format          # Prettier整形
 ```
 
 ## Testing
-- ユニットテスト: Vitest + @testing-library/react（hooks・コンポーネント・バリデーション）
-- E2E: Playwright（正常/準正常/異常すべて必須）
-- テスト設計: `docs/test-design/`（テストケース洗い出し → 実装の2段階）
-- テスト仕様: `docs/spec/04.e2e-cases.md`
 ```
 cd front
 pnpm test                    # ユニットテスト実行
-pnpm test:watch              # ユニットテスト（watchモード）
+pnpm test:watch              # ウォッチモード
 pnpm exec playwright install # 初回のみ
 pnpm test:e2e                # E2Eテスト実行
 pnpm test:e2e:ui             # UIモード
 pnpm test:e2e:report         # レポート表示
 ```
-- ユニットテスト配置: `src/<module>/__tests__/` ディレクトリ
-- E2Eは `NEXT_PUBLIC_AUTH_MODE=local` / `NEXT_PUBLIC_DATA_MODE=local` で動作
-- CI (GitHub Actions) ではダミーの `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` を使用
-
-## Coding Conventions
-- 2スペースインデント、セミコロンあり
-- ReactコンポーネントはPascalCase、ユーティリティはcamelCase
-- Tailwindクラスは既存の並びに合わせて読みやすさ優先
-- 再利用性を意識して適切にコンポーネント分割
-- `base/` のコードは参照のみ。`front/` に変更を加える
+- テスト設計: `docs/test-design/` / テスト仕様: `docs/spec/04.e2e-cases.md`
+- CI では `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` にダミー値を使用
+- 詳細方針は `.claude/rules/testing.md` を参照
 
 ## Commit & Branch Rules
 - 開発は必ずブランチを切って作業する（`main` 直接作業禁止）
@@ -73,13 +62,25 @@ pnpm test:e2e:report         # レポート表示
 - `DATABASE_URL` — Supabase Postgres接続（`prisma.config.ts` で参照）
 
 ## Key Design Decisions
-- Markdown表示は `rehype-sanitize` で必ずサニタイズ
-- 管理者メールは `ADMIN_EMAIL` をサーバーサイドAPIで判定（クライアント環境変数には出さない）
 - ローカルモード（localStorage）はE2E専用。本番はSupabaseデータのみ表示
 - カテゴリは固定リスト: Development / AI / Cloud / Linux / Container / Application / Program / Hobby
-- DBマイグレーション禁止。スキーマ変更はコードファイルのみ反映し、DB側は別プロジェクトで管理
+- セキュリティ・DB詳細は `.claude/rules/security.md` / `.claude/rules/database.md` を参照
 
 ## Task Management
 - タスク一覧は `docs/TASKS.md` で管理
 - 作業開始前に必ず `docs/TASKS.md` を確認し、現状を把握する
 - タスク完了後は `docs/TASKS.md` を更新する
+
+## Rules
+
+詳細ルールは `.claude/rules/` を参照:
+
+| ファイル | スコープ | 内容 |
+|---|---|---|
+| `coding-standards.md` | 全体 | コーディング規約（TypeScript/pnpm/ESLint/Prettier） |
+| `error-handling.md` | 全体 | エラーハンドリング方針（バリデーション・ログ・HTTPステータス） |
+| `security.md` | 全体 | セキュリティ設計方針（認証・RLS・XSS対策・シークレット管理） |
+| `testing.md` | 全体 | テスト方針・配置規約（Vitest + Playwright） |
+| `frontend.md` | `front/src/components/**`, `front/src/app/**`, `front/src/hooks/**` | Next.js App Router フロントエンド設計・アトミックデザイン規約 |
+| `api.md` | `front/src/app/api/**` | Next.js BFF（Route Handlers）設計・API ルール |
+| `database.md` | `front/prisma/**`, `front/src/lib/db.ts`, `front/src/app/api/**` | Prisma ORM 規約・マイグレーション禁止・RLSポリシー |
