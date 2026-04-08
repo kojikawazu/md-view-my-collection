@@ -83,3 +83,17 @@ pnpm test:e2e:report         # レポート表示
 - タスク一覧は `docs/TASKS.md` で管理
 - 作業開始前に必ず `docs/TASKS.md` を確認し、現状を把握する
 - タスク完了後は `docs/TASKS.md` を更新する
+
+## Rules
+
+詳細ルールは `.claude/rules/` を参照:
+
+| ファイル | スコープ | 内容 |
+|---|---|---|
+| `coding-standards.md` | 全体 | コーディング規約（TypeScript/pnpm/ESLint/Prettier） |
+| `error-handling.md` | 全体 | エラーハンドリング方針（バリデーション・ログ・HTTPステータス） |
+| `security.md` | 全体 | セキュリティ設計方針（認証・RLS・XSS対策・シークレット管理） |
+| `testing.md` | 全体 | テスト方針・配置規約（Vitest + Playwright） |
+| `frontend.md` | `front/src/components/**`, `front/src/app/**`, `front/src/hooks/**` | Next.js App Router フロントエンド設計・アトミックデザイン規約 |
+| `api.md` | `front/src/app/api/**` | Next.js BFF（Route Handlers）設計・API ルール |
+| `database.md` | `front/prisma/**`, `front/src/lib/db.ts`, `front/src/app/api/**` | Prisma ORM 規約・マイグレーション禁止・RLSポリシー |
