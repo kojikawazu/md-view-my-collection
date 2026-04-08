@@ -35,6 +35,6 @@ globs: "front/src/components/**,front/src/app/**,front/src/hooks/**,front/src/li
 
 ## テスト
 
-- E2E: Playwright（`front/tests/` ディレクトリ）
+- E2E: Playwright（`front/tests/e2e/` ディレクトリ）
 - ユニットテスト: `front/src/<module>/__tests__/` ディレクトリ
 - Base URL: `http://localhost:3000`

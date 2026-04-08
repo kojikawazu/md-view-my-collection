@@ -19,7 +19,7 @@ globs:
 ## ディレクトリ配置
 
 - ユニットテスト: `front/src/<module>/__tests__/` に配置する
-- E2Eテスト: `front/tests/` に配置する
+- E2Eテスト: `front/tests/e2e/` に配置する
 
 ## 実行コマンド（`front/` ディレクトリで実行）
 
