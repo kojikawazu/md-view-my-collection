@@ -27,7 +27,7 @@ globs: "front/prisma/**,front/src/lib/db.ts,front/src/app/api/**"
 |---|---|
 | `Report` | id, title, summary, content, category, author, publishDate |
 | `ReportTag` | id, name |
-| `ReportTagMapping` | reportId, tagId |
+| `ReportTagMapping` | reportId, reportTagId |
 | `ExternalUrl` | id, reportId, url, label, createdAt |
 
 ## RLS（Supabase Row Level Security）
