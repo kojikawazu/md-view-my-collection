@@ -9,7 +9,6 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-inter);
-  --font-playfair: var(--font-playfair);
 }
 
 body {
@@ -18,8 +17,9 @@ body {
   font-family: var(--font-inter), system-ui, sans-serif;
 }
 
+/* 見出し用ユーティリティ。読みやすさ優先で英数字・日本語とも Noto Sans JP（ゴシック）に統一 */
 .font-playfair {
-  font-family: var(--font-playfair), ui-serif, serif;
+  font-family: var(--font-noto-sans-jp), ui-sans-serif, system-ui, sans-serif;
 }
 
 .loading-gradient {
@@ -70,7 +70,7 @@ body {
 
 .report-markdown :where(h1, h2, h3) {
   color: #3d2b1f;
-  font-family: var(--font-playfair), ui-serif, serif;
+  font-family: var(--font-noto-sans-jp), ui-sans-serif, system-ui, sans-serif;
   font-weight: var(--md-heading-weight);
   letter-spacing: var(--md-heading-tracking);
   line-height: 1.26;
@@ -272,7 +272,7 @@ body {
 
 .report-markdown--v7 {
   --md-body-size: 1rem;
-  --md-line-height: 1.78;
+  --md-line-height: 1.86;
   --md-flow-space: 1.05rem;
   --md-list-indent: 1.5rem;
   --md-list-item-gap: 0.4rem;
@@ -285,6 +285,41 @@ body {
   --md-quote-border: #5c4033;
   --md-quote-label: 'INSIGHT';
   --md-quote-label-space: 0.36rem;
+}
+
+/* 見出しの区切りを左アクセントバーで表現する（h2: 太め / h3: 細め） */
+.report-markdown--v7 h2 {
+  border-left: 5px solid #5c4033;
+  padding-left: 0.72rem;
+  /* セクションの開始を明確にするため、見出し上に十分な余白を取る（直前が見出しでも適用） */
+  margin-top: calc(var(--md-flow-space) * 2.4);
+}
+
+.report-markdown--v7 h3 {
+  border-left: 3px solid #b08968;
+  padding-left: 0.62rem;
+  /* 項目間に広めの余白を取り、その中央に区切り線（::before）を浮かせる */
+  margin-top: calc(var(--md-flow-space) * 3.4);
+  position: relative;
+}
+
+/* 項目の境界線。見出しの左バーから切り離し、上下の余白の中央に独立した線として配置する */
+.report-markdown--v7 h3::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(var(--md-flow-space) * -1.7);
+  border-top: 1px solid #c4ab93;
+}
+
+/* セクション見出し（h2）直後の最初の項目には境界線も余分な余白も付けない */
+.report-markdown--v7 h2 + h3 {
+  margin-top: calc(var(--md-flow-space) * 1.7);
+}
+
+.report-markdown--v7 h2 + h3::before {
+  display: none;
 }
 
 .report-markdown--v7 blockquote {
@@ -302,12 +337,12 @@ body {
 .report-markdown--v7 :where(ul, ol) {
   display: grid;
   gap: 0.4rem;
-  margin-top: calc(var(--md-flow-space) * 2.1);
-  margin-bottom: calc(var(--md-flow-space) * 4.2);
+  margin-top: calc(var(--md-flow-space) * 0.6);
+  margin-bottom: calc(var(--md-flow-space) * 0.9);
 }
 
 .report-markdown--v7 li {
-  line-height: 1.62;
+  line-height: 1.74;
 }
 
 .report-markdown--v7 pre {
@@ -408,6 +443,100 @@ body {
 .report-markdown--v7 a:hover {
   background: rgba(92, 64, 51, 0.16);
   border-bottom-color: rgba(92, 64, 51, 0.75);
+}
+
+/* 結論（まとめ）/ 注意（懸念）セクションを囲みボックスで強調する共通スタイル */
+.report-markdown--v7 .report-callout {
+  margin-top: calc(var(--md-flow-space) * 2.4);
+  padding: 1.4rem 1.6rem 1.6rem;
+  border: 1px solid;
+  border-left-width: 6px;
+  border-radius: 0.4rem;
+}
+
+/* 囲みの中は親の flow 余白が効かないため、内部用の縦リズムを与える */
+.report-markdown--v7 .report-callout > * + * {
+  margin-top: var(--md-flow-space);
+}
+
+/* 見出しは左バーをやめ、アイコン付きの強い見出しにする */
+.report-markdown--v7 .report-callout h2 {
+  margin-top: 0;
+  padding: 0 0 0.55rem;
+  border-left: none;
+  border-bottom: 2px solid;
+  font-size: 1.74rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.report-markdown--v7 .report-callout h2::before {
+  font-size: 1.05rem;
+}
+
+/* 囲みの中は余白が異なり区切り線の位置がずれるため、h3 の浮かせ区切り線は使わない
+   （左バーは残し、上余白だけ通常量にする） */
+.report-markdown--v7 .report-callout h3 {
+  margin-top: calc(var(--md-flow-space) * 1.5);
+}
+
+.report-markdown--v7 .report-callout h3::before {
+  display: none;
+}
+
+/* まとめ（結論）= ブラウン系で「最重要」を表現 */
+.report-markdown--v7 .report-callout--summary {
+  background: #f6efe9;
+  border-color: #e2d3c6;
+  border-left-color: #5c4033;
+  box-shadow: 0 1px 3px rgba(60, 43, 31, 0.1);
+}
+
+.report-markdown--v7 .report-callout--summary h2 {
+  color: #3d2b1f;
+  border-bottom-color: #d8c3b2;
+}
+
+.report-markdown--v7 .report-callout--summary h2::before {
+  content: '★';
+  color: #5c4033;
+}
+
+/* 注意点・懸念事項 = レッド系で「警告」を表現 */
+.report-markdown--v7 .report-callout--warning {
+  background: #fbf1ef;
+  border-color: #e8c9c4;
+  border-left-color: #9b2c2c;
+  box-shadow: 0 1px 3px rgba(120, 40, 30, 0.1);
+}
+
+.report-markdown--v7 .report-callout--warning h2 {
+  color: #8a2020;
+  border-bottom-color: #e3b9b3;
+}
+
+.report-markdown--v7 .report-callout--warning h2::before {
+  content: '⚠';
+  color: #9b2c2c;
+}
+
+/* トレンド分析（動向）= アンバー系で「注目の動き」を表現 */
+.report-markdown--v7 .report-callout--trend {
+  background: #fbf5e6;
+  border-color: #ecdcb0;
+  border-left-color: #c08a1e;
+  box-shadow: 0 1px 3px rgba(120, 90, 20, 0.1);
+}
+
+.report-markdown--v7 .report-callout--trend h2 {
+  color: #846212;
+  border-bottom-color: #e3d2a4;
+}
+
+.report-markdown--v7 .report-callout--trend h2::before {
+  content: '↗';
+  color: #c08a1e;
 }
 
 .report-markdown--v8 {
