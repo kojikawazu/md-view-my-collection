@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter, Playfair_Display } from 'next/font/google';
+import { Inter, Noto_Sans_JP } from 'next/font/google';
 import { AppStateProvider } from '@/providers/AppStateProvider';
 import './globals.css';
 
@@ -8,9 +8,12 @@ const inter = Inter({
   subsets: ['latin'],
 });
 
-const playfair = Playfair_Display({
-  variable: '--font-playfair',
-  subsets: ['latin'],
+// 見出し用フォント。英数字・日本語とも Noto Sans JP（ゴシック）で読みやすさを優先する。
+// CJK サブセットは巨大なため preload は無効化する（subsets は指定不可）。
+const notoSansJP = Noto_Sans_JP({
+  variable: '--font-noto-sans-jp',
+  weight: ['400', '700'],
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -25,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
-      <body className={`${inter.variable} ${playfair.variable} antialiased`}>
+      <body className={`${inter.variable} ${notoSansJP.variable} antialiased`}>
         <AppStateProvider>{children}</AppStateProvider>
       </body>
     </html>
