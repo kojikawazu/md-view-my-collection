@@ -12,11 +12,11 @@
 - Root `README.md` describes this repo; `base/README.md` is legacy and not used.
 
 ## Build, Test, and Development Commands
-Run commands from `front/` (not `base/`):
-- `npm install` installs dependencies.
-- `npm run dev` starts the Next.js dev server.
-- `npm run build` creates a production build in `front/.next/`.
-- `npm run start` serves the production build locally.
+Run commands from `front/` (not `base/`). Use **pnpm** (npm / yarn are not used):
+- `pnpm install` installs dependencies.
+- `pnpm dev` starts the Next.js dev server.
+- `pnpm build` creates a production build in `front/.next/`.
+- `pnpm start` serves the production build locally.
 
 Configuration:
 - Create `front/.env.local` as needed (e.g. Supabase keys, admin email, `NEXT_PUBLIC_SITE_URL`).
@@ -29,8 +29,8 @@ Configuration:
 - Component splitting is encouraged where reuse makes sense.
 
 ## Testing Guidelines
-- E2E-only strategy (no unit tests). Tooling target: Playwright.
-- Test specification is in `docs/spec/04.e2e-cases.md` (normal/edge/error cases are all required).
+- Unit tests with Vitest (`pnpm test`) and E2E with Playwright (`pnpm test:e2e`).
+- Test specification is in `docs/08-test-specification.md` (normal/edge/error cases are all required).
 
 ## Commit & Pull Request Guidelines
 - This snapshot does not include Git history, so no established commit message convention is visible.
@@ -42,5 +42,5 @@ Configuration:
 - The UI stores local-mode data in `localStorage` (see `front/src/components/AppStateProvider.tsx`), so verify behavior with fresh storage when debugging.
 - Deployment is Vercel, `main` branch only, `front/` directory only, no preview.
 - Database migrations are禁止 (no migrations). Schema changes must be reflected only in code files and applied in the separate DB project by the owner.
-- Always read `docs/TASKS.md` before starting work to align on remaining tasks and completion status.
-- After each completed task, update `docs/TASKS.md` and this file if requirements or workflows changed.
+- Always read `docs/11-tasks.md` before starting work to align on remaining tasks and completion status.
+- After each completed task, update `docs/11-tasks.md` and this file if requirements or workflows changed.

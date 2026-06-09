@@ -14,6 +14,8 @@ globs:
 | `NEXT_PUBLIC_SITE_URL` | クライアント | Google OAuth リダイレクト先 |
 | `ADMIN_EMAIL` | **サーバー専用** | 管理者メール（カンマ区切りで複数可）。`/api/auth/admin` で照合 |
 | `DATABASE_URL` | **サーバー専用** | Supabase Postgres 接続文字列（`prisma.config.ts` で参照） |
+| `NEXT_PUBLIC_AUTH_MODE` | クライアント（**E2E専用**） | `local` でローカル認証モードに切替。`playwright.config.ts` が注入 |
+| `NEXT_PUBLIC_DATA_MODE` | クライアント（**E2E専用**） | `local` で localStorage データモードに切替。`playwright.config.ts` が注入 |
 
 ## 管理方針
 

@@ -16,8 +16,8 @@ globs: "front/src/app/api/**"
 ```
 front/src/app/api/
 ├── auth/
-│   ├── admin/route.ts      # 管理者判定（ADMIN_EMAIL照合）
-│   └── is-allowed/route.ts # ローカルモード認証（E2E専用）
+│   ├── admin/route.ts      # 管理者判定（GET / ADMIN_EMAIL照合, isAdmin を返す）
+│   └── is-allowed/route.ts # 許可メール判定（POST）。localモードは body.email、supabaseモードは Bearer トークン検証 + メール照合
 ├── reports/
 │   ├── route.ts            # GET（一覧）/ POST（新規作成）
 │   └── [id]/route.ts       # GET（詳細）/ PATCH（更新）/ DELETE（削除）

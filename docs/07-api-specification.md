@@ -1,5 +1,18 @@
 # APIルート設計書（認証認可・DB操作の移行）
 
+> 本書は仕様（What）に加え、APIルート移行時の**設計判断（How）**を含む設計書です。
+
+## 目次（主なセクション）
+
+- 概要 / 設計判断（DJ-1〜DJ-6）
+- 参照元（youtube-my-collection のパターン）
+- 新規ファイル設計（auth-server / db / validation / types）
+- APIルート設計（auth/admin・reports・reports/[id]・tags）
+- レスポンス形式 / エラーハンドリング
+- クライアント側の変更方針
+- ファイル構成 / テスト方針 / 移行フェーズ / セキュリティ考慮
+- 外部URL管理機能（API拡張）
+
 ## 概要
 
 現在のクライアント直接Supabase操作を、**APIルート経由のPrisma操作**に移行する。
@@ -89,8 +102,10 @@ deleteReport: (id: string) => Promise<MutationResult>;
 ```typescript
 type MutationResult =
   | { ok: true }
-  | { ok: false; status: number; error: string; fieldErrors?: ValidationErrors };
+  | { ok: false; status: number; error: string; fieldErrors?: Record<string, string> };
 ```
+
+> `fieldErrors` は `Record<string, string>` とする（`ValidationErrors` ではない）。外部URLのエラーは `externalUrls.0.url` のような動的キーを取るため、固定キー型では表現できない。
 
 **呼び出し元の変更:**
 
@@ -222,7 +237,7 @@ CI での API 統合テストは **テスト用 Supabase プロジェクト（�
 **決定: サーバー側バリデーションでもカテゴリ固定リストを検証する。**
 
 理由:
-- 要件定義（`docs/spec/03.requirements.md:22`）でカテゴリは固定リスト。
+- 要件定義（`docs/02-requirements-specification.md`）でカテゴリは固定リスト。
 - 現行UIも `constants.tsx:24` の `CATEGORIES` 配列で固定。
 - サーバー側がノーチェックだと、API直叩きで不正カテゴリが入る。
 
@@ -621,8 +636,10 @@ export const validateReportInput = (
 /** API書き込み操作の結果型（DJ-3） */
 export type MutationResult =
   | { ok: true }
-  | { ok: false; status: number; error: string; fieldErrors?: import('@/lib/validation').ValidationErrors };
+  | { ok: false; status: number; error: string; fieldErrors?: Record<string, string> };
 ```
+
+> 実装の `fieldErrors` は `Record<string, string>`。外部URLのエラー（`externalUrls.<i>.url` 等の動的キー）を扱うため固定キーの `ValidationErrors` 型ではない。
 
 ---
 
@@ -920,15 +937,20 @@ APIルートは `types.ts` の `ReportItem` と同じ形式で返却する。
   id: string;
   title: string;
   summary: string | null;
-  content: string;
+  content: string;               // 詳細APIのみ実体。一覧API（GET /api/reports）では '' を返す
   category: string;
   author: string;
   publishDate: string | null;   // ISO 8601
   createdAt: string;             // ISO 8601
   updatedAt: string;             // ISO 8601
   tags: string[];                // # 付き配列（例: ["#AI", "#Cloud"]）
+  externalUrls: { id: string; url: string; label: string | null }[];  // 外部URL（詳細: 本書「外部URL管理機能（API拡張）」セクション）
 }
 ```
+
+> **実装メモ（一覧と詳細の差分）:**
+> - `GET /api/reports`（一覧）は `select` で `content` を除外し `toReportListItem()` が `content: ''` を返す（ペイロード削減のため）。本文は `GET /api/reports/[id]` でのみ取得する。
+> - `externalUrls` は一覧・詳細の両方に含まれる（URL+ラベルのみで軽量）。本機能は後発の Issue で追加されたもので、API拡張の詳細は本書「外部URL管理機能（API拡張）」セクションを参照。
 
 **変換関数:** APIルート内で `toReportItem()` を定義し、Prismaの結果をフラット化する。
 
@@ -1242,3 +1264,29 @@ front/src/
 - **カテゴリ固定リスト**: サーバー側で CATEGORIES 照合（API直叩きによる不正値防止）
 - **エラー情報の制限**: エラーレスポンスに内部情報（スタックトレース等）を含めない
 - **accessToken管理**: 初回getSession + onAuthStateChange の両方で復元・更新し、リロード後も書き込み可能を保証
+
+---
+
+## 外部URL管理機能（API拡張）
+
+ExternalUrl は常に Report と一緒に操作されるため、専用エンドポイントは設けず既存 `/api/reports` を拡張する。
+
+### 読み取り（GET /api/reports, GET /api/reports/[id]）
+
+- Prisma `include` に `ExternalUrl` を追加し、各レポートに `externalUrls: { id, url, label }[]` を含める。
+- `externalUrls` は URL+ラベルのみで軽量なため、一覧APIにも含める（`content` とは異なり除外しない）。
+
+### 書き込み
+
+- **POST /api/reports**: body に `externalUrls?: { url: string; label?: string }[]` を受け付け、トランザクション内で Report 作成後に bulk insert（`createMany`）。
+- **PATCH /api/reports/[id]**: body の `externalUrls` で**全件置換**（`deleteMany` → `createMany`）。TagMapping 同期と同じ全件置換パターン。
+- **DELETE /api/reports/[id]**: 変更なし（ON DELETE CASCADE で自動削除）。
+
+### バリデーション（validateExternalUrls）
+
+- `url`: 必須、`http://` または `https://` で始まる（`/^https?:\/\//`）。
+- `label`: 任意、最大200文字。
+- エラーは行単位の dot-notation キー（`externalUrls.<i>.url` / `externalUrls.<i>.label`）で `fieldErrors`（`Record<string, string>`）に返す。
+- 空行（URL空）は無視される。
+
+> データモデル・RLS は `docs/05-data-specification.md`、機能仕様は `docs/03-functional-specification.md`、コンポーネント設計は `docs/09-architecture-specification.md` を参照。
