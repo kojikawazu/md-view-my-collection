@@ -10,10 +10,11 @@ globs:
 ## 開発・ビルド
 
 ```bash
-pnpm install   # 依存インストール
+pnpm install   # 依存インストール（postinstall で prisma generate が自動実行される）
 pnpm dev       # 開発サーバー起動（http://localhost:3000）
 pnpm build     # プロダクションビルド
 pnpm start     # プロダクションビルド配信
+pnpm lint      # ESLint 実行（CI のグリーン条件 / git-workflow.md 参照）
 pnpm format    # Prettier 整形
 ```
 

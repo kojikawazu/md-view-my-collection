@@ -30,9 +30,9 @@ Markdownレポートの保存・閲覧UIを提供するNext.jsアプリ。
 - カテゴリは固定リスト: Development / AI / Cloud / Linux / Container / Application / Program / Hobby
 
 ## Task Management
-- タスク一覧は `docs/TASKS.md` で管理
-- 作業開始前に必ず `docs/TASKS.md` を確認し、現状を把握する
-- タスク完了後は `docs/TASKS.md` を更新する
+- タスク一覧は `docs/11-tasks.md` で管理
+- 作業開始前に必ず `docs/11-tasks.md` を確認し、現状を把握する
+- タスク完了後は `docs/11-tasks.md` を更新する
 
 ## Rules
 
@@ -41,6 +41,7 @@ Markdownレポートの保存・閲覧UIを提供するNext.jsアプリ。
 | ファイル | スコープ | 内容 |
 |---|---|---|
 | `coding-standards.md` | 全体 | コーディング規約（TypeScript/pnpm/ESLint/Prettier） |
+| `documentation.md` | 全体 | ドキュメント更新・設計書管理ルール（影響マップ + opt-out の完了条件） |
 | `commands.md` | 全体 | Build & Dev コマンド（pnpm dev / build / format 等） |
 | `environment.md` | 全体 | 環境変数一覧・管理方針 |
 | `error-handling.md` | 全体 | エラーハンドリング方針（バリデーション・ログ・HTTPステータス） |

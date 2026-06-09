@@ -25,9 +25,9 @@ globs: "front/prisma/**,front/src/lib/db.ts,front/src/app/api/**"
 
 | テーブル | 主要フィールド |
 |---|---|
-| `Report` | id, title, summary, content, category, author, publishDate |
-| `ReportTag` | id, name |
-| `ReportTagMapping` | reportId, reportTagId |
+| `Report` | id, title, summary, content, category, author, publishDate, createdAt, updatedAt |
+| `ReportTag` | id, name, createdAt |
+| `ReportTagMapping` | id, reportId, reportTagId, createdAt |
 | `ExternalUrl` | id, reportId, url, label, createdAt |
 
 ## RLS（Supabase Row Level Security）

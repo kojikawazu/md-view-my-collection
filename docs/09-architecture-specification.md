@@ -1,5 +1,30 @@
 # アトミックデザイン設計書
 
+## 目次（主なセクション）
+
+- 概要 / スコープ / 現状の構成
+- 設計判断（フィルタ状態・AppLink・theme受け渡し 等）
+- アトミックデザイン階層（Atoms / Molecules / Organisms / Pages）
+- hooks / providers / 層間の依存方向ルール
+- 移行後のディレクトリ構造 / 移行フェーズ / 設計方針
+- 外部URL管理機能（コンポーネント設計）
+- システム構成・技術スタック（概要）
+
+## システム構成図
+
+```mermaid
+flowchart TD
+  subgraph Client["ブラウザ / React 19 (App Router)"]
+    Pages["Pages"] --> Organisms["Organisms"] --> Molecules["Molecules"] --> Atoms["Atoms"]
+    Pages --> Hooks["hooks"]
+    Hooks --> Providers["providers (AppStateProvider / LoadingContext)"]
+  end
+  Providers -->|fetch /api/*| API["Next.js Route Handlers (BFF)"]
+  API -->|requireAdmin + validation| Prisma["Prisma (singleton)"]
+  Prisma --> DB[("Supabase Postgres + RLS")]
+  Providers -->|Google OAuth| Auth[("Supabase Auth")]
+```
+
 ## 概要
 `front/src/components/` のフラット構成をアトミックデザイン4階層（Atoms / Molecules / Organisms / Pages）に再編成する。
 ロジックは `hooks/` に、状態管理は `providers/` に分離する。
@@ -160,6 +185,9 @@ LoginPage 内のインラインスピナー（`LoginPage.tsx:52-58`）を削除�
 | `CategoryButton` | サイドバーカテゴリ項目 | Button |
 | `ReportCardMeta` | バッジ + 日付 | Badge + テキスト |
 | `UserAuthSection` | ユーザー情報 + Logoutボタン | Button + テキスト |
+| `ExternalUrlInput` | 外部URL入力1行（URL + ラベル + 削除） | Input + Button（詳細: 本書「外部URL管理機能（コンポーネント設計）」セクション） |
+| `ExternalUrlFieldList` | 外部URL入力行の繰り返し + 追加ボタン | SectionLabel + ExternalUrlInput |
+| `ExternalUrlLinks` | 詳細画面の外部リンク一覧表示 | SectionLabel + リンク |
 
 ### Organisms（独立した複合セクション）
 
@@ -171,20 +199,20 @@ LoginPage 内のインラインスピナー（`LoginPage.tsx:52-58`）を削除�
 | `Header` | ロゴ + ナビ + 認証セクション | AppLink + NavLink + UserAuthSection |
 | `Sidebar` | カテゴリ一覧 + タグ一覧 + マニフェスト（固定幅 `w-64`、タグは `flex-wrap` で折り返し） | SectionLabel + CategoryButton + TagChip |
 | `Footer` | ブランド + コピーライト | テキスト |
-| `ReportCard` | 一覧用カード | ReportCardMeta + AuthorInfo + AppLink |
-| `ReportForm` | 投稿/編集フォーム | FormField + Button + ConfirmationModal |
 | `LoginForm` | ログインフォーム（`useLoginForm` の `isSubmitting` に従い LoadingOverlay を内部表示） | FormField + Button + LoadingOverlay |
 | `ConfirmationModal` | 確認モーダル | Button + テキスト |
 | `ReportMarkdown` | Markdown描画 | 内部react-markdown |
 | `LoadingOverlay` | 全画面ローディング（Shell内外で共用） | Spinner |
 
+> **実装メモ:** 当初計画にあった `ReportCard` / `ReportForm` organisms は**抽出を見送り**、一覧カード/投稿フォームの markup はそれぞれ `pages/ListPage.tsx` / `pages/FormPage.tsx` 内に残している。`organisms/` には上記8ファイルのみが存在する。
+
 ### Pages（ルートレベル、データ接続）
 
 | コンポーネント | 説明 |
 |---|---|
-| `ListPage` | 一覧（ReportCard + FilterIndicator + PaginationNav） |
-| `DetailPage` | 詳細（ReportMarkdown + AuthorInfo + ConfirmationModal） |
-| `FormPage` | 投稿/編集（ReportForm） |
+| `ListPage` | 一覧（カード markup インライン + FilterIndicator + PaginationNav） |
+| `DetailPage` | 詳細（ReportMarkdown + AuthorInfo + ExternalUrlLinks + ConfirmationModal） |
+| `FormPage` | 投稿/編集（フォーム markup インライン + FormField + ExternalUrlFieldList） |
 | `LoginPage` | ログイン（LoginForm）。LoadingOverlay は LoginForm 内部で管理 |
 | `MarkdownLabPage` | Markdown検証（ReportMarkdown） |
 
@@ -195,8 +223,9 @@ LoginPage 内のインラインスピナー（`LoginPage.tsx:52-58`）を削除�
 | `useAppState` | グローバル状態へのアクセス（re-export） | AppStateProvider |
 | `useLoading` | ローディングトリガー（context-optional） | LoadingContext |
 | `usePagination` | ページネーションロジック（ページ計算/フィルタ連動リセット） | ListPage |
-| `useReportForm` | フォーム状態管理 + バリデーション + 送信処理 | FormPage |
+| `useReportForm` | フォーム状態管理 + バリデーション + 送信処理（externalUrls 管理含む） | FormPage |
 | `useLoginForm` | ログインフォーム状態 + 送信処理 | LoginPage |
+| `useReport` | 詳細レポートの個別取得（supabaseモードは `/api/reports/[id]`、localモードは listReport を返す） | DetailPage |
 
 ※ `useReportFilter` は作成しない。フィルタ状態は AppStateProvider の責務として維持する。
 
@@ -271,15 +300,16 @@ front/src/
 │   │   ├── NavLink.tsx
 │   │   ├── CategoryButton.tsx
 │   │   ├── ReportCardMeta.tsx
-│   │   └── UserAuthSection.tsx
+│   │   ├── UserAuthSection.tsx
+│   │   ├── ExternalUrlInput.tsx
+│   │   ├── ExternalUrlFieldList.tsx
+│   │   └── ExternalUrlLinks.tsx
 │   ├── organisms/
 │   │   ├── index.ts
 │   │   ├── AppShell.tsx
 │   │   ├── Header.tsx
 │   │   ├── Sidebar.tsx
 │   │   ├── Footer.tsx
-│   │   ├── ReportCard.tsx
-│   │   ├── ReportForm.tsx
 │   │   ├── LoginForm.tsx
 │   │   ├── ConfirmationModal.tsx
 │   │   ├── ReportMarkdown.tsx
@@ -297,13 +327,17 @@ front/src/
 │   ├── useLoading.ts
 │   ├── usePagination.ts
 │   ├── useReportForm.ts
-│   └── useLoginForm.ts
+│   ├── useLoginForm.ts
+│   └── useReport.ts
 ├── providers/
 │   ├── index.ts
 │   ├── AppStateProvider.tsx
 │   └── LoadingContext.tsx
 ├── lib/
-│   └── supabaseClient.ts
+│   ├── supabaseClient.ts
+│   ├── auth-server.ts
+│   ├── db.ts
+│   └── validation.ts
 ├── types.ts
 └── constants.tsx
 ```
@@ -387,3 +421,51 @@ front/src/
 - Organism: 具体名（`ReportCard`, `LoginForm`）
 - Hook: `use〜` プレフィックス
 - Page: `〜Page` サフィックス維持
+
+---
+
+## 外部URL管理機能（コンポーネント設計）
+
+### 新規コンポーネント
+
+| コンポーネント | 階層 | 説明 |
+|---|---|---|
+| `ExternalUrlInput` | Molecule | URL + ラベル入力行 + 削除ボタン（1行分） |
+| `ExternalUrlFieldList` | Molecule | `ExternalUrlInput` の繰り返し + 「+ URL追加」ボタン |
+| `ExternalUrlLinks` | Molecule | 詳細画面用リンク一覧表示（0件時は `null`） |
+
+### 既存コンポーネントの変更
+
+- `FormPage`（ReportForm 相当）: タグ入力の下に `ExternalUrlFieldList` を追加。
+- `DetailPage`: タグセクションの上に `ExternalUrlLinks` を追加。
+
+### hooks 変更
+
+- `useReportForm`: `externalUrls` state + `addUrl()` / `removeUrl(index)` / `updateUrl(index, field, value)` を追加。submit 時に `externalUrls` を送信。削除時は `fieldErrors` のインデックスを再採番。
+
+### ローカルモード対応（E2E）
+
+- `localStorage` の `espresso_reports` に `externalUrls` フィールドを追加し、AppStateProvider のローカルモードで保存・読み取りに対応。fixture に URLあり/なし両方を用意。
+
+### 設計判断
+
+- URL同期は**全件置換**（差分計算不要・URL数は数件想定）。
+- 専用APIは設けず `/api/reports` を拡張。
+- 一覧APIにも `externalUrls` を含める（軽量）。
+- ラベル未入力時はURL自体をリンクテキストにする。
+
+> 機能仕様は `docs/03-functional-specification.md`、データモデルは `docs/05-data-specification.md`、API は `docs/07-api-specification.md` を参照。
+
+---
+
+## システム構成・技術スタック（概要）
+
+- **フロント**: Next.js 16 (App Router) + React 19 + TailwindCSS v4 / TypeScript strict / pnpm
+- **Markdown**: react-markdown + remark-gfm + rehype-sanitize（詳細: `docs/10-miscellaneous-specification.md`）
+- **認証**: Supabase Auth (Google OAuth)。管理者判定はサーバーAPI `/api/auth/admin`（`ADMIN_EMAIL` 照合）
+- **DB**: Supabase Postgres + RLS。ORM は Prisma（`db pull` のみ・マイグレーション禁止 / 詳細: `docs/05-data-specification.md`）
+- **BFF**: Next.js Route Handlers（詳細: `docs/07-api-specification.md`）
+- **デプロイ**: Vercel（`main` のみ本番、プレビュー無し）
+- **コンポーネント設計**: アトミックデザイン（本書 上記）
+
+> 技術スタックの正本は `CLAUDE.md`。ルール詳細は `.claude/rules/` を参照。

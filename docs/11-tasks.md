@@ -1,9 +1,9 @@
 # Tasks
 
 ## 要件定義
-- [x] 最新UIレイアウト要求を作成（`docs/spec/02.ui-layout.md`）
-- [x] 要件定義ドラフトを作成（`docs/spec/03.requirements.md`）
-- [x] コーディング規約を明文化（`docs/spec/03.requirements.md`）
+- [x] 最新UIレイアウト要求を作成（`docs/03-functional-specification.md`）
+- [x] 要件定義ドラフトを作成（`docs/02-requirements-specification.md`）
+- [x] コーディング規約を明文化（`docs/02-requirements-specification.md`）
 - [x] E2Eツールを選定（Playwright）
 - [x] 認証方式を決定（Supabase Auth）
 - [x] Markdownサニタイズ方針を確定（react-markdown/remark-gfm/rehype-sanitize）
@@ -69,13 +69,13 @@
 ## テスト
 - [x] E2Eテスト基盤を導入
 - [x] 主要導線のE2Eテスト作成（一覧/詳細/投稿/編集/削除/ログイン）
-- [x] E2Eテスト仕様（正常/準正常/異常）を定義（`docs/spec/04.e2e-cases.md`）
+- [x] E2Eテスト仕様（正常/準正常/異常）を定義（`docs/08-test-specification.md`）
 - [x] GitHub ActionsでE2E自動実行を追加
 - [x] GitHub ActionsのE2E実行成功を確認
 - [x] ユニットテスト基盤を導入（Vitest + @testing-library/react + happy-dom / 2026-04-03）
-- [x] テスト設計ドキュメントを作成（`docs/test-design/` 4ファイル / 2026-04-03）
-- [x] validation.ts ユニットテスト作成（45件: validateReportInput + normalizeTags + validateExternalUrls / 2026-04-03）
-- [x] hooks ユニットテスト作成（28件: usePagination + useReportForm + useLoginForm + useLoading + useReport / 2026-04-03）
+- [x] テスト設計ドキュメントを作成（`docs/08-test-specification.md` に統合 / 2026-04-03）
+- [x] validation.ts ユニットテスト作成（44実行ケース: it 37 個 + N-7 の it.each×8カテゴリ / validateReportInput + normalizeTags + validateExternalUrls / 2026-04-03）
+- [x] hooks ユニットテスト作成（47件: usePagination 12 + useReportForm 19 + useLoginForm 8 + useLoading 2 + useReport 6 / 2026-04-03）
 - [x] ConfirmationModal ユニットテスト作成（12件: 描画・二重クリック防止・エラー復帰 / 2026-04-03）
 - [x] E2Eテスト強化（TC-026〜TC-031, TC-035, TC-036 追加 + helpers.ts 共通化 / 2026-04-03）
 - [x] GitHub ActionsにVitestユニットテスト実行を追加（E2Eの前にUT実行する構成 / 2026-04-03）
@@ -96,7 +96,7 @@
 - [x] POST/PATCHトランザクション最適化: 不要クエリ削除 + upsert結果直接利用（DB呼び出し数 N+5→N+2 / 2026-03-23）
 - [x] requireAdmin()の認証結果をメモリキャッシュ（同一トークンの2回目以降はSupabase HTTP往復スキップ / 2026-03-23）
 - [x] mutation後のfetchTags()を廃止しderiveTagsFromReportsに統一（不要なAPI呼び出し排除 / 2026-03-23）
-- [x] #47レビュー指摘対応: 設計書のPrisma/Supabaseシングルトン記述を実装に合わせて更新（`docs/design/06.api-routes-design.md` / 2026-03-23）
+- [x] #47レビュー指摘対応: 設計書のPrisma/Supabaseシングルトン記述を実装に合わせて更新（`docs/07-api-specification.md` / 2026-03-23）
 - [x] #47レビュー指摘対応: AppShellのローディング300ms定数を一元管理に変更（2026-03-23）
 
 ## UIバグ修正
@@ -139,7 +139,7 @@
 - [x] SupabaseログインにGoogle OAuthを追加（localはE2E用に維持）
 
 ## アトミックデザイン移行（Issue #37）
-- [x] アトミックデザイン設計書を作成（`docs/design/05.atomic-design.md`）
+- [x] アトミックデザイン設計書を作成（`docs/09-architecture-specification.md`）
 - [x] Phase 1: ディレクトリ作成 + providers/hooks分離 + Atoms抽出
 - [x] Phase 2: Molecules抽出
 - [x] Phase 3: Organisms再編成 + hooks抽出（usePagination/useReportForm/useLoginForm）
@@ -147,7 +147,7 @@
 - [x] 全フェーズ完了後の最終E2E + ビルド確認
 
 ## APIルート移行（認証認可・DB操作 / youtube-my-collection踏襲 / Issue #42）
-- [x] APIルート設計書を作成（`docs/design/06.api-routes-design.md` / 2026-03-22）
+- [x] APIルート設計書を作成（`docs/07-api-specification.md` / 2026-03-22）
 - [x] 設計レビュー指摘対応: DJ-1〜DJ-8 を設計書に反映（2026-03-22）
   - DJ-1: クライアント側全件保持を維持（GET /api/reports はデフォルト全件返却）
   - DJ-2: タグ canonical form は `#` 付きで維持
@@ -163,7 +163,7 @@
 - [x] E2Eテスト全パス確認 + ビルド確認（2026-03-22）
 
 ## データ品質
-- [x] Reportテーブル全229件のハルシネーション・品質チェック実施（`docs/07.hallucination-check-report.md` / 2026-03-24）
+- [x] Reportテーブル全229件のハルシネーション・品質チェック実施（`docs/10-miscellaneous-specification.md` / 2026-03-24）
 - [x] MongoDB 9.0 ハルシネーション修正（3件 → MongoDB 8.x）
 - [x] Milvus 2.5 ミスリード修正（1件 → Milvus 2.6.x）
 - [x] カテゴリ誤分類修正（4件）
