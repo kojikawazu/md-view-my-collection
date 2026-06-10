@@ -6,9 +6,6 @@ ChatGPT / Gemini / Perplexity などで生成した **Markdown レポートを S
 
 > 管理者（オーナー1人）が投稿・編集・削除を行い、閲覧は誰でも可能な「単一管理者 + 公開ビューア」型のアプリです。
 
-<!-- スクリーンショット: 一覧 / 詳細 / 投稿フォーム の画像をここに追加してください -->
-<!-- ![一覧画面](docs/assets/list.png) -->
-
 ## 主な機能
 
 - **レポート一覧**: カードUI（カテゴリバッジ・日付・タイトル・要約・著者）、新しい順表示
@@ -41,14 +38,8 @@ ChatGPT / Gemini / Perplexity などで生成した **Markdown レポートを S
 
 ## 画面 / ルート
 
-| パス | 画面 | 認証 |
-|---|---|---|
-| `/` | レポート一覧 | 公開 |
-| `/report/:id` | レポート詳細 | 公開 |
-| `/report/new` | 新規作成 | 管理者 |
-| `/report/:id/edit` | 編集 | 管理者 |
-| `/report/markdown-lab` | Markdown Style Lab | 管理者 |
-| `/login` | ログイン | — |
+- ルーティング一覧（認証要件含む）: [docs/03-functional-specification.md](docs/03-functional-specification.md)
+- 画面遷移: [docs/03-functional-specification.md](docs/03-functional-specification.md)
 
 ## 必要要件
 
@@ -72,21 +63,12 @@ NEXT_PUBLIC_AUTH_MODE=local NEXT_PUBLIC_DATA_MODE=local pnpm dev
 
 `front/.env.local` に設定します（テンプレートは `front/.env.local.example`）。
 
-| 変数 | スコープ | 必須 | 用途 |
-|---|---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | クライアント | 本番 | Supabase API URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | クライアント | 本番 | Supabase anon key |
-| `NEXT_PUBLIC_SITE_URL` | クライアント | 本番 | Google OAuth リダイレクト先 |
-| `ADMIN_EMAIL` | **サーバー専用** | 本番 | 管理者メール許可リスト（カンマ区切り可）。`/api/auth/admin` で照合 |
-| `DATABASE_URL` | **サーバー専用** | 本番 | Supabase Postgres 接続文字列（Prisma が参照） |
-| `NEXT_PUBLIC_AUTH_MODE` | クライアント | E2E | `local` でローカル認証に切替 |
-| `NEXT_PUBLIC_DATA_MODE` | クライアント | E2E | `local` で localStorage データに切替 |
-
-> `ADMIN_EMAIL`（管理者ログイン）と `DATABASE_URL`（API/DB書き込み）が無いと、本番モードで投稿・編集・削除が動きません。詳細は `.claude/rules/environment.md` を参照。
+- 変数一覧: [docs/04-non-functional-specification.md](docs/04-non-functional-specification.md)
+- 補足: `ADMIN_EMAIL`（管理者ログイン）と `DATABASE_URL`（API/DB書き込み）が無いと、本番モードで投稿・編集・削除は動きません。
 
 ## 本番セットアップ（supabase モード）
 
-1. **Supabase プロジェクト作成** — `Report` / `ReportTag` / `ReportTagMapping` / `ExternalUrl` テーブルと RLS を用意（スキーマは `docs/05-data-specification.md`）。DBスキーマ変更は別プロジェクトで管理し、本リポジトリは `pnpm prisma db pull` で取り込むのみ。
+1. **Supabase プロジェクト作成** — `Report` / `ReportTag` / `ReportTagMapping` / `ExternalUrl` テーブルと RLS を用意（スキーマは [docs/05-data-specification.md](docs/05-data-specification.md)）。DBスキーマ変更は別プロジェクトで管理し、本リポジトリは `pnpm prisma db pull` で取り込むのみ。
 2. **Google OAuth** — Supabase Auth に Google プロバイダを設定し、リダイレクトに `NEXT_PUBLIC_SITE_URL` を使用。
 3. **環境変数** — 上表のキーを `front/.env.local` に設定（`front/.env.local.example` をコピー）。
 4. **起動** — `cd front && pnpm install && pnpm dev`。
@@ -123,9 +105,9 @@ E2E は `NEXT_PUBLIC_AUTH_MODE=local` / `NEXT_PUBLIC_DATA_MODE=local` 前提で�
 
 ## ドキュメント
 
-- `docs/README.md` — 仕様書の索引と読む順序
-- `docs/01-business-requirements.md` 〜 `docs/10-miscellaneous-specification.md` — 要件・機能・非機能・データ・セキュリティ・API・テスト・アーキテクチャ・その他
-- `docs/11-tasks.md` — タスク一覧
+- [docs/README.md](docs/README.md) — 仕様書の索引と読む順序
+- [docs/01-business-requirements.md](docs/01-business-requirements.md) 〜 [docs/10-miscellaneous-specification.md](docs/10-miscellaneous-specification.md) — 要件・機能・非機能・データ・セキュリティ・API・テスト・アーキテクチャ・その他
+- [docs/11-tasks.md](docs/11-tasks.md) — タスク一覧
 
 ## 注意
 

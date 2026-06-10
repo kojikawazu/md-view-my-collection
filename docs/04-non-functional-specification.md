@@ -2,6 +2,13 @@
 
 パフォーマンス・可用性・運用・ログ等の非機能要件を定義する。
 
+## 目次
+
+- [非機能要件](#非機能要件)
+- [デプロイ設定（確定）](#デプロイ設定確定)
+- [環境変数一覧](#環境変数一覧)
+- [ログ仕様（最低限）](#ログ仕様最低限)
+
 ## 非機能要件
 
 - デプロイ: 本番運用はVercelで実施（デプロイ必須）。
@@ -19,6 +26,23 @@
 - プレビュー: 不要。
 - 環境変数: Supabase接続用の `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`、OAuthリダイレクト用の `NEXT_PUBLIC_SITE_URL` を設定（一覧: `.claude/rules/environment.md`）。
 - ビルド: Next.js標準（`pnpm install` → `pnpm build`）。
+
+## 環境変数一覧
+
+`front/.env.local` に設定する。クライアント公開可否と用途を以下に示す。
+
+| 変数 | スコープ | 必須 | 用途 |
+|---|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | クライアント | 本番 | Supabase API URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | クライアント | 本番 | Supabase anon key |
+| `NEXT_PUBLIC_SITE_URL` | クライアント | 本番 | Google OAuth リダイレクト先 |
+| `ADMIN_EMAIL` | **サーバー専用** | 本番 | 管理者メール許可リスト（カンマ区切り可）。`/api/auth/admin` で照合 |
+| `DATABASE_URL` | **サーバー専用** | 本番 | Supabase Postgres 接続文字列（Prisma が参照） |
+| `NEXT_PUBLIC_AUTH_MODE` | クライアント（E2E専用） | E2E | `local` でローカル認証に切替 |
+| `NEXT_PUBLIC_DATA_MODE` | クライアント（E2E専用） | E2E | `local` で localStorage データに切替 |
+
+- `ADMIN_EMAIL` / `DATABASE_URL` はサーバー専用のため `NEXT_PUBLIC_` を付けない。
+- 詳細運用（ローカル/本番/CI）は `.claude/rules/environment.md` を参照。
 
 ## ログ仕様（最低限）
 

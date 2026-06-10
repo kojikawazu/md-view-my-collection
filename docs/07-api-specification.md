@@ -2,16 +2,60 @@
 
 > 本書は仕様（What）に加え、APIルート移行時の**設計判断（How）**を含む設計書です。
 
-## 目次（主なセクション）
+## 目次
 
-- 概要 / 設計判断（DJ-1〜DJ-6）
-- 参照元（youtube-my-collection のパターン）
-- 新規ファイル設計（auth-server / db / validation / types）
-- APIルート設計（auth/admin・reports・reports/[id]・tags）
-- レスポンス形式 / エラーハンドリング
-- クライアント側の変更方針
-- ファイル構成 / テスト方針 / 移行フェーズ / セキュリティ考慮
-- 外部URL管理機能（API拡張）
+- [概要](#概要)
+  - [移行の目的](#移行の目的)
+  - [スコープ外](#スコープ外)
+- [設計判断（レビュー指摘への回答）](#設計判断レビュー指摘への回答)
+  - [DJ-1. データ読み込みモデル: クライアント側全件保持を維持する](#dj-1-データ読み込みモデル-クライアント側全件保持を維持する)
+  - [DJ-2. タグの canonical form: `#` 付きで維持する](#dj-2-タグの-canonical-form--付きで維持する)
+  - [DJ-3. APIエラーのUI返却契約を定義する](#dj-3-apiエラーのui返却契約を定義する)
+  - [DJ-4. accessToken のリロード時復元](#dj-4-accesstoken-のリロード時復元)
+  - [DJ-5. APIルートの自動テスト方針](#dj-5-apiルートの自動テスト方針)
+  - [DJ-6. カテゴリの固定リストバリデーション](#dj-6-カテゴリの固定リストバリデーション)
+- [参照元: youtube-my-collection のパターン](#参照元-youtube-my-collection-のパターン)
+  - [ファイル構成](#ファイル構成)
+  - [認可フロー](#認可フロー)
+  - [youtube-my-collection との差分](#youtube-my-collection-との差分)
+- [新規ファイル設計](#新規ファイル設計)
+  - [1. `front/src/lib/auth-server.ts` — サーバー側認可ミドルウェア](#1-frontsrclibauth-serverts--サーバー側認可ミドルウェア)
+  - [2. `front/src/lib/db.ts` — Prismaクライアントシングルトン](#2-frontsrclibdbts--prismaクライアントシングルトン)
+  - [3. `front/src/lib/validation.ts` — サーバー+クライアント共用バリデーション](#3-frontsrclibvalidationts--サーバークライアント共用バリデーション)
+  - [4. `front/src/types.ts` — 追加型定義](#4-frontsrctypests--追加型定義)
+- [APIルート設計](#apiルート設計)
+  - [5. `GET /api/auth/admin` — 管理者判定（既存 is-allowed を置き換え）](#5-get-apiauthadmin--管理者判定既存-is-allowed-を置き換え)
+  - [6. `GET /api/reports` — レポート一覧取得](#6-get-apireports--レポート一覧取得)
+  - [7. `POST /api/reports` — レポート新規作成](#7-post-apireports--レポート新規作成)
+  - [8. `GET /api/reports/[id]` — レポート詳細取得](#8-get-apireportsid--レポート詳細取得)
+  - [9. `PATCH /api/reports/[id]` — レポート更新](#9-patch-apireportsid--レポート更新)
+  - [10. `DELETE /api/reports/[id]` — レポート削除](#10-delete-apireportsid--レポート削除)
+  - [11. `GET /api/tags` — タグ一覧取得](#11-get-apitags--タグ一覧取得)
+- [レスポンス形式](#レスポンス形式)
+  - [ReportItem（API → クライアント）](#reportitemapi--クライアント)
+- [クライアント側の変更方針](#クライアント側の変更方針)
+  - [AppState インターフェース変更（DJ-3）](#appstate-インターフェース変更dj-3)
+  - [AppStateProvider CRUD の修正](#appstateprovider-crud-の修正)
+  - [accessToken の保持（DJ-4）](#accesstoken-の保持dj-4)
+  - [fetchReports / fetchTags の修正](#fetchreports--fetchtags-の修正)
+  - [削除対象のコード](#削除対象のコード)
+- [エラーハンドリング](#エラーハンドリング)
+  - [HTTPステータス体系](#httpステータス体系)
+  - [クライアント側エラー処理フロー（DJ-3）](#クライアント側エラー処理フローdj-3)
+- [ファイル構成（移行後）](#ファイル構成移行後)
+- [テスト方針（DJ-5）](#テスト方針dj-5)
+  - [既存 E2E テスト（維持）](#既存-e2e-テスト維持)
+  - [API 統合テスト（新規追加 / 正式一覧）](#api-統合テスト新規追加--正式一覧)
+- [移行フェーズ](#移行フェーズ)
+  - [Phase 1: 基盤ファイル追加](#phase-1-基盤ファイル追加)
+  - [Phase 2: APIルート追加 + API統合テスト](#phase-2-apiルート追加--api統合テスト)
+  - [Phase 3: クライアント側の接続切り替え](#phase-3-クライアント側の接続切り替え)
+  - [Phase 4: 認証エンドポイント統一（任意）](#phase-4-認証エンドポイント統一任意)
+- [セキュリティ考慮](#セキュリティ考慮)
+- [外部URL管理機能（API拡張）](#外部url管理機能api拡張)
+  - [読み取り（GET /api/reports, GET /api/reports/[id]）](#読み取りget-apireports-get-apireportsid)
+  - [書き込み](#書き込み)
+  - [バリデーション（validateExternalUrls）](#バリデーションvalidateexternalurls)
 
 ## 概要
 

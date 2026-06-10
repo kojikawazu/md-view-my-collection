@@ -2,6 +2,25 @@
 
 ※ `docs/01-business-requirements.md`（旧 pre-requirements）は読み取り専用。以降の要求反映は本書に追記/更新する。
 
+## 目次
+
+- [概要](#概要)
+- [グローバルレイアウト](#グローバルレイアウト)
+- [画面: 一覧（/）](#画面-一覧)
+- [画面: 詳細（/report/:id）](#画面-詳細reportid)
+- [画面: 新規作成・編集（/report/new, /report/:id/edit）](#画面-新規作成編集reportnew-reportidedit)
+- [画面: Markdown Style Lab（/report/markdown-lab）](#画面-markdown-style-labreportmarkdown-lab)
+- [画面: ログイン（/login）](#画面-ログインlogin)
+- [UIトーン/スタイル](#uiトーンスタイル)
+- [データ/状態（現行の挙動）](#データ状態現行の挙動)
+- [ルーティング](#ルーティング)
+- [画面遷移図](#画面遷移図)
+- [差分（01-business-requirements.md → 最新UI）](#差分01-business-requirementsmd--最新ui)
+- [外部URL管理機能（機能仕様）](#外部url管理機能機能仕様)
+  - [機能要件](#機能要件)
+  - [アクセス制御](#アクセス制御)
+  - [画面仕様](#画面仕様)
+
 ## 概要
 - `base/` の画面実装が最新のレイアウト定義。
 - 対象は「Markdownレポート閲覧・管理UI」。
