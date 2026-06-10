@@ -1,14 +1,47 @@
 # アトミックデザイン設計書
 
-## 目次（主なセクション）
+## 目次
 
-- 概要 / スコープ / 現状の構成
-- 設計判断（フィルタ状態・AppLink・theme受け渡し 等）
-- アトミックデザイン階層（Atoms / Molecules / Organisms / Pages）
-- hooks / providers / 層間の依存方向ルール
-- 移行後のディレクトリ構造 / 移行フェーズ / 設計方針
-- 外部URL管理機能（コンポーネント設計）
-- システム構成・技術スタック（概要）
+- [システム構成図](#システム構成図)
+- [概要](#概要)
+- [スコープ](#スコープ)
+- [現状の構成](#現状の構成)
+  - [Provider/Shell のスコープ（現状）](#providershell-のスコープ現状)
+- [設計判断（レビュー指摘への回答）](#設計判断レビュー指摘への回答)
+  - [フィルタ状態の所有者](#フィルタ状態の所有者)
+  - [AppLink と LoadingProvider の境界](#applink-と-loadingprovider-の境界)
+  - [theme（DesignSystem）の受け渡し](#themedesignsystemの受け渡し)
+  - [AppStateProvider の肥大化](#appstateprovider-の肥大化)
+  - [LoginPage のローディング重複](#loginpage-のローディング重複)
+- [アトミックデザイン階層](#アトミックデザイン階層)
+  - [Atoms（最小の再利用可能部品）](#atoms最小の再利用可能部品)
+  - [Molecules（Atomの組み合わせ）](#moleculesatomの組み合わせ)
+  - [Organisms（独立した複合セクション）](#organisms独立した複合セクション)
+  - [Pages（ルートレベル、データ接続）](#pagesルートレベルデータ接続)
+- [hooks（カスタムフック）](#hooksカスタムフック)
+- [providers（状態管理）](#providers状態管理)
+- [層間の依存方向ルール](#層間の依存方向ルール)
+  - [AppLink の例外について](#applink-の例外について)
+- [移行後のディレクトリ構造](#移行後のディレクトリ構造)
+- [移行フェーズ](#移行フェーズ)
+  - [Phase 1: ディレクトリ作成 + providers/hooks分離 + Atoms抽出](#phase-1-ディレクトリ作成--providershooks分離--atoms抽出)
+  - [Phase 2: Molecules抽出](#phase-2-molecules抽出)
+  - [Phase 3: Organisms再編成 + hooks抽出](#phase-3-organisms再編成--hooks抽出)
+  - [Phase 4: Pages整理 + 最終クリーンアップ](#phase-4-pages整理--最終クリーンアップ)
+- [設計方針](#設計方針)
+  - [theme（DesignSystem）の受け渡し](#themedesignsystemの受け渡し-1)
+  - [フィルタ状態の所有者](#フィルタ状態の所有者-1)
+  - [hooks 設計方針](#hooks-設計方針)
+  - [LoginForm のローディング責務](#loginform-のローディング責務)
+  - [barrel export](#barrel-export)
+  - [命名規則](#命名規則)
+- [外部URL管理機能（コンポーネント設計）](#外部url管理機能コンポーネント設計)
+  - [新規コンポーネント](#新規コンポーネント)
+  - [既存コンポーネントの変更](#既存コンポーネントの変更)
+  - [hooks 変更](#hooks-変更)
+  - [ローカルモード対応（E2E）](#ローカルモード対応e2e)
+  - [設計判断](#設計判断)
+- [システム構成・技術スタック（概要）](#システム構成技術スタック概要)
 
 ## システム構成図
 

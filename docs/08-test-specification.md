@@ -1,13 +1,60 @@
 # E2Eテスト仕様（厳密版）
 
-## 目次（主なセクション）
+## 目次
 
-- 前提データ作成方針 / 実行方法 / CI（GitHub Actions）
-- テストデータ注入 / 現行の自動テスト実装範囲
-- 画面×観点マトリクス（前提/手順/期待）
-- 詳細テストケース（TC-001〜TC-036）
-- 外部URL管理（TC-026〜TC-030）/ 追加テストケース
-- テスト設計（ユニット / E2E強化）— validation / hooks / modal / E2E強化
+- [前提データ作成方針](#前提データ作成方針)
+- [実行方法](#実行方法)
+- [CI（GitHub Actions）](#cigithub-actions)
+- [テストデータ注入](#テストデータ注入)
+- [現行の自動テスト実装範囲](#現行の自動テスト実装範囲)
+- [画面×観点マトリクス（前提/手順/期待）](#画面観点マトリクス前提手順期待)
+  - [一覧（/）](#一覧)
+  - [詳細（/report/:id）](#詳細reportid)
+  - [新規作成（/report/new）](#新規作成reportnew)
+  - [編集（/report/:id/edit）](#編集reportidedit)
+  - [ログイン（/login）](#ログインlogin)
+  - [削除/ログアウト](#削除ログアウト)
+  - [Markdown Style Lab（/report/markdown-lab）](#markdown-style-labreportmarkdown-lab)
+- [詳細テストケース（ID/前提/手順/期待）](#詳細テストケースid前提手順期待)
+  - [外部URL管理（詳細: `docs/03-functional-specification.md`）](#外部url管理詳細-docs03-functional-specificationmd)
+  - [追加テストケース（二重送信防止・エッジケース）](#追加テストケース二重送信防止エッジケース)
+- [テスト設計（ユニット / E2E強化）](#テスト設計ユニット--e2e強化)
+- [テスト設計: validation.ts](#テスト設計-validationts)
+  - [対象](#対象)
+  - [モック方針](#モック方針)
+  - [テストケース一覧](#テストケース一覧)
+    - [validateReportInput — 正常系](#validatereportinput--正常系)
+    - [validateReportInput — 準正常系](#validatereportinput--準正常系)
+    - [validateReportInput — 異常系](#validatereportinput--異常系)
+    - [normalizeTags — 正常系](#normalizetags--正常系)
+    - [validateExternalUrls — 正常系](#validateexternalurls--正常系)
+    - [validateExternalUrls — 準正常系](#validateexternalurls--準正常系)
+    - [validateExternalUrls — 異常系](#validateexternalurls--異常系)
+- [テスト設計: hooks ユニットテスト](#テスト設計-hooks-ユニットテスト)
+  - [対象](#対象-1)
+  - [モック方針](#モック方針-1)
+  - [テストケース一覧](#テストケース一覧-1)
+    - [usePagination](#usepagination)
+    - [useReportForm](#usereportform)
+    - [useLoginForm](#useloginform)
+    - [useLoading（+ LoadingContext）](#useloading-loadingcontext)
+    - [useReport](#usereport)
+- [テスト設計: ConfirmationModal コンポーネント](#テスト設計-confirmationmodal-コンポーネント)
+  - [対象](#対象-2)
+  - [モック方針](#モック方針-2)
+  - [テストケース一覧](#テストケース一覧-2)
+    - [正常系](#正常系-5)
+    - [準正常系](#準正常系-4)
+    - [異常系](#異常系-4)
+- [テスト設計: E2E テスト強化](#テスト設計-e2e-テスト強化)
+  - [対象](#対象-3)
+  - [方針](#方針)
+  - [ヘルパー分離設計](#ヘルパー分離設計)
+  - [新規テストケース一覧](#新規テストケース一覧)
+    - [準正常系（既存テストの強化）](#準正常系既存テストの強化)
+    - [異常系（新規）](#異常系新規)
+    - [構成変更（リファクタリング）](#構成変更リファクタリング)
+  - [既存テスト（TC-026〜TC-030）のステータス](#既存テストtc-026tc-030のステータス)
 
 ## 前提データ作成方針
 - テスト実行前に初期データを用意できる仕組みを持つ（fixture/seedなど）。

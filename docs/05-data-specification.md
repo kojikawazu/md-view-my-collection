@@ -2,6 +2,17 @@
 
 データモデル・DBスキーマ・RLS・バリデーションを定義する。命名規約・マイグレーション方針の正本は `.claude/rules/database.md`。
 
+## 目次
+
+- [ER図](#er図)
+- [データ要件](#データ要件)
+- [現行テーブル（schema.prisma）](#現行テーブルschemaprisma)
+- [ExternalUrl テーブル（外部URL管理機能）](#externalurl-テーブル外部url管理機能)
+  - [Prismaスキーマ（ExternalUrl）](#prismaスキーマexternalurl)
+  - [DB作成手順](#db作成手順)
+- [バリデーション](#バリデーション)
+- [RLSポリシー（Supabase Row Level Security）](#rlsポリシーsupabase-row-level-security)
+
 ## ER図
 
 ```mermaid
