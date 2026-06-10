@@ -193,4 +193,8 @@
 ## ドキュメント
 - [x] ドキュメントを最新状態に整理
 - [x] `npm run dev` 時の `tailwindcss` 解決エラーのバグレポートを起票（Issue #32 / 2026-02-14）
+- [x] 環境変数一覧を docs に追加し、README の参照先を docs に統一（`docs/04-non-functional-specification.md` / 2026-06-10）
+- [x] 画面/ルート一覧を README から削除し、docs 参照に統一（`docs/03-functional-specification.md` / 2026-06-10）
+- [x] docs index のファイル参照をリンク化（`docs/README.md` / 2026-06-10）
+- [x] docs index を youtube-my-collection の構成・文体を参考に再構成（`docs/README.md` / 2026-06-10）
 - [x] docs/ 全仕様書（01〜11・README）にアンカーリンク付き目次を追加（h3まで・形式統一 / 2026-06-10）
