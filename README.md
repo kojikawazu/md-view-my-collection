@@ -22,75 +22,20 @@ ChatGPT / Gemini / Perplexity などで生成した **Markdown レポートを S
 
 ## 技術スタック
 
-| 領域 | 採用技術 |
-|---|---|
-| 言語 | TypeScript 5（strict） |
-| フレームワーク | Next.js 16（App Router） / React 19 |
-| スタイリング | TailwindCSS v4 |
-| Markdown | react-markdown 10 + remark-gfm 4 + rehype-sanitize 6 |
-| 認証 | Supabase Auth（Google OAuth） |
-| DB | Supabase Postgres（RLS） |
-| ORM | Prisma 6（`db pull` のみ・マイグレーション禁止） |
-| BFF | Next.js Route Handlers（`/api/*`） |
-| テスト | Vitest（ユニット） + Playwright（E2E） |
-| デプロイ | Vercel（`main` のみ本番、プレビュー無し） |
-| パッケージマネージャ | **pnpm**（npm / yarn は使用しない） |
+TypeScript + Next.js 16（App Router）/ React 19 + TailwindCSS v4 を中核に、Supabase（Auth + Postgres/RLS）+ Prisma（BFF は Next.js Route Handlers）で構成。テストは Vitest + Playwright、デプロイは Vercel（`main` のみ本番）。パッケージマネージャは **pnpm**。
+
+> 版数を含む一覧は [front/README.md](front/README.md#技術スタック)、選定理由は [docs/09-architecture-specification.md](docs/09-architecture-specification.md) を参照。
 
 ## 画面 / ルート
 
 - ルーティング一覧（認証要件含む）: [docs/03-functional-specification.md](docs/03-functional-specification.md)
 - 画面遷移: [docs/03-functional-specification.md](docs/03-functional-specification.md)
 
-## 必要要件
+## セットアップ・開発
 
-- Node.js 20+ / pnpm 9+（`npm i -g pnpm` で導入）
-- （本番データを扱う場合）Supabase プロジェクト + Google OAuth クライアント
+必要要件・セットアップ・起動（local / supabase モード）・本番セットアップ・ビルド・テストの手順は、実装ディレクトリの **[front/README.md](front/README.md)** に集約しています。
 
-## クイックスタート（まずは local モードで動かす）
-
-Supabase を用意しなくても、E2E 用の **local モード**（localStorage のダミーデータ）で UI を確認できます。最短で動かすならこちら。
-
-```bash
-cd front
-pnpm install
-NEXT_PUBLIC_AUTH_MODE=local NEXT_PUBLIC_DATA_MODE=local pnpm dev
-# http://localhost:3000
-```
-
-> 通常の `pnpm dev` は **supabase モード**で起動し、`.env.local`（後述）が無いとデータを取得できません。初見はまず local モードを推奨します。
-
-## 環境変数
-
-`front/.env.local` に設定します（テンプレートは `front/.env.local.example`）。
-
-- 変数一覧: [docs/04-non-functional-specification.md](docs/04-non-functional-specification.md)
-- 補足: `ADMIN_EMAIL`（管理者ログイン）と `DATABASE_URL`（API/DB書き込み）が無いと、本番モードで投稿・編集・削除は動きません。
-
-## 本番セットアップ（supabase モード）
-
-1. **Supabase プロジェクト作成** — `Report` / `ReportTag` / `ReportTagMapping` / `ExternalUrl` テーブルと RLS を用意（スキーマは [docs/05-data-specification.md](docs/05-data-specification.md)）。DBスキーマ変更は別プロジェクトで管理し、本リポジトリは `pnpm prisma db pull` で取り込むのみ。
-2. **Google OAuth** — Supabase Auth に Google プロバイダを設定し、リダイレクトに `NEXT_PUBLIC_SITE_URL` を使用。
-3. **環境変数** — 上表のキーを `front/.env.local` に設定（`front/.env.local.example` をコピー）。
-4. **起動** — `cd front && pnpm install && pnpm dev`。
-
-## ビルド
-
-```bash
-cd front
-pnpm build
-pnpm start
-```
-
-## テスト
-
-```bash
-cd front
-pnpm test                  # ユニット（Vitest）
-pnpm exec playwright install   # 初回のみ
-pnpm test:e2e              # E2E（Playwright）
-```
-
-E2E は `NEXT_PUBLIC_AUTH_MODE=local` / `NEXT_PUBLIC_DATA_MODE=local` 前提で動作します（`front/playwright.config.ts` が注入）。
+> 最短で UI を確認するなら local モード: `cd front && pnpm install && NEXT_PUBLIC_AUTH_MODE=local NEXT_PUBLIC_DATA_MODE=local pnpm dev`（詳細は [front/README.md](front/README.md)）。
 
 ## ディレクトリ構成
 
