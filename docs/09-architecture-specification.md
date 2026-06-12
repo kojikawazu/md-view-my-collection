@@ -498,6 +498,7 @@ front/src/
 - **認証**: Supabase Auth (Google OAuth)。管理者判定はサーバーAPI `/api/auth/admin`（`ADMIN_EMAIL` 照合）
 - **DB**: Supabase Postgres + RLS。ORM は Prisma（`db pull` のみ・マイグレーション禁止 / 詳細: `docs/05-data-specification.md`）
 - **BFF**: Next.js Route Handlers（詳細: `docs/07-api-specification.md`）
+- **バリデーション/API契約**: zod + zod-openapi（`front/src/lib/schemas/` を単一ソースに `docs/openapi.json` を生成 / 詳細: `docs/07-api-specification.md`）
 - **デプロイ**: Vercel（`main` のみ本番、プレビュー無し）
 - **コンポーネント設計**: アトミックデザイン（本書 上記）
 

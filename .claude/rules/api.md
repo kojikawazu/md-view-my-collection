@@ -28,10 +28,16 @@ front/src/app/api/
 
 - RESTful 設計（リソース指向エンドポイント）
 - レスポンス形式: JSON（`NextResponse.json()`）
-- 入力バリデーションは Route Handler 内で実施（`lib/validation.ts` を使用）
+- 入力バリデーションは Route Handler 内で実施。スキーマの正準は `lib/schemas/`（zod）。`lib/validation.ts` はそれを包むアダプタ（`{ data, errors }` 契約を維持）
 - エラー時は適切な HTTP ステータスコード（400/401/403/404/500）で返す
 - 認証は `lib/auth-server.ts` の `requireAdmin()` を使用する
 - DB アクセスは `lib/db.ts` の Prisma インスタンスを使用する（シングルトン）
+
+## API 契約（OpenAPI）
+
+- リクエスト/レスポンスの契約は `lib/schemas/`（zod）を単一ソースとし、`pnpm gen:openapi` で `docs/openapi.json`（OpenAPI 3.1）を生成する。
+- スキーマ・検証ルールを変更したら `pnpm gen:openapi` を実行し、生成物をコミットする。
+- 手書きのエンドポイント仕様は `docs/openapi.json` と重複させない（正準は生成物）。
 
 ## キャッシュ戦略
 

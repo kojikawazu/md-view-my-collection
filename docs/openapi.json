@@ -1,0 +1,865 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "md-view-my-collection API",
+    "version": "0.1.0",
+    "description": "Markdown レポートの保存・閲覧 UI の BFF（Next.js Route Handlers）。このドキュメントは zod スキーマ（front/src/lib/schemas）から自動生成される。"
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": "同一オリジン（Next.js）"
+    }
+  ],
+  "tags": [
+    {
+      "name": "reports",
+      "description": "レポート CRUD"
+    },
+    {
+      "name": "tags",
+      "description": "タグ"
+    },
+    {
+      "name": "auth",
+      "description": "認証・認可"
+    }
+  ],
+  "paths": {
+    "/api/reports": {
+      "get": {
+        "tags": [
+          "reports"
+        ],
+        "summary": "レポート一覧取得",
+        "description": "新しい順。`content` は空文字で返す。件数は `x-total-count` ヘッダ。",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "description": "取得件数（1〜1000）",
+              "example": "10",
+              "type": "string"
+            },
+            "description": "取得件数（1〜1000）"
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "description": "スキップ件数（0〜）",
+              "example": "0",
+              "type": "string"
+            },
+            "description": "スキップ件数（0〜）"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "一覧",
+            "headers": {
+              "x-total-count": {
+                "required": true,
+                "description": "総件数",
+                "schema": {
+                  "type": "string",
+                  "description": "総件数"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportList"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "サーバーエラー",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "reports"
+        ],
+        "summary": "レポート新規作成（管理者のみ）",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "作成済みレポート",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportItem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "バリデーションエラー",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未認証 / 管理者以外",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "サーバーエラー",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reports/{id}": {
+      "get": {
+        "tags": [
+          "reports"
+        ],
+        "summary": "レポート詳細取得",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "description": "レポート ID",
+              "example": "rep_123"
+            },
+            "required": true,
+            "description": "レポート ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "レポート",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportItem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "未存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "サーバーエラー",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "reports"
+        ],
+        "summary": "レポート更新（管理者のみ・部分更新）",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "description": "レポート ID",
+              "example": "rep_123"
+            },
+            "required": true,
+            "description": "レポート ID"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportPatchRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新済みレポート",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportItem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "バリデーションエラー",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未認証 / 管理者以外",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "未存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "サーバーエラー",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "reports"
+        ],
+        "summary": "レポート削除（管理者のみ）",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "description": "レポート ID",
+              "example": "rep_123"
+            },
+            "required": true,
+            "description": "レポート ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "削除成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OkResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未認証 / 管理者以外",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "未存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "サーバーエラー",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tags": {
+      "get": {
+        "tags": [
+          "tags"
+        ],
+        "summary": "タグ一覧取得",
+        "responses": {
+          "200": {
+            "description": "タグ名の配列（昇順）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TagList"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "サーバーエラー",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/admin": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "管理者判定",
+        "description": "Bearer トークンを検証し ADMIN_EMAIL と照合する。",
+        "responses": {
+          "200": {
+            "description": "判定結果",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IsAdminResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未認証 / トークン無効",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IsAdminResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/is-allowed": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "許可メール判定",
+        "description": "local モードは body.email、supabase モードは Bearer トークンを検証する。",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IsAllowedRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "判定結果",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IsAllowedResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "未認証 / トークン無効",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IsAllowedResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "サーバー設定不備",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IsAllowedResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ReportCreateRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "レポートタイトル",
+            "example": "Kubernetes 入門",
+            "maxLength": 200,
+            "minLength": 1
+          },
+          "content": {
+            "type": "string",
+            "description": "Markdown 本文",
+            "example": "# 見出し\\n\\n本文",
+            "maxLength": 50000,
+            "minLength": 1
+          },
+          "category": {
+            "type": "string",
+            "description": "カテゴリ（固定リスト）",
+            "example": "AI",
+            "minLength": 1,
+            "enum": [
+              "Development",
+              "AI",
+              "Cloud",
+              "Linux",
+              "Container",
+              "Application",
+              "Program",
+              "Hobby"
+            ]
+          },
+          "author": {
+            "type": "string",
+            "description": "著者名",
+            "example": "Editor",
+            "minLength": 1
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "タグ（`#` 付き canonical）",
+            "example": [
+              "#AI",
+              "#Cloud"
+            ],
+            "minItems": 1,
+            "maxItems": 20
+          },
+          "summary": {
+            "type": "string",
+            "description": "要約（空文字は null）",
+            "example": "記事の要約",
+            "maxLength": 500
+          },
+          "publishDate": {
+            "type": "string",
+            "format": "date",
+            "description": "公開日（ISO 文字列 / null）。不正値は無視",
+            "example": "2024-01-15",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "externalUrls": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExternalUrlInput"
+            }
+          }
+        },
+        "required": [
+          "title",
+          "content",
+          "category",
+          "author",
+          "tags"
+        ]
+      },
+      "ExternalUrlInput": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "example": "https://example.com",
+            "minLength": 1,
+            "pattern": "^https?:\\/\\/"
+          },
+          "label": {
+            "type": "string",
+            "example": "Example",
+            "maxLength": 200
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "ReportPatchRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "レポートタイトル",
+            "example": "Kubernetes 入門",
+            "maxLength": 200,
+            "minLength": 1
+          },
+          "content": {
+            "type": "string",
+            "description": "Markdown 本文",
+            "example": "# 見出し\\n\\n本文",
+            "maxLength": 50000,
+            "minLength": 1
+          },
+          "category": {
+            "type": "string",
+            "description": "カテゴリ（固定リスト）",
+            "example": "AI",
+            "minLength": 1,
+            "enum": [
+              "Development",
+              "AI",
+              "Cloud",
+              "Linux",
+              "Container",
+              "Application",
+              "Program",
+              "Hobby"
+            ]
+          },
+          "author": {
+            "type": "string",
+            "description": "著者名",
+            "example": "Editor",
+            "minLength": 1
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "タグ（`#` 付き canonical / 空配列可）",
+            "example": [
+              "#AI"
+            ],
+            "maxItems": 20
+          },
+          "summary": {
+            "type": "string",
+            "description": "要約（空文字は null）",
+            "example": "記事の要約",
+            "maxLength": 500
+          },
+          "publishDate": {
+            "type": "string",
+            "format": "date",
+            "description": "公開日（ISO 文字列 / null）。不正値は無視",
+            "example": "2024-01-15",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "externalUrls": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExternalUrlInput"
+            }
+          }
+        }
+      },
+      "IsAllowedRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "description": "local モードで照合するメール",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "ReportList": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/ReportItem"
+        }
+      },
+      "ReportItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "rep_123"
+          },
+          "title": {
+            "type": "string"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "content": {
+            "type": "string",
+            "description": "一覧 API では空文字"
+          },
+          "category": {
+            "type": "string",
+            "example": "AI"
+          },
+          "author": {
+            "type": "string",
+            "example": "Editor"
+          },
+          "publishDate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "format": "date-time",
+            "example": "2024-01-15T00:00:00.000Z"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "#AI",
+              "#Cloud"
+            ]
+          },
+          "externalUrls": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExternalUrlItem"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "summary",
+          "content",
+          "category",
+          "author",
+          "publishDate",
+          "createdAt",
+          "updatedAt",
+          "tags",
+          "externalUrls"
+        ],
+        "additionalProperties": false
+      },
+      "ExternalUrlItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "eu_123"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "example": "https://example.com"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "example": "Example"
+          }
+        },
+        "required": [
+          "id",
+          "url",
+          "label"
+        ],
+        "additionalProperties": false
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "additionalProperties": false,
+        "example": {
+          "error": "Not found"
+        }
+      },
+      "ValidationErrorResponse": {
+        "type": "object",
+        "properties": {
+          "errors": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "errors"
+        ],
+        "additionalProperties": false,
+        "example": {
+          "errors": {
+            "title": "タイトルは必須です。"
+          }
+        }
+      },
+      "OkResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "additionalProperties": false
+      },
+      "TagList": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "example": [
+          "#AI",
+          "#Cloud"
+        ]
+      },
+      "IsAdminResponse": {
+        "type": "object",
+        "properties": {
+          "isAdmin": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "isAdmin"
+        ],
+        "additionalProperties": false
+      },
+      "IsAllowedResponse": {
+        "type": "object",
+        "properties": {
+          "allowed": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "allowed"
+        ],
+        "additionalProperties": false
+      }
+    }
+  }
+}

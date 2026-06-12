@@ -2,8 +2,11 @@
 
 > 本書は仕様（What）に加え、APIルート移行時の**設計判断（How）**を含む設計書です。
 
+> **API 契約（パス・リクエスト/レスポンス・ステータス）の正準は [`openapi.json`](openapi.json)（zod スキーマから `pnpm gen:openapi` で生成）。本書は設計判断・補足・エンドポイント概要を担う。**
+
 ## 目次
 
+- [API 契約の正準（openapi.json）](#api-契約の正準openapijson)
 - [概要](#概要)
   - [移行の目的](#移行の目的)
   - [スコープ外](#スコープ外)
@@ -21,18 +24,13 @@
 - [新規ファイル設計](#新規ファイル設計)
   - [1. `front/src/lib/auth-server.ts` — サーバー側認可ミドルウェア](#1-frontsrclibauth-serverts--サーバー側認可ミドルウェア)
   - [2. `front/src/lib/db.ts` — Prismaクライアントシングルトン](#2-frontsrclibdbts--prismaクライアントシングルトン)
-  - [3. `front/src/lib/validation.ts` — サーバー+クライアント共用バリデーション](#3-frontsrclibvalidationts--サーバークライアント共用バリデーション)
+  - [3. `front/src/lib/schemas/` と `front/src/lib/validation.ts` — zod スキーマとアダプタ](#3-frontsrclibschemas-と-frontsrclibvalidationts--zod-スキーマとアダプタ)
   - [4. `front/src/types.ts` — 追加型定義](#4-frontsrctypests--追加型定義)
-- [APIルート設計](#apiルート設計)
-  - [5. `GET /api/auth/admin` — 管理者判定（既存 is-allowed を置き換え）](#5-get-apiauthadmin--管理者判定既存-is-allowed-を置き換え)
-  - [6. `GET /api/reports` — レポート一覧取得](#6-get-apireports--レポート一覧取得)
-  - [7. `POST /api/reports` — レポート新規作成](#7-post-apireports--レポート新規作成)
-  - [8. `GET /api/reports/[id]` — レポート詳細取得](#8-get-apireportsid--レポート詳細取得)
-  - [9. `PATCH /api/reports/[id]` — レポート更新](#9-patch-apireportsid--レポート更新)
-  - [10. `DELETE /api/reports/[id]` — レポート削除](#10-delete-apireportsid--レポート削除)
-  - [11. `GET /api/tags` — タグ一覧取得](#11-get-apitags--タグ一覧取得)
-- [レスポンス形式](#レスポンス形式)
-  - [ReportItem（API → クライアント）](#reportitemapi--クライアント)
+- [APIルート設計（エンドポイント概要）](#apiルート設計エンドポイント概要)
+  - [`GET /api/auth/admin` の設計補足](#get-apiauthadmin-の設計補足)
+  - [`GET /api/reports` の設計補足（DJ-1）](#get-apireports-の設計補足dj-1)
+  - [`POST /api/reports` / `PATCH /api/reports/[id]` のタグ同期](#post-apireports--patch-apireportsid-のタグ同期)
+  - [レスポンス形式（ReportItem）](#レスポンス形式reportitem)
 - [クライアント側の変更方針](#クライアント側の変更方針)
   - [AppState インターフェース変更（DJ-3）](#appstate-インターフェース変更dj-3)
   - [AppStateProvider CRUD の修正](#appstateprovider-crud-の修正)
@@ -56,6 +54,15 @@
   - [読み取り（GET /api/reports, GET /api/reports/[id]）](#読み取りget-apireports-get-apireportsid)
   - [書き込み](#書き込み)
   - [バリデーション（validateExternalUrls）](#バリデーションvalidateexternalurls)
+
+## API 契約の正準（openapi.json）
+
+- **契約の正準は [`openapi.json`](openapi.json)（OpenAPI 3.1）。** パス・リクエスト/レスポンスのスキーマ・ステータスコードの機械的な記述はこのファイルを唯一の真実とする。
+- 生成元は `front/src/lib/schemas/report.ts` の zod スキーマ（`reportCreateSchema` / `reportPatchSchema` / `externalUrlInputSchema` / `reportItemSchema` / `tagListSchema` / `validationErrorSchema` / `errorSchema`、定数 `LIMITS`、関数 `normalizeTags`）。
+- `front/` で `pnpm gen:openapi` を実行すると、`front/src/lib/openapi/document.ts`（`buildOpenApiDocument`）+ `front/scripts/gen-openapi.ts` 経由で `docs/openapi.json` が再生成される。
+- 対象パス: `/api/reports`（GET/POST）, `/api/reports/{id}`（GET/PATCH/DELETE）, `/api/tags`（GET）, `/api/auth/admin`（GET）, `/api/auth/is-allowed`（POST）。
+- **本書の役割**: 設計判断（DJ-1〜DJ-6）・補足・エンドポイント概要を担う。フィールド表やステータス羅列などの機械的な契約記述は openapi.json に集約し、本書からは重複を排除する。
+- Swagger UI は導入していない（JSON を直接参照する）。
 
 ## 概要
 
@@ -483,194 +490,14 @@ export const prisma =
 globalForPrisma.prisma = prisma;
 ```
 
-### 3. `front/src/lib/validation.ts` — サーバー+クライアント共用バリデーション
+### 3. `front/src/lib/schemas/` と `front/src/lib/validation.ts` — zod スキーマとアダプタ
 
-Report向けにyoutube版のパターンを適用。タグは `#` 付きで維持（DJ-2）、カテゴリは固定リスト検証（DJ-6）。
+**契約の正準は `front/src/lib/schemas/`（zod）。** `validation.ts` はそれを包む薄いアダプタである。
 
-```typescript
-import { CATEGORIES } from '@/constants';
-
-export type ValidationErrors = {
-  title?: string;
-  content?: string;
-  category?: string;
-  author?: string;
-  tags?: string;
-  summary?: string;
-};
-
-type ValidateOptions = {
-  partial?: boolean;
-};
-
-type ReportInput = {
-  title?: unknown;
-  content?: unknown;
-  category?: unknown;
-  author?: unknown;
-  tags?: unknown;
-  summary?: unknown;
-  publishDate?: unknown;
-};
-
-type NormalizedReport = {
-  title?: string;
-  content?: string;
-  category?: string;
-  author?: string;
-  tags?: string[];
-  summary?: string | null;
-  publishDate?: Date | null;
-};
-
-const MAX_TITLE_LENGTH = 200;
-const MAX_SUMMARY_LENGTH = 500;
-const MAX_CONTENT_LENGTH = 50000;
-const MAX_TAG_LENGTH = 50;
-const MAX_TAGS_COUNT = 20;
-const ALLOWED_CATEGORIES: readonly string[] = CATEGORIES;
-
-const hasField = (input: ReportInput, key: keyof ReportInput) =>
-  Object.prototype.hasOwnProperty.call(input, key);
-
-const toStringValue = (value: unknown) => {
-  if (typeof value === 'string') return value.trim();
-  return '';
-};
-
-/**
- * タグの正規化。canonical form は `#` 付き。
- *
- * - 配列入力: 各要素をトリムし、`#` が無ければ付与
- * - 文字列入力: カンマ分割後、各要素をトリムし、`#` が無ければ付与
- *
- * 例: ["AI", "#Cloud"] → ["#AI", "#Cloud"]
- * 例: "AI, Cloud, #Linux" → ["#AI", "#Cloud", "#Linux"]
- */
-const normalizeTags = (value: unknown): string[] => {
-  const ensureHash = (tag: string) => {
-    const trimmed = tag.trim();
-    if (!trimmed) return '';
-    return trimmed.startsWith('#') ? trimmed : `#${trimmed}`;
-  };
-
-  if (Array.isArray(value)) {
-    return value
-      .filter((tag) => typeof tag === 'string')
-      .map(ensureHash)
-      .filter(Boolean);
-  }
-  if (typeof value === 'string') {
-    return value
-      .split(',')
-      .map(ensureHash)
-      .filter(Boolean);
-  }
-  return [];
-};
-
-const parsePublishDate = (value: unknown): Date | null | undefined => {
-  if (value === null) return null;
-  if (value instanceof Date) return value;
-  if (typeof value === 'string' && value.trim().length > 0) {
-    const parsed = new Date(value);
-    if (!Number.isNaN(parsed.getTime())) return parsed;
-  }
-  return undefined;
-};
-
-export const validateReportInput = (
-  input: ReportInput,
-  options: ValidateOptions = {},
-): { data: NormalizedReport; errors: ValidationErrors } => {
-  const errors: ValidationErrors = {};
-  const data: NormalizedReport = {};
-  const { partial = false } = options;
-
-  // title: 必須
-  if (!partial || hasField(input, 'title')) {
-    const title = toStringValue(input.title);
-    if (!title) {
-      errors.title = 'タイトルは必須です。';
-    } else if (title.length > MAX_TITLE_LENGTH) {
-      errors.title = `タイトルは${MAX_TITLE_LENGTH}文字以内です。`;
-    } else {
-      data.title = title;
-    }
-  }
-
-  // content: 必須
-  if (!partial || hasField(input, 'content')) {
-    const content = toStringValue(input.content);
-    if (!content) {
-      errors.content = '本文は必須です。';
-    } else if (content.length > MAX_CONTENT_LENGTH) {
-      errors.content = `本文は${MAX_CONTENT_LENGTH}文字以内です。`;
-    } else {
-      data.content = content;
-    }
-  }
-
-  // category: 必須 + 固定リスト検証（DJ-6）
-  if (!partial || hasField(input, 'category')) {
-    const category = toStringValue(input.category);
-    if (!category) {
-      errors.category = 'カテゴリは必須です。';
-    } else if (!ALLOWED_CATEGORIES.includes(category)) {
-      errors.category = `カテゴリは次のいずれかです: ${ALLOWED_CATEGORIES.join(' / ')}`;
-    } else {
-      data.category = category;
-    }
-  }
-
-  // author: 必須
-  if (!partial || hasField(input, 'author')) {
-    const author = toStringValue(input.author);
-    if (!author) {
-      errors.author = '著者は必須です。';
-    } else {
-      data.author = author;
-    }
-  }
-
-  // tags: 必須（1つ以上）、canonical form は # 付き（DJ-2）
-  if (!partial || hasField(input, 'tags')) {
-    const tags = normalizeTags(input.tags);
-    if (!partial && tags.length === 0) {
-      errors.tags = 'タグは1つ以上必要です。';
-    } else if (tags.length > MAX_TAGS_COUNT) {
-      errors.tags = `タグは${MAX_TAGS_COUNT}個以内です。`;
-    } else {
-      const tooLong = tags.find((tag) => tag.length > MAX_TAG_LENGTH);
-      if (tooLong) {
-        errors.tags = `タグは${MAX_TAG_LENGTH}文字以内です。`;
-      } else {
-        data.tags = tags;
-      }
-    }
-  }
-
-  // summary: 任意
-  if (hasField(input, 'summary')) {
-    const summary = toStringValue(input.summary);
-    if (summary.length > MAX_SUMMARY_LENGTH) {
-      errors.summary = `要約は${MAX_SUMMARY_LENGTH}文字以内です。`;
-    } else {
-      data.summary = summary || null;
-    }
-  }
-
-  // publishDate: 任意
-  if (hasField(input, 'publishDate')) {
-    const publishDate = parsePublishDate(input.publishDate);
-    if (publishDate !== undefined) {
-      data.publishDate = publishDate;
-    }
-  }
-
-  return { data, errors };
-};
-```
+- **単一ソース**: `front/src/lib/schemas/report.ts` に API 契約を zod スキーマとして定義する（`reportCreateSchema` / `reportPatchSchema` / `externalUrlInputSchema` / `reportItemSchema` / `tagListSchema` / `validationErrorSchema` / `errorSchema`、定数 `LIMITS`、関数 `normalizeTags`）。タグは `#` 付きで維持（DJ-2）、カテゴリは固定リスト検証（DJ-6）。フィールドの型・上限・必須/任意の正準はこのスキーマで、`docs/openapi.json` へも反映される。
+- **アダプタ**: `front/src/lib/validation.ts` は上記 zod スキーマを包み、既存の `{ data, errors }` 契約・日本語メッセージ・フィールドキーを維持する。export は `validateReportInput` / `validateExternalUrls` / `normalizeTags`。実装の本体ロジックは `lib/schemas/` 側にあり、本ファイルはエラー整形・後方互換のための薄いラッパーに徹する。
+- **利用範囲（現状）**: バリデーションは**サーバー専用**で、reports の2ルート（`POST /api/reports` / `PATCH /api/reports/[id]`）のみが使用する。クライアント側では現状は呼び出していない（旧設計の「サーバー+クライアント共用」記述は実態に合わせて修正）。
+- `validation.ts` の `{ data, errors }` 契約・`ValidationErrors` の各フィールドキー・日本語メッセージは Route Handler / hooks 側の既存呼び出しと互換を保つ。詳細なフィールド定義・上限値・エラースキーマは `lib/schemas/report.ts` および `docs/openapi.json` を参照する。
 
 ### 4. `front/src/types.ts` — 追加型定義
 
@@ -687,89 +514,50 @@ export type MutationResult =
 
 ---
 
-## APIルート設計
+## APIルート設計（エンドポイント概要）
 
-### 5. `GET /api/auth/admin` — 管理者判定（既存 is-allowed を置き換え）
+> **パス・リクエスト/レスポンスのスキーマ・ステータスコードの正準は [`openapi.json`](openapi.json)。** 以下は概要テーブルと設計上の補足のみを示す。フィールド表・ステータス羅列・スキーマ詳細は openapi.json を参照すること（本書では重複させない）。
 
-youtube-my-collection の `/api/auth/admin` パターンを踏襲。
+| メソッド | パス | 概要 | 認証要否 |
+|---------|------|------|---------|
+| GET | `/api/auth/admin` | 管理者判定（boolean を返す。`{ isAdmin }`） | Bearer 必須 |
+| POST | `/api/auth/is-allowed` | 許可メール判定（E2E互換用に維持） | localモード: body / supabaseモード: Bearer |
+| GET | `/api/reports` | レポート一覧取得（DJ-1: デフォルト全件、`content` は除外） | 不要（公開閲覧） |
+| POST | `/api/reports` | レポート新規作成（タグ・外部URL同期含む） | `requireAdmin()`（管理者必須） |
+| GET | `/api/reports/{id}` | レポート詳細取得（`content` 実体を返す） | 不要（公開閲覧） |
+| PATCH | `/api/reports/{id}` | レポート更新（partial / タグ・外部URL全件置換） | `requireAdmin()`（管理者必須） |
+| DELETE | `/api/reports/{id}` | レポート削除（Cascade で関連削除） | `requireAdmin()`（管理者必須） |
+| GET | `/api/tags` | タグ一覧取得（`#` 付き `string[]`） | 不要（公開閲覧） |
+
+> 各エンドポイントのリクエスト/レスポンスフィールド・ステータスコード・エラースキーマは `docs/openapi.json` でカバーされる。ファイル配置は本書「ファイル構成（移行後）」セクションを参照。
+
+以下は openapi.json に表現しきれない**設計判断・実装上の注意**を補足する。
+
+### `GET /api/auth/admin` の設計補足
 
 **ファイル:** `front/src/app/api/auth/admin/route.ts`
 
-```
-GET /api/auth/admin
-Headers: Authorization: Bearer <access_token>
-Response: { isAdmin: boolean }
-```
-
-| ステータス | 条件 |
-|-----------|------|
-| 200 `{ isAdmin: true }` | トークン有効 + ADMIN_EMAIL一致 |
-| 200 `{ isAdmin: false }` | トークン有効 + ADMIN_EMAIL不一致 |
-| 401 `{ isAdmin: false }` | トークン無し/無効/期限切れ |
-
-**重要: `requireAdmin()` との使い分け:**
+**`requireAdmin()` との使い分け（設計判断）:**
 - `/api/auth/admin` は **boolean 判定専用**のエンドポイントであり、`requireAdmin()` を直接流用しない。
   - 非管理者は 403 ではなく **200 `{ isAdmin: false }`** を返す（クライアントが判定結果を受け取り自分でハンドリングする）。
   - `requireAdmin()` は CRUD エンドポイント（POST/PATCH/DELETE）の入り口で使い、非管理者を **403 で拒否**する。
 - この区別は youtube-my-collection と同じ設計: `/api/auth/admin` は `supabase.auth.getUser(token)` + メール照合のみ、`requireAdmin()` は 401/403 でブロック。
-
-**実装概要（requireAdmin を使わない）:**
-
-Supabase クライアントはモジュールスコープで生成し、warm invocation 間で再利用する。
-`supabase.auth.getUser(token)` は明示的に JWT を渡すため、共有 auth 状態の混線は起きない。
-
-```typescript
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-export async function GET(request: Request) {
-  const authHeader = request.headers.get('authorization');
-  const token = authHeader ? authHeader.replace(/^Bearer\s+/i, '').trim() : '';
-
-  if (!authHeader || !token) {
-    return NextResponse.json({ isAdmin: false }, { status: 401 });
-  }
-
-  const { data, error } = await supabase.auth.getUser(token);
-  if (error || !data.user) {
-    return NextResponse.json({ isAdmin: false }, { status: 401 });
-  }
-
-  const email = data.user.email ?? '';
-  const adminEmails = (process.env.ADMIN_EMAIL ?? '')
-    .split(',').map((e) => e.trim().toLowerCase()).filter(Boolean);
-  const isAdmin = adminEmails.includes(email.toLowerCase());
-
-  return NextResponse.json({ isAdmin });  // ← 非管理者でも 200
-}
-```
+- Supabase クライアントはモジュールスコープで生成し、warm invocation 間で再利用する。`supabase.auth.getUser(token)` は明示的に JWT を渡すため、共有 auth 状態の混線は起きない。
 
 **localモード対応:**
-- E2E互換のため、既存 `/api/auth/is-allowed` (POST) も当面維持する
-- 新規実装では `/api/auth/admin` (GET) を優先的に使用する
+- E2E互換のため、既存 `/api/auth/is-allowed` (POST) も当面維持する。
+- 新規実装では `/api/auth/admin` (GET) を優先的に使用する。
 
-### 6. `GET /api/reports` — レポート一覧取得
+### `GET /api/reports` の設計補足（DJ-1）
 
 **ファイル:** `front/src/app/api/reports/route.ts`
 
-```
-GET /api/reports
-GET /api/reports?limit=50&offset=0
-Response: ReportItem[]
-```
-
-| パラメータ | 型 | デフォルト | 説明 |
-|-----------|-----|-----------|------|
-| `limit` | number | なし（全件） | 取得件数上限（1〜1000）。省略時は全件返却 |
-| `offset` | number | 0 | オフセット |
-
-**DJ-1 に基づく仕様:**
-- `limit` を省略した場合は全件を返却する（現行のクライアント側全件保持モデルに合わせる）。
+- `limit` を省略した場合は全件を返却する（現行のクライアント側全件保持モデルに合わせる）。クエリパラメータ `limit` / `offset` の定義は openapi.json を参照。
 - `limit` を指定した場合はレスポンスヘッダーに `x-total-count`, `x-limit`, `x-offset` を付与する。
 - フィルタリング/ページングはクライアント側で行うため、サーバー側フィルタパラメータは設けない。
+- 一覧は `select` で `content` を除外し `toReportListItem()` が `content: ''` を返す（ペイロード削減）。本文は `GET /api/reports/{id}` でのみ取得する。
 
-**Prisma操作:**
+**Prisma操作（全件取得時の例）:**
 ```typescript
 const limit = parsedLimit;  // undefined = 全件
 const offset = parsedOffset ?? 0;
@@ -781,38 +569,30 @@ const [totalCount, reports] = await prisma.$transaction([
     ...(limit !== undefined ? { take: limit } : {}),
     skip: offset,
     include: {
-      ReportTagMapping: {
-        include: { ReportTag: true },
-      },
+      ReportTagMapping: { include: { ReportTag: true } },
     },
   }),
 ]);
 ```
 
-**認可:** 不要（公開閲覧）
+**備考（`GET /api/reports/{id}`）:** 現行UIは AppStateProvider の `reports` 配列から ID 解決するため、詳細エンドポイントは直接使わない。将来 server-driven 化した場合の詳細取得用に用意する。
 
-### 7. `POST /api/reports` — レポート新規作成
+### `POST /api/reports` / `PATCH /api/reports/[id]` のタグ同期
 
-```
-POST /api/reports
-Headers: Authorization: Bearer <access_token>
-Body: { title, content, category, author, tags, summary?, publishDate? }
-Response: 201 ReportItem
-```
+**処理フロー（共通）:**
+1. `requireAdmin()` で認可チェック。
+2. `validateReportInput()`（PATCH は `{ partial: true }`）でバリデーション（カテゴリ固定リスト含む）。契約の正準は `lib/schemas/`（zod）。
+3. Prismaトランザクションで Report + ReportTag + ReportTagMapping（+ 外部URL）を同期。
+4. 作成/更新済みレポートを返却。
 
-**処理フロー:**
-1. `requireAdmin()` で認可チェック
-2. `validateReportInput()` でバリデーション（カテゴリ固定リスト含む）
-3. Prismaトランザクションで Report + ReportTag + ReportTagMapping を一括作成
-4. 作成済みレポートを返却
-
-**タグ同期（Prismaトランザクション内）:**
+**タグ同期（# 付き canonical form / トランザクション内）:**
 ```typescript
 await prisma.$transaction(async (tx) => {
-  // 1. Report作成
-  const report = await tx.report.create({ data: { ... } });
+  const report = await tx.report.create({ data: { ... } });  // PATCH は update
 
-  // 2. 存在しないタグを作成（# 付き canonical form）
+  // PATCH 時、tags が送信された場合は既存マッピングを全削除してから再作成
+  // await tx.reportTagMapping.deleteMany({ where: { reportId: id } });
+
   for (const tagName of data.tags) {
     await tx.reportTag.upsert({
       where: { name: tagName },           // 例: "#AI"
@@ -821,7 +601,6 @@ await prisma.$transaction(async (tx) => {
     });
   }
 
-  // 3. マッピング作成
   const tagRecords = await tx.reportTag.findMany({ where: { name: { in: data.tags } } });
   await tx.reportTagMapping.createMany({
     data: tagRecords.map((tag) => ({
@@ -835,185 +614,20 @@ await prisma.$transaction(async (tx) => {
 });
 ```
 
-| ステータス | 条件 |
-|-----------|------|
-| 201 | 作成成功 |
-| 400 `{ errors }` | バリデーションエラー |
-| 401 | トークン無し |
-| 403 | 管理者でない |
+- **PATCH のタグ/外部URL**: `tags` / `externalUrls` が送信された場合のみ**全件置換**（`deleteMany` → `createMany`）する。
+- **DELETE**: `ReportTagMapping` / `ExternalUrl` は ON DELETE CASCADE で自動削除される。
+- ステータスコード（201/200/400/401/403/404）の正準は openapi.json を参照。
 
-### 8. `GET /api/reports/[id]` — レポート詳細取得
+### レスポンス形式（ReportItem）
 
-**ファイル:** `front/src/app/api/reports/[id]/route.ts`
+APIルートは `types.ts` の `ReportItem` と同じ形式で返却する（スキーマの正準は `reportItemSchema`（zod）/ openapi.json）。
 
-```
-GET /api/reports/:id
-Response: ReportItem
-```
+- `content`: 詳細APIのみ実体。一覧API（`GET /api/reports`）では `''` を返す（ペイロード削減）。
+- `tags`: `#` 付き配列（例: `["#AI", "#Cloud"]`）。
+- `externalUrls`: `{ id, url, label }[]`。一覧・詳細の両方に含まれる（URL+ラベルのみで軽量）。詳細は本書「外部URL管理機能（API拡張）」セクションを参照。
+- 日付フィールド（`publishDate` / `createdAt` / `updatedAt`）は ISO 8601 文字列。
 
-**Prisma操作:**
-```typescript
-const report = await prisma.report.findUnique({
-  where: { id },
-  include: {
-    ReportTagMapping: {
-      include: { ReportTag: true },
-    },
-  },
-});
-```
-
-| ステータス | 条件 |
-|-----------|------|
-| 200 | 取得成功 |
-| 404 `{ error: 'Not found' }` | ID不存在 |
-
-**認可:** 不要（公開閲覧）
-
-**備考:** 現行UIは AppStateProvider の `reports` 配列から ID 解決するため、このエンドポイントは直接使わない。将来 server-driven 化した場合の詳細取得用に用意する。
-
-### 9. `PATCH /api/reports/[id]` — レポート更新
-
-```
-PATCH /api/reports/:id
-Headers: Authorization: Bearer <access_token>
-Body: Partial<{ title, content, category, author, tags, summary, publishDate }>
-Response: ReportItem
-```
-
-**処理フロー:**
-1. `requireAdmin()` で認可チェック
-2. `validateReportInput(body, { partial: true })` でバリデーション
-3. Prismaトランザクションで Report更新 + タグ同期
-4. 更新済みレポートを返却
-
-**タグ同期（更新時）:**
-```typescript
-await prisma.$transaction(async (tx) => {
-  // 1. Report更新
-  const report = await tx.report.update({ where: { id }, data: { ... } });
-
-  // 2. tags が送信された場合のみタグ同期
-  if (data.tags) {
-    // 既存マッピング削除
-    await tx.reportTagMapping.deleteMany({ where: { reportId: id } });
-
-    // 新規タグ upsert + マッピング再作成（# 付き canonical form）
-    for (const tagName of data.tags) {
-      await tx.reportTag.upsert({
-        where: { name: tagName },
-        create: { id: crypto.randomUUID(), name: tagName },
-        update: {},
-      });
-    }
-    const tagRecords = await tx.reportTag.findMany({ where: { name: { in: data.tags } } });
-    await tx.reportTagMapping.createMany({
-      data: tagRecords.map((tag) => ({
-        id: crypto.randomUUID(),
-        reportId: report.id,
-        reportTagId: tag.id,
-      })),
-    });
-  }
-
-  return report;
-});
-```
-
-| ステータス | 条件 |
-|-----------|------|
-| 200 | 更新成功 |
-| 400 `{ errors }` | バリデーションエラー |
-| 401 | トークン無し |
-| 403 | 管理者でない |
-| 404 `{ error: 'Not found' }` | ID不存在（Prisma P2025） |
-
-### 10. `DELETE /api/reports/[id]` — レポート削除
-
-```
-DELETE /api/reports/:id
-Headers: Authorization: Bearer <access_token>
-Response: { ok: true }
-```
-
-**処理フロー:**
-1. `requireAdmin()` で認可チェック
-2. Prismaで削除（ReportTagMappingはCascade削除）
-
-| ステータス | 条件 |
-|-----------|------|
-| 200 `{ ok: true }` | 削除成功 |
-| 401 | トークン無し |
-| 403 | 管理者でない |
-| 404 `{ error: 'Not found' }` | ID不存在（Prisma P2025） |
-
-### 11. `GET /api/tags` — タグ一覧取得
-
-**ファイル:** `front/src/app/api/tags/route.ts`
-
-```
-GET /api/tags
-Response: string[]
-```
-
-**Prisma操作:**
-```typescript
-const tags = await prisma.reportTag.findMany({
-  orderBy: { name: 'asc' },
-  select: { name: true },
-});
-return NextResponse.json(tags.map((t) => t.name));
-// 例: ["#AI", "#Cloud", "#Linux"]  ← # 付き canonical form
-```
-
-**認可:** 不要（公開閲覧）
-
----
-
-## レスポンス形式
-
-### ReportItem（API → クライアント）
-
-APIルートは `types.ts` の `ReportItem` と同じ形式で返却する。
-
-```typescript
-{
-  id: string;
-  title: string;
-  summary: string | null;
-  content: string;               // 詳細APIのみ実体。一覧API（GET /api/reports）では '' を返す
-  category: string;
-  author: string;
-  publishDate: string | null;   // ISO 8601
-  createdAt: string;             // ISO 8601
-  updatedAt: string;             // ISO 8601
-  tags: string[];                // # 付き配列（例: ["#AI", "#Cloud"]）
-  externalUrls: { id: string; url: string; label: string | null }[];  // 外部URL（詳細: 本書「外部URL管理機能（API拡張）」セクション）
-}
-```
-
-> **実装メモ（一覧と詳細の差分）:**
-> - `GET /api/reports`（一覧）は `select` で `content` を除外し `toReportListItem()` が `content: ''` を返す（ペイロード削減のため）。本文は `GET /api/reports/[id]` でのみ取得する。
-> - `externalUrls` は一覧・詳細の両方に含まれる（URL+ラベルのみで軽量）。本機能は後発の Issue で追加されたもので、API拡張の詳細は本書「外部URL管理機能（API拡張）」セクションを参照。
-
-**変換関数:** APIルート内で `toReportItem()` を定義し、Prismaの結果をフラット化する。
-
-```typescript
-const toReportItem = (
-  report: Report & { ReportTagMapping: (ReportTagMapping & { ReportTag: ReportTag })[] },
-) => ({
-  id: report.id,
-  title: report.title,
-  summary: report.summary ?? null,
-  content: report.content,
-  category: report.category,
-  author: report.author,
-  publishDate: report.publishDate?.toISOString() ?? null,
-  createdAt: report.createdAt.toISOString(),
-  updatedAt: report.updatedAt.toISOString(),
-  tags: report.ReportTagMapping.map((m) => m.ReportTag.name),  // # 付きのまま
-});
-```
+**変換関数:** APIルート内で `toReportItem()` を定義し、Prismaの結果をフラット化する（`tags` は `ReportTagMapping.ReportTag.name` を `#` 付きのまま展開）。フィールドごとの型は openapi.json を参照。
 
 ---
 
@@ -1212,7 +826,9 @@ front/src/
 ├── lib/
 │   ├── auth-server.ts            # 【新規】サーバー側認可ミドルウェア
 │   ├── db.ts                     # 【新規】Prismaクライアントシングルトン
-│   ├── validation.ts             # 【新規】サーバー+クライアント共用バリデーション
+│   ├── schemas/report.ts         # 【新規】API契約の単一ソース（zod スキーマ / openapi.json 生成元）
+│   ├── openapi/document.ts       # 【新規】buildOpenApiDocument（OpenAPI 3.1 生成）
+│   ├── validation.ts             # 【新規】zod スキーマを包むサーバー専用アダプタ（{ data, errors } 契約維持）
 │   └── supabaseClient.ts         # 【維持】認証用のみ（DB操作には使わない）
 ├── providers/
 │   └── AppStateProvider.tsx      # 【修正】CRUD → fetch APIルート、MutationResult返却、accessToken管理
