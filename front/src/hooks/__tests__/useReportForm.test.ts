@@ -5,8 +5,10 @@ import type { MutationResult, ReportItem, User } from '@/types';
 
 const mockPush = vi.fn();
 const mockBack = vi.fn();
+// useRouter は毎回同じオブジェクトを返す（effect 依存配列の参照を安定させ、再レンダーループを防ぐ）
+const mockRouter = { push: mockPush, back: mockBack };
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: mockPush, back: mockBack }),
+  useRouter: () => mockRouter,
 }));
 
 const testUser: User = { id: '1', username: 'Editor', email: 'editor@test.com', role: 'admin' };
@@ -24,6 +26,9 @@ const testReport: ReportItem = {
     { id: 'eu1', url: 'https://example.com', label: 'Example' },
   ],
 };
+
+// 安定参照の fixture（edit モードのテストで effect 依存を安定させる）
+const testReports: ReportItem[] = [testReport];
 
 const mockOnSubmit = vi.fn<(data: Omit<ReportItem, 'id'>) => Promise<MutationResult>>();
 
@@ -49,7 +54,7 @@ describe('useReportForm', () => {
       useReportForm({
         user: testUser,
         reportId: 'r1',
-        reports: [testReport],
+        reports: testReports,
         onSubmit: mockOnSubmit,
       }),
     );
@@ -130,7 +135,7 @@ describe('useReportForm', () => {
       useReportForm({
         user: testUser,
         reportId: 'r1',
-        reports: [testReport],
+        reports: testReports,
         onSubmit: mockOnSubmit,
       }),
     );

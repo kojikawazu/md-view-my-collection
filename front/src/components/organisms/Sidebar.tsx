@@ -87,11 +87,11 @@ const Sidebar: React.FC<SidebarProps> = ({
 
         <div className={`mt-20 pt-8 border-t ${colors.border}`}>
           <p className="text-[9px] uppercase tracking-[0.2em] font-bold mb-4 text-[#3d2b1f] opacity-40">
-            Director's Manifesto
+            {"Director's Manifesto"}
           </p>
           <div className="relative pl-4 border-l-2 border-[#5c4033]">
             <p className={`${fontHeader} text-sm italic leading-relaxed ${colors.text} opacity-90`}>
-              "True design is the intersection of logic and emotion."
+              {'"True design is the intersection of logic and emotion."'}
             </p>
             <div className="mt-4 flex items-center gap-2">
               <div className="w-4 h-[1px] bg-[#3d2b1f] opacity-30"></div>

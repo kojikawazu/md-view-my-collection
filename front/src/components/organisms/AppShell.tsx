@@ -64,12 +64,15 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
     scheduleFadeOut(remaining);
   }, [isHydrated]);
 
+  // ルート遷移（pathname 変化）でローディングを開始する副作用。
+  // ナビゲーション連動のため effect 内 setState は意図的。pathname のみを依存に保つ。
   useEffect(() => {
     const now = Date.now();
     if (lastManualTriggerRef.current && now - lastManualTriggerRef.current < minDurationMs) {
       return;
     }
     startLoading();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
   useEffect(() => {

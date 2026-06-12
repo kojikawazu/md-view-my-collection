@@ -6,28 +6,12 @@ import { requireAdmin } from '@/lib/auth-server';
 
 type TagMapping = ReportTagMapping & { ReportTag: ReportTag };
 
-type ReportWithTags = Report & { ReportTagMapping: TagMapping[]; ExternalUrl: ExternalUrl[] };
-
 type ReportListRow = Omit<Report, 'content'> & { ReportTagMapping: TagMapping[]; ExternalUrl: ExternalUrl[] };
 
 const mapTags = (mappings: TagMapping[]) => mappings.map((m) => m.ReportTag.name);
 
 const mapExternalUrls = (urls: ExternalUrl[]) =>
   urls.map((eu) => ({ id: eu.id, url: eu.url, label: eu.label }));
-
-const toReportItem = (report: ReportWithTags) => ({
-  id: report.id,
-  title: report.title,
-  summary: report.summary ?? null,
-  content: report.content,
-  category: report.category,
-  author: report.author,
-  publishDate: report.publishDate?.toISOString() ?? null,
-  createdAt: report.createdAt.toISOString(),
-  updatedAt: report.updatedAt.toISOString(),
-  tags: mapTags(report.ReportTagMapping),
-  externalUrls: mapExternalUrls(report.ExternalUrl),
-});
 
 const toReportListItem = (report: ReportListRow) => ({
   id: report.id,
@@ -126,7 +110,7 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      let tagRecords: { id: string; name: string }[] = [];
+      const tagRecords: { id: string; name: string }[] = [];
       if (tagNames.length > 0) {
         for (const tagName of tagNames) {
           const tag = await tx.reportTag.upsert({

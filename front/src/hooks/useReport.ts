@@ -15,6 +15,9 @@ export const useReport = (
 
   const dataMode = process.env.NEXT_PUBLIC_DATA_MODE ?? 'supabase';
 
+  // データ取得 effect。listReport を即時反映してから全文を fetch する。
+  // 即時反映の同期 setState は意図的（props→state の初期同期）。
+  // 依存は listReport の id/content のみ（参照変化での無駄な再取得を避けるため意図的に限定）。
   useEffect(() => {
     if (!reportId) return;
 
@@ -47,6 +50,7 @@ export const useReport = (
       })
       .catch(() => {})
       .finally(() => setIsLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reportId, listReport?.id, listReport?.content, dataMode]);
 
   return { report, isLoading };

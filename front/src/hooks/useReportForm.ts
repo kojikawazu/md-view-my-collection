@@ -44,14 +44,25 @@ export const useReportForm = ({
     if (reportId && reports) {
       const existing = reports.find((report) => report.id === reportId);
       if (existing) {
-        const { id: _, ...rest } = existing;
-        setFormData({ ...rest, summary: rest.summary ?? '' });
+        // 既存レポートでフォームを初期化する。props からの初期化のため effect 内 setState は意図的。
+        /* eslint-disable react-hooks/set-state-in-effect */
+        setFormData({
+          title: existing.title,
+          summary: existing.summary ?? '',
+          content: existing.content,
+          category: existing.category,
+          author: existing.author,
+          publishDate: existing.publishDate,
+          tags: existing.tags,
+          externalUrls: existing.externalUrls,
+        });
         setExternalUrls(
           (existing.externalUrls ?? []).map((eu) => ({
             url: eu.url,
             label: eu.label ?? '',
           })),
         );
+        /* eslint-enable react-hooks/set-state-in-effect */
       }
     }
   }, [reportId, reports, user, router, isHydrated]);
