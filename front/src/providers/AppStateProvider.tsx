@@ -225,8 +225,11 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     };
 
     void init();
+    // マウント時に一度だけ初期化する（依存を空に固定するのは意図的）。
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // local モードでは reports を localStorage に永続化し、タグを派生させる。
   useEffect(() => {
     if (dataMode === 'local') {
       localStorage.setItem('espresso_reports', JSON.stringify(reports));
@@ -277,6 +280,8 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
       })();
     });
     return () => subscription.subscription.unsubscribe();
+    // 認証購読はマウント時に一度だけ登録する（依存を空に固定するのは意図的）。
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const login = async (email: string, password: string) => {

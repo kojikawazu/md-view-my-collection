@@ -93,7 +93,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
         await tx.reportTagMapping.deleteMany({ where: { reportId: id } });
 
-        let tagRecords: { id: string; name: string }[] = [];
+        const tagRecords: { id: string; name: string }[] = [];
         if (tagNames.length > 0) {
           for (const tagName of tagNames) {
             const tag = await tx.reportTag.upsert({

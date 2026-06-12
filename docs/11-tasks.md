@@ -16,6 +16,7 @@
 - [APIルート移行（認証認可・DB操作 / youtube-my-collection踏襲 / Issue #42）](#apiルート移行認証認可db操作--youtube-my-collection踏襲--issue-42)
 - [データ品質](#データ品質)
 - [ドキュメント](#ドキュメント)
+- [API / バリデーション基盤](#api--バリデーション基盤)
 
 ## 要件定義
 - [x] 最新UIレイアウト要求を作成（`docs/03-functional-specification.md`）
@@ -198,3 +199,9 @@
 - [x] docs index のファイル参照をリンク化（`docs/README.md` / 2026-06-10）
 - [x] docs index を youtube-my-collection の構成・文体を参考に再構成（`docs/README.md` / 2026-06-10）
 - [x] docs/ 全仕様書（01〜11・README）にアンカーリンク付き目次を追加（h3まで・形式統一 / 2026-06-10）
+- [x] root/front README の役割分担と重複解消（技術スタック・開発手順を front に集約 / PR #75 / 2026-06-12）
+
+## API / バリデーション基盤
+- [x] zod + zod-openapi 導入。`front/src/lib/schemas/` を契約の単一ソース化し、`lib/validation.ts` を zod アダプタへ移行（既存 45 テスト互換維持 / 2026-06-13）
+- [x] `pnpm gen:openapi` で `docs/openapi.json`（OpenAPI 3.1）を生成。`docs/07-api-specification.md` の契約記述を生成物参照へ置換（2026-06-13）
+- [ ] Swagger UI（`/api/docs`）の導入は将来検討（API が外部公開・他者連携に育った場合）

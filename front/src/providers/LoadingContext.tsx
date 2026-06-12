@@ -11,10 +11,9 @@ const LoadingContext = createContext<LoadingContextValue | null>(null);
 export const LoadingProvider = ({
   value,
   children,
-}: {
+}: React.PropsWithChildren<{
   value: LoadingContextValue;
-  children: React.ReactNode;
-}) => <LoadingContext.Provider value={value}>{children}</LoadingContext.Provider>;
+}>) => <LoadingContext.Provider value={value}>{children}</LoadingContext.Provider>;
 
 export const useLoading = () => {
   const context = useContext(LoadingContext);

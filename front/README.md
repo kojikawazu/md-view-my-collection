@@ -15,6 +15,7 @@ Markdown レポートの保存・閲覧 UI の**実装ディレクトリ**です
 - [本番セットアップ（supabase モード）](#本番セットアップsupabase-モード)
 - [静的解析・フォーマット](#静的解析フォーマット)
 - [テスト](#テスト)
+- [API 仕様（OpenAPI）](#api-仕様openapi)
 - [Prisma / DB スキーマ](#prisma--db-スキーマ)
 - [注意点](#注意点)
 - [ドキュメント](#ドキュメント)
@@ -30,6 +31,7 @@ Markdown レポートの保存・閲覧 UI の**実装ディレクトリ**です
 | 認証 | Supabase Auth（Google OAuth） |
 | DB / ORM | Supabase Postgres（RLS） / Prisma 6（`db pull` のみ・マイグレーション禁止） |
 | BFF | Next.js Route Handlers（`src/app/api/*`） |
+| バリデーション / API契約 | zod 4 + zod-openapi 5（スキーマから OpenAPI 生成） |
 | テスト | Vitest（ユニット） + Playwright（E2E） |
 | 静的解析 | ESLint 9 + Prettier 3 |
 | パッケージマネージャ | **pnpm**（npm / yarn は使用しない） |
@@ -158,6 +160,18 @@ pnpm test:e2e:report # 直近の E2E レポート表示
 ```
 
 E2E は `NEXT_PUBLIC_AUTH_MODE=local` / `NEXT_PUBLIC_DATA_MODE=local` 前提で動作します（`playwright.config.ts` が注入）。テストケース設計は [../docs/08-test-specification.md](../docs/08-test-specification.md)。
+
+## API 仕様（OpenAPI）
+
+API の契約（リクエスト/レスポンス・ステータス）の正準は、zod スキーマ（`src/lib/schemas/report.ts`）から生成する **`docs/openapi.json`**（OpenAPI 3.1）です。
+
+```bash
+pnpm gen:openapi   # zod スキーマ → docs/openapi.json を再生成
+```
+
+- バリデーションと API ドキュメントは同じ zod スキーマを単一ソースとする。ランタイム検証は `src/lib/validation.ts`（zod アダプタ、`{ data, errors }` 契約を維持）。
+- スキーマ（schema / 検証ルール）を変更したら `pnpm gen:openapi` を実行し、生成物をコミットする。
+- 設計判断・エンドポイント概要は [../docs/07-api-specification.md](../docs/07-api-specification.md) を参照。
 
 ## Prisma / DB スキーマ
 

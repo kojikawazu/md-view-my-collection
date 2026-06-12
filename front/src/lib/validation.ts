@@ -1,5 +1,18 @@
-import { CATEGORIES } from '@/constants';
 import type { ExternalUrlInput } from '@/types';
+import {
+  LIMITS,
+  normalizeTags,
+  reportCreateSchema,
+  reportPatchSchema,
+} from '@/lib/schemas/report';
+
+/**
+ * ランタイム検証アダプタ。
+ *
+ * 契約の正準は `lib/schemas/report.ts`（zod）。このモジュールはそれを包み、
+ * 既存の `{ data, errors }`（フィールド名 → 日本語メッセージ）形式を維持する。
+ * これにより Route Handler とフロントのエラー契約を変更せずに済む。
+ */
 
 export type ValidationErrors = {
   title?: string;
@@ -14,16 +27,6 @@ type ValidateOptions = {
   partial?: boolean;
 };
 
-type ReportInput = {
-  title?: unknown;
-  content?: unknown;
-  category?: unknown;
-  author?: unknown;
-  tags?: unknown;
-  summary?: unknown;
-  publishDate?: unknown;
-};
-
 type NormalizedReport = {
   title?: string;
   content?: string;
@@ -34,148 +37,46 @@ type NormalizedReport = {
   publishDate?: Date | null;
 };
 
-const MAX_TITLE_LENGTH = 200;
-const MAX_SUMMARY_LENGTH = 500;
-const MAX_CONTENT_LENGTH = 50000;
-const MAX_TAG_LENGTH = 50;
-const MAX_TAGS_COUNT = 20;
-const ALLOWED_CATEGORIES: readonly string[] = CATEGORIES;
+export { normalizeTags };
 
-const hasField = (input: ReportInput, key: keyof ReportInput) =>
-  Object.prototype.hasOwnProperty.call(input, key);
+// validateReportInput は本文フィールドのみを扱う（externalUrls は別関数で検証）。
+const createReportSchema = reportCreateSchema.omit({ externalUrls: true });
+const patchReportSchema = reportPatchSchema.omit({ externalUrls: true });
 
-const toStringValue = (value: unknown) => {
-  if (typeof value === 'string') return value.trim();
-  return '';
-};
-
-/**
- * タグの正規化。canonical form は `#` 付き。
- *
- * - 配列入力: 各要素をトリムし、`#` が無ければ付与
- * - 文字列入力: カンマ分割後、各要素をトリムし、`#` が無ければ付与
- *
- * 例: ["AI", "#Cloud"] → ["#AI", "#Cloud"]
- * 例: "AI, Cloud, #Linux" → ["#AI", "#Cloud", "#Linux"]
- */
-export const normalizeTags = (value: unknown): string[] => {
-  const ensureHash = (tag: string) => {
-    const trimmed = tag.trim();
-    if (!trimmed) return '';
-    return trimmed.startsWith('#') ? trimmed : `#${trimmed}`;
-  };
-
-  if (Array.isArray(value)) {
-    return value
-      .filter((tag) => typeof tag === 'string')
-      .map(ensureHash)
-      .filter(Boolean);
+/** zod の issues を、先勝ちでフィールド名 → メッセージの平坦な形へ変換する。 */
+const toFieldErrors = (issues: { path: PropertyKey[]; message: string }[]): ValidationErrors => {
+  const errors: ValidationErrors = {};
+  for (const issue of issues) {
+    const key = issue.path[0];
+    if (typeof key !== 'string') continue;
+    if (!(key in errors)) {
+      (errors as Record<string, string>)[key] = issue.message;
+    }
   }
-  if (typeof value === 'string') {
-    return value
-      .split(',')
-      .map(ensureHash)
-      .filter(Boolean);
-  }
-  return [];
-};
-
-const parsePublishDate = (value: unknown): Date | null | undefined => {
-  if (value === null) return null;
-  if (value instanceof Date) return value;
-  if (typeof value === 'string' && value.trim().length > 0) {
-    const parsed = new Date(value);
-    if (!Number.isNaN(parsed.getTime())) return parsed;
-  }
-  return undefined;
+  return errors;
 };
 
 export const validateReportInput = (
-  input: ReportInput,
+  input: unknown,
   options: ValidateOptions = {},
 ): { data: NormalizedReport; errors: ValidationErrors } => {
-  const errors: ValidationErrors = {};
+  const schema = options.partial ? patchReportSchema : createReportSchema;
+  const result = schema.safeParse(input);
+
+  if (!result.success) {
+    return { data: {}, errors: toFieldErrors(result.error.issues) };
+  }
+
+  // 値が undefined のキーは落とす（部分更新で「未指定」を保持するため）。
   const data: NormalizedReport = {};
-  const { partial = false } = options;
-
-  if (!partial || hasField(input, 'title')) {
-    const title = toStringValue(input.title);
-    if (!title) {
-      errors.title = 'タイトルは必須です。';
-    } else if (title.length > MAX_TITLE_LENGTH) {
-      errors.title = `タイトルは${MAX_TITLE_LENGTH}文字以内です。`;
-    } else {
-      data.title = title;
+  for (const [key, value] of Object.entries(result.data)) {
+    if (value !== undefined) {
+      (data as Record<string, unknown>)[key] = value;
     }
   }
-
-  if (!partial || hasField(input, 'content')) {
-    const content = toStringValue(input.content);
-    if (!content) {
-      errors.content = '本文は必須です。';
-    } else if (content.length > MAX_CONTENT_LENGTH) {
-      errors.content = `本文は${MAX_CONTENT_LENGTH}文字以内です。`;
-    } else {
-      data.content = content;
-    }
-  }
-
-  if (!partial || hasField(input, 'category')) {
-    const category = toStringValue(input.category);
-    if (!category) {
-      errors.category = 'カテゴリは必須です。';
-    } else if (!ALLOWED_CATEGORIES.includes(category)) {
-      errors.category = `カテゴリは次のいずれかです: ${ALLOWED_CATEGORIES.join(' / ')}`;
-    } else {
-      data.category = category;
-    }
-  }
-
-  if (!partial || hasField(input, 'author')) {
-    const author = toStringValue(input.author);
-    if (!author) {
-      errors.author = '著者は必須です。';
-    } else {
-      data.author = author;
-    }
-  }
-
-  if (!partial || hasField(input, 'tags')) {
-    const tags = normalizeTags(input.tags);
-    if (!partial && tags.length === 0) {
-      errors.tags = 'タグは1つ以上必要です。';
-    } else if (tags.length > MAX_TAGS_COUNT) {
-      errors.tags = `タグは${MAX_TAGS_COUNT}個以内です。`;
-    } else {
-      const tooLong = tags.find((tag) => tag.length > MAX_TAG_LENGTH);
-      if (tooLong) {
-        errors.tags = `タグは${MAX_TAG_LENGTH}文字以内です。`;
-      } else {
-        data.tags = tags;
-      }
-    }
-  }
-
-  if (hasField(input, 'summary')) {
-    const summary = toStringValue(input.summary);
-    if (summary.length > MAX_SUMMARY_LENGTH) {
-      errors.summary = `要約は${MAX_SUMMARY_LENGTH}文字以内です。`;
-    } else {
-      data.summary = summary || null;
-    }
-  }
-
-  if (hasField(input, 'publishDate')) {
-    const publishDate = parsePublishDate(input.publishDate);
-    if (publishDate !== undefined) {
-      data.publishDate = publishDate;
-    }
-  }
-
-  return { data, errors };
+  return { data, errors: {} };
 };
 
-const MAX_LABEL_LENGTH = 200;
 const URL_PATTERN = /^https?:\/\//;
 
 export const validateExternalUrls = (
@@ -201,8 +102,8 @@ export const validateExternalUrls = (
       errors[`externalUrls.${i}.url`] = 'URLはhttp://またはhttps://で始まる必要があります。';
     }
 
-    if (label.length > MAX_LABEL_LENGTH) {
-      errors[`externalUrls.${i}.label`] = `ラベルは${MAX_LABEL_LENGTH}文字以内です。`;
+    if (label.length > LIMITS.label) {
+      errors[`externalUrls.${i}.label`] = `ラベルは${LIMITS.label}文字以内です。`;
     }
 
     data.push({ url, label });

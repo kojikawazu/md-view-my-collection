@@ -89,7 +89,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ theme, onLogin, onLoginWithGoogle
 
         <div className={`mt-10 text-center border-t ${colors.border} pt-6`}>
           <p className={`text-[11px] ${colors.muted} italic font-medium`}>
-            "Precision is the soul of elegance."
+            {'"Precision is the soul of elegance."'}
           </p>
         </div>
       </div>
