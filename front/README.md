@@ -169,6 +169,7 @@ API の契約（リクエスト/レスポンス・ステータス）の正準は
 pnpm gen:openapi   # zod スキーマ → docs/openapi.json を再生成
 ```
 
+- ブラウザで閲覧する場合は `/docs`（Swagger UI・**管理者のみ**）。スペックは管理者ゲート付き `/api/openapi` から取得する。
 - バリデーションと API ドキュメントは同じ zod スキーマを単一ソースとする。ランタイム検証は `src/lib/validation.ts`（zod アダプタ、`{ data, errors }` 契約を維持）。
 - スキーマ（schema / 検証ルール）を変更したら `pnpm gen:openapi` を実行し、生成物をコミットする。
 - 設計判断・エンドポイント概要は [../docs/07-api-specification.md](../docs/07-api-specification.md) を参照。

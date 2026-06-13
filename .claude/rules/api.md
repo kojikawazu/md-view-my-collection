@@ -21,7 +21,8 @@ front/src/app/api/
 ├── reports/
 │   ├── route.ts            # GET（一覧）/ POST（新規作成）
 │   └── [id]/route.ts       # GET（詳細）/ PATCH（更新）/ DELETE（削除）
-└── tags/route.ts           # GET（タグ一覧）
+├── tags/route.ts           # GET（タグ一覧）
+└── openapi/route.ts        # GET（OpenAPI ドキュメント / 管理者のみ `requireAdmin`）。`/docs` の Swagger UI が読み込む
 ```
 
 ## 共通方針
@@ -38,6 +39,7 @@ front/src/app/api/
 - リクエスト/レスポンスの契約は `lib/schemas/`（zod）を単一ソースとし、`pnpm gen:openapi` で `docs/openapi.json`（OpenAPI 3.1）を生成する。
 - スキーマ・検証ルールを変更したら `pnpm gen:openapi` を実行し、生成物をコミットする。
 - 手書きのエンドポイント仕様は `docs/openapi.json` と重複させない（正準は生成物）。
+- ブラウザ閲覧用に `/docs`（Swagger UI・**管理者のみ**）を提供する。スペックは `/api/openapi`（`requireAdmin`）から Bearer トークン付きで取得する。
 
 ## キャッシュ戦略
 
