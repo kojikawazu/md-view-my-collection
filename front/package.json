@@ -25,6 +25,7 @@
     "react-markdown": "^10.1.0",
     "rehype-sanitize": "^6.0.0",
     "remark-gfm": "^4.0.1",
+    "swagger-ui-react": "^5.32.6",
     "zod": "^4.4.3",
     "zod-openapi": "^5.4.6"
   },
@@ -37,6 +38,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/swagger-ui-react": "^5.18.0",
     "babel-plugin-react-compiler": "1.0.0",
     "dotenv": "^17.2.2",
     "eslint": "^9",

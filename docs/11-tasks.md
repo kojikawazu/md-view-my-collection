@@ -204,4 +204,4 @@
 ## API / バリデーション基盤
 - [x] zod + zod-openapi 導入。`front/src/lib/schemas/` を契約の単一ソース化し、`lib/validation.ts` を zod アダプタへ移行（既存 45 テスト互換維持 / 2026-06-13）
 - [x] `pnpm gen:openapi` で `docs/openapi.json`（OpenAPI 3.1）を生成。`docs/07-api-specification.md` の契約記述を生成物参照へ置換（2026-06-13）
-- [ ] Swagger UI（`/api/docs`）の導入は将来検討（API が外部公開・他者連携に育った場合）
+- [x] Swagger UI を `/docs`（管理者のみ）に導入。スペックは管理者ゲート付き `/api/openapi` から取得（2026-06-13）

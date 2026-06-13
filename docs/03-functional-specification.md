@@ -90,6 +90,7 @@
 - `/report/:id/edit` 編集
 - `/report/markdown-lab` Markdownデザイン検証（認証必須）
 - `/login` ログイン
+- `/docs` API リファレンス（Swagger UI・**管理者のみ**）。スペックは管理者ゲート付き `/api/openapi` から取得
 
 ## 画面遷移図
 
