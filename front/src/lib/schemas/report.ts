@@ -26,13 +26,21 @@ export const LIMITS = {
 
 const URL_PATTERN = /^https?:\/\//;
 
-/** 文字列以外は空文字に倒し、文字列はトリムする（既存 validation.ts と同一挙動）。 */
+/**
+ * 文字列以外は空文字に倒し、文字列はトリムする（既存 validation.ts と同一挙動）。
+ *
+ * @param value - 任意の入力値
+ * @returns トリム済み文字列。文字列でなければ空文字
+ */
 const toStringValue = (value: unknown): string => (typeof value === 'string' ? value.trim() : '');
 
 /**
  * タグの正規化。canonical form は `#` 付き。
  * - 配列入力: 各要素をトリムし、`#` が無ければ付与（非文字列要素は除外）
  * - 文字列入力: カンマ分割後、各要素をトリムし、`#` が無ければ付与
+ *
+ * @param value - タグの配列またはカンマ区切り文字列
+ * @returns `#` 付きに正規化したタグ配列（空要素は除外）
  */
 export const normalizeTags = (value: unknown): string[] => {
   const ensureHash = (tag: string) => {
@@ -53,7 +61,12 @@ export const normalizeTags = (value: unknown): string[] => {
   return [];
 };
 
-/** publishDate を Date | null | undefined に解釈する（不正値は undefined で無視）。 */
+/**
+ * publishDate を Date | null | undefined に解釈する（不正値は undefined で無視）。
+ *
+ * @param value - 日付候補（Date / 文字列 / null など）
+ * @returns 有効な `Date`、明示的な `null`、または不正・未指定時の `undefined`
+ */
 const parsePublishDate = (value: unknown): Date | null | undefined => {
   if (value === null) return null;
   if (value instanceof Date) return value;

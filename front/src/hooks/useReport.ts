@@ -5,6 +5,10 @@ import { ReportItem } from '@/types';
  * Fetches a single report with full content from /api/reports/[id].
  * Returns the cached report from the list (without content) immediately,
  * then replaces it with the full report once the API responds.
+ *
+ * @param reportId - 取得対象レポートの ID（未定義なら fetch しない）
+ * @param listReport - 一覧から渡る本文なしのキャッシュ。即時表示の初期値に使う
+ * @returns 現在のレポート（`report`）と取得中フラグ（`isLoading`）
  */
 export const useReport = (
   reportId: string | undefined,

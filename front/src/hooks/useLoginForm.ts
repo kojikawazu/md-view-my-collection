@@ -5,7 +5,11 @@ interface UseLoginFormOptions {
   onLoginWithGoogle: () => Promise<string | null>;
 }
 
-/** URL の `?error=unauthorized` を初回レンダー時に解決する（SSR では window 不在のため null）。 */
+/**
+ * URL の `?error=unauthorized` を初回レンダー時に解決する（SSR では window 不在のため null）。
+ *
+ * @returns 未認可エラー時の日本語メッセージ、該当しなければ `null`
+ */
 const initialErrorFromUrl = (): string | null => {
   if (typeof window === 'undefined') return null;
   const errorParam = new URLSearchParams(window.location.search).get('error');

@@ -43,7 +43,12 @@ export { normalizeTags };
 const createReportSchema = reportCreateSchema.omit({ externalUrls: true });
 const patchReportSchema = reportPatchSchema.omit({ externalUrls: true });
 
-/** zod の issues を、先勝ちでフィールド名 → メッセージの平坦な形へ変換する。 */
+/**
+ * zod の issues を、先勝ちでフィールド名 → メッセージの平坦な形へ変換する。
+ *
+ * @param issues - zod のバリデーション issue 配列（`path` の先頭要素をフィールド名に使う）
+ * @returns フィールド名をキー、最初のエラーメッセージを値に持つオブジェクト
+ */
 const toFieldErrors = (issues: { path: PropertyKey[]; message: string }[]): ValidationErrors => {
   const errors: ValidationErrors = {};
   for (const issue of issues) {

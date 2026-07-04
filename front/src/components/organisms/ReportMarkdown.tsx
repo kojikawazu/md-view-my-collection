@@ -59,7 +59,11 @@ const classifyHeading = (heading: string): SectionKind => {
   return 'normal';
 };
 
-/** 本文を h2（## …）境界で分割し、各セクションを種類付きで返す。 */
+/**
+ * 本文を h2（## …）境界で分割し、各セクションを種類付きで返す。
+ *
+ * @param content - 分割対象の Markdown 本文
+ */
 const splitSections = (content: string): { kind: SectionKind; content: string }[] => {
   const lines = content.split('\n');
   const sections: { kind: SectionKind; lines: string[] }[] = [];
