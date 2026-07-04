@@ -112,6 +112,8 @@ model ExternalUrl {
 2. `cd front && npx prisma db pull` で `schema.prisma` に反映
 3. `npx prisma generate` でクライアント再生成
 
+> **テスト用 DB（IT）**: 統合テストのコンテナには `pnpm gen:test-schema`（`prisma migrate diff --from-empty`。DB を変更しない読み取り専用 diff）で `schema.prisma` から DDL を生成し、使い捨てコンテナにのみ適用する。本番 DB・Supabase には適用しない（`.claude/rules/database.md` の test-only 例外を参照）。
+
 ## バリデーション
 
 | 対象 | ルール |

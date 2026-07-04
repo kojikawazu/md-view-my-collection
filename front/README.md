@@ -32,7 +32,7 @@ Markdown レポートの保存・閲覧 UI の**実装ディレクトリ**です
 | DB / ORM | Supabase Postgres（RLS） / Prisma 6（`db pull` のみ・マイグレーション禁止） |
 | BFF | Next.js Route Handlers（`src/app/api/*`） |
 | バリデーション / API契約 | zod 4 + zod-openapi 5（スキーマから OpenAPI 生成） |
-| テスト | Vitest（ユニット） + Playwright（E2E） |
+| テスト | Vitest（ユニット / 統合） + Testcontainers（IT用 Postgres） + Playwright（E2E） |
 | 静的解析 | ESLint 9 + Prettier 3 |
 | パッケージマネージャ | **pnpm**（npm / yarn は使用しない） |
 
@@ -61,9 +61,10 @@ front/
 │   └── types.ts                型定義
 ├── prisma/                     schema.prisma（db pull で取得）
 ├── tests/e2e/                  Playwright E2E（app.spec.ts / helpers.ts）
+├── tests/integration/          Vitest 統合テスト（*.test.ts / schema.sql / global-setup.ts）
 ├── public/                     静的アセット
 └── 設定: next.config.ts / playwright.config.ts / vitest.config.ts /
-         eslint.config.mjs / prisma.config.ts / tsconfig.json
+         vitest.integration.config.ts / eslint.config.mjs / prisma.config.ts / tsconfig.json
 ```
 
 設計方針（サーバー/クライアント分離・アトミックデザイン）は [../.claude/rules/frontend.md](../.claude/rules/frontend.md) を参照。
@@ -148,18 +149,22 @@ pnpm format   # Prettier 整形（--write）
 
 ## テスト
 
-正常 / 準正常 / 異常をユニット・E2E の両方で必須にしています（[../.claude/rules/testing.md](../.claude/rules/testing.md)）。
+正常 / 準正常 / 異常をユニット・統合・E2E で必須にしています（[../.claude/rules/testing.md](../.claude/rules/testing.md)）。
 
 ```bash
-pnpm test            # ユニット（Vitest） — src/<module>/__tests__/ に配置
-pnpm test:watch      # ユニット（watch）
+pnpm test              # ユニット（Vitest） — src/<module>/__tests__/ に配置
+pnpm test:watch        # ユニット（watch）
+pnpm test:integration  # 統合（Vitest + Testcontainers Postgres） — tests/integration/ ※Docker 必須
 pnpm exec playwright install   # E2E 初回のみ
-pnpm test:e2e        # E2E（Playwright） — tests/e2e/ に配置
-pnpm test:e2e:ui     # E2E（UIモード）
-pnpm test:e2e:report # 直近の E2E レポート表示
+pnpm test:e2e          # E2E（Playwright） — tests/e2e/ に配置
+pnpm test:e2e:ui       # E2E（UIモード）
+pnpm test:e2e:report   # 直近の E2E レポート表示
 ```
 
-E2E は `NEXT_PUBLIC_AUTH_MODE=local` / `NEXT_PUBLIC_DATA_MODE=local` 前提で動作します（`playwright.config.ts` が注入）。テストケース設計は [../docs/08-test-specification.md](../docs/08-test-specification.md)。
+- **統合テスト（IT）**は APIルート × 実 DB を検証します。**Docker が必要**（Testcontainers が使い捨て Postgres を起動）。認証はモック、DB スキーマは `pnpm gen:test-schema`（`schema.prisma` から DDL 生成）で更新します。テストデータはコンテナ破棄 + `TRUNCATE` で残しません。
+- **E2E** は `NEXT_PUBLIC_AUTH_MODE=local` / `NEXT_PUBLIC_DATA_MODE=local` 前提で動作します（`playwright.config.ts` が注入）。
+
+テストケース設計は [../docs/08-test-specification.md](../docs/08-test-specification.md)。
 
 ## API 仕様（OpenAPI）
 

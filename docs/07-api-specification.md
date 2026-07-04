@@ -257,31 +257,22 @@ if (event === 'SIGNED_OUT') {
 
 | テスト種別 | 対象 | CI実行 | 環境 |
 |-----------|------|--------|------|
+| UT (既存) | ロジック単体 | あり | happy-dom + モック |
+| **IT (統合テスト・新規)** | **APIルート × 実 DB** | あり | **Testcontainers Postgres + Auth モック** |
 | E2E (既存) | UI全体（localモード） | あり | `AUTH_MODE=local`, `DATA_MODE=local` |
-| API統合テスト (新規) | APIルート単体 | あり | テスト用 Supabase 実 DB（DJ-8） |
 
-**API統合テストの構成:**
-- ファイル: `front/tests/api/reports.test.ts`, `front/tests/api/auth.test.ts`
-- ツール: Playwright の `request` API（`APIRequestContext`）を使用
-  - Playwright は既に導入済みのため追加依存なし
-  - `request.get('/api/reports')` のように直接 API を叩ける
-- 実行: `npm run test:api`（Playwright を `testDir: './tests/api'` で別プロジェクト起動）
+**IT（統合テスト）の構成（実装済み）:**
+- ファイル: `front/tests/integration/*.test.ts`（reports / reports-id / tags / auth / openapi）。
+- ランナー: Vitest（node 環境）。`vitest.integration.config.ts` + `pnpm test:integration`。UT（`pnpm test`）とは分離。
+- DB: **Testcontainers で実 Postgres を起動**（`@testcontainers/postgresql`）。`globalSetup` で 1 度だけ起動し、DDL を適用、`DATABASE_URL` をコンテナに向ける。テスト間は `TRUNCATE ... RESTART IDENTITY CASCADE`、終了時にコンテナ破棄（テストデータを残さない）。
+- スキーマ: `pnpm gen:test-schema`（`prisma migrate diff --from-empty`。**apply しない**）で `tests/integration/schema.sql` を `schema.prisma` から生成・コミット。
+- 呼び出し: route ハンドラを **in-process で直接 import** して `NextRequest` で実行（dev サーバー不要）。Prisma は実コンテナに接続し、トランザクション・upsert・CASCADE を実検証。
+- 認証: **モック**（`vi.mock('@supabase/supabase-js')` でトークン→ユーザーを固定）。`ADMIN_EMAIL` と組み合わせて `requireAdmin` の実ロジック（401/403/200 分岐）を検証。
+- **RLS は IT では検証しない**（Prisma はオーナー接続で RLS をバイパスするため）。RLS/実 Auth の検証は E2E の実 DB 化（Supabase CLI ローカルスタック）で担う（別 PR）。
 
-**DB方針（確定 / DJ-8）:**
+> 旧案（実テスト用 Supabase プロジェクト + Playwright `APIRequestContext`、`tests/api/`、`test:api`）は **上記 Testcontainers 方式に置き換え**た。軽量・ハーメティックで CI secrets 不要のため。
 
-CI での API 統合テストは **テスト用 Supabase プロジェクト（実 DB）** を正とする。
-
-- Playwright `APIRequestContext` で実際の Next.js dev サーバーに HTTP リクエストを送る構成のため、
-  Prisma モックでは API ルート内の `prisma` インスタンスを差し替えられない。
-- テスト用 Supabase プロジェクト（開発用と同一でも可）の `DATABASE_URL` を CI secrets に設定する。
-- テスト実行前に seed → テスト → 終了後にクリーンアップ（`prisma.$transaction` で全テストデータ削除）。
-- 認可テスト（API-004/005/011/012/013/014）は Supabase Auth のテストユーザーを使用する。
-  - 管理者ユーザー: `ADMIN_EMAIL` に登録済みのメール
-  - 非管理者ユーザー: `ADMIN_EMAIL` に登録されていないメール
-  - トークンは `supabase.auth.signInWithPassword()` で取得
-- API統合テストの導入は Phase 2 完了後に行い、Phase 3 のクライアント切り替え前にグリーンを確認する。
-
-**テストケース一覧は本設計書「テスト方針」セクションの正式一覧（API-001〜API-014、14ケース）を正とする。**
+**テストケース一覧は本設計書「テスト方針」セクションの正式一覧（API-001〜API-014、14ケース）を IT に移植・拡充したものを正とする。**
 
 ### DJ-6. カテゴリの固定リストバリデーション
 

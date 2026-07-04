@@ -13,7 +13,7 @@
 
 - デプロイ: 本番運用はVercelで実施（デプロイ必須）。
 - CI/CD: 自動デプロイのみ（Vercel連携を前提）。`main` ブランチのみ本番デプロイ。プレビューは不要。
-- CI: GitHub Actions（`.github/workflows/test.yml`）で自動実行する。`static-analysis` ジョブが静的解析（ESLint `pnpm lint` + 型チェック `pnpm typecheck`）、`playwright` ジョブがユニット（Vitest）+ E2E（Playwright）を担当し、並列実行する。
+- CI: GitHub Actions（`.github/workflows/test.yml`）で自動実行する。`static-analysis` ジョブが静的解析（ESLint `pnpm lint` + 型チェック `pnpm typecheck`）、`playwright` ジョブがユニット（Vitest）→ 統合（IT・Testcontainers Postgres・`pnpm test:integration`）→ E2E（Playwright）を順に担当し、両ジョブを並列実行する。IT は ubuntu-latest 同梱の Docker で実 Postgres を起動する。
 - テスト: 正常/準正常/異常をすべて必須とする（ユニット + E2E）。詳細は `docs/08-test-specification.md`。
 - 監視/ログ: 不具合を早期発見できるログ設計を意識する。
 - セキュリティ: Markdown表示はサニタイズ必須。Supabase RLSは「公開閲覧 + 認証ユーザーのみ書き込み」を採用する（詳細: `docs/06-security-specification.md`）。

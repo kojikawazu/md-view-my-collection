@@ -75,6 +75,10 @@ jobs:
       - name: Run unit tests
         run: pnpm test
 
+      - name: Run integration tests
+        # Testcontainers が Docker で Postgres を起動する（ubuntu-latest は Docker 同梱）。
+        run: pnpm test:integration
+
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
 
