@@ -52,3 +52,4 @@ Markdownレポートの保存・閲覧UIを提供するNext.jsアプリ。
 | `frontend.md` | `front/src/components/**`, `front/src/app/**`, `front/src/hooks/**` | Next.js App Router フロントエンド設計・アトミックデザイン規約 |
 | `api.md` | `front/src/app/api/**` | Next.js BFF（Route Handlers）設計・API ルール |
 | `database.md` | `front/prisma/**`, `front/src/lib/db.ts`, `front/src/app/api/**` | Prisma ORM 規約・マイグレーション禁止・RLSポリシー |
+| `jsdoc.md` | `front/src/**` | JSDoc（TSDoc）ドキュメンテーションコメント規約（公開シンボル必須・型は書かない・why 重視） |
