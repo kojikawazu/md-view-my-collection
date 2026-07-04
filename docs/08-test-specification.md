@@ -83,6 +83,15 @@
 - カバー済み: TC-001 〜 TC-031, TC-035, TC-036
 - 未実装: TC-008-2（許可メール不一致）
 
+## 統合テスト（IT・APIルート × 実 DB）
+
+- 実装ファイル: `front/tests/integration/*.test.ts`（reports / reports-id / tags / auth / openapi）。共有ヘルパー: `tests/integration/helpers.ts`。
+- 実行: `pnpm test:integration`（Vitest・node 環境。UT の `pnpm test` とは分離）。CI の playwright ジョブで UT の後に実行。
+- DB: **Testcontainers で実 Postgres を起動**。`globalSetup` で 1 度だけ起動し `tests/integration/schema.sql`（`pnpm gen:test-schema` 生成物）を適用。テスト間 `TRUNCATE`、終了時にコンテナ破棄（**テストデータを残さない**）。前提として **Docker が必要**。
+- 方式: route ハンドラを in-process で直接呼び出し（`NextRequest`）、Prisma は実コンテナに接続。認証は `vi.mock('@supabase/supabase-js')` でモック（`requireAdmin` の 401/403/200 分岐は実検証）。
+- カバー: GET 一覧（ページング・content 除外・ヘッダ）/ POST 作成（201・タグ upsert・外部URL・400・401・403）/ GET 詳細（200・404）/ PATCH（部分更新・タグ置換・URL 全削除・404=P2025・400・401/403）/ DELETE（200・CASCADE 実確認・404・401/403）/ tags GET / auth.admin / auth.is-allowed（local・supabase）/ openapi ゲート。33 ケース。
+- RLS/実 Auth は IT のスコープ外（Prisma オーナー接続で RLS はバイパス）。E2E の実 DB 化（Supabase CLI）で別途カバー予定。
+
 ## 画面×観点マトリクス（前提/手順/期待）
 
 ### 一覧（/）

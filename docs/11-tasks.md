@@ -97,6 +97,9 @@
 - [x] ConfirmationModal ユニットテスト作成（12件: 描画・二重クリック防止・エラー復帰 / 2026-04-03）
 - [x] E2Eテスト強化（TC-026〜TC-031, TC-035, TC-036 追加 + helpers.ts 共通化 / 2026-04-03）
 - [x] GitHub ActionsにVitestユニットテスト実行を追加（E2Eの前にUT実行する構成 / 2026-04-03）
+- [x] 統合テスト（IT）基盤を導入: Testcontainers(Postgres) + Auth モックで APIルート×実 DB を検証（`front/tests/integration/`・`pnpm test:integration`・`gen:test-schema` で DDL 生成・33ケース / 2026-07-04）
+- [x] CI（playwright ジョブ）に IT 実行を追加（UT の後 / 2026-07-04）
+- [ ] E2E/シナリオの実 DB 化（Supabase CLI ローカルスタック・実 Auth/RLS・テストデータ後始末必須 / PR2 予定）
 
 ## デプロイ/運用
 - [x] Vercelプロジェクトを作成

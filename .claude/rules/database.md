@@ -16,6 +16,12 @@ globs: "front/prisma/**,front/src/lib/db.ts,front/src/app/api/**"
 - DB 側のスキーマ変更は別プロジェクトで管理する。
 - `schema.prisma` の変更はコードファイルのみ反映し、DB への適用は行わない。
 
+### test-only 例外（DDL 生成）
+
+- 統合テスト（IT）のエフェメラルな DB コンテナ用に、`prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script`（`pnpm gen:test-schema`）で DDL を生成してよい。
+- `migrate diff` は **DB を変更せず SQL を出力するだけの読み取り専用 diff ツール**（`migrate dev/deploy/reset` とは別物）。
+- 生成物（`front/tests/integration/schema.sql`）は **Testcontainers の使い捨て DB にのみ適用**。本番 DB・Supabase・`schema.prisma` には一切適用しない。migrate 禁止ルールに抵触しない。
+
 ## クエリ
 
 - Prisma Client のパラメータバインディングを使用する。`$queryRaw` での文字列結合は禁止。
