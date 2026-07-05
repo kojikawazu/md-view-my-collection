@@ -9,6 +9,11 @@ import LoadingOverlay from './LoadingOverlay';
 import { LoadingProvider } from '@/providers/LoadingContext';
 import { useAppState } from '@/hooks/useAppState';
 
+/**
+ * アプリ全体のレイアウト骨格。Header / Sidebar / Footer と本文（children）を配置し、
+ * 初回ハイドレーションおよびルート遷移時のローディングオーバーレイ表示を制御する。
+ * ローディング開始トリガーは `LoadingProvider` 経由で配下コンポーネントへ公開する。
+ */
 const AppShell = ({ children }: { children: React.ReactNode }) => {
   const {
     theme,
@@ -36,6 +41,12 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
     }
   }, []);
 
+  /**
+   * 指定遅延後にオーバーレイのフェードアウトを予約する。
+   * 既存タイマーがあればクリアして常に最新の1本だけを走らせる（多重発火防止）。
+   *
+   * @param delayMs - フェードアウト開始までの遅延（ms）
+   */
   const scheduleFadeOut = (delayMs: number) => {
     if (loadingTimerRef.current) {
       clearTimeout(loadingTimerRef.current);
@@ -43,6 +54,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
     loadingTimerRef.current = setTimeout(() => setFadeOutLoading(true), delayMs);
   };
 
+  /** オーバーレイを即時表示し、最短表示時間の経過後にフェードアウトを予約する。 */
   const startLoading = () => {
     setShowLoading(true);
     setFadeOutLoading(false);
@@ -50,6 +62,10 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
     scheduleFadeOut(minDurationMs);
   };
 
+  /**
+   * 配下コンポーネントからの手動ローディング開始。
+   * 発火時刻を記録し、直後に走るルート遷移由来の二重表示を抑止する。
+   */
   const triggerLoading = () => {
     lastManualTriggerRef.current = Date.now();
     startLoading();

@@ -14,6 +14,7 @@ import {
  * これにより Route Handler とフロントのエラー契約を変更せずに済む。
  */
 
+/** フィールド名 → 日本語エラーメッセージ。エラーの無いフィールドはキーごと省略する。 */
 export type ValidationErrors = {
   title?: string;
   content?: string;
@@ -23,6 +24,7 @@ export type ValidationErrors = {
   summary?: string;
 };
 
+/** 検証モード切替。`partial: true` で部分更新（PATCH）スキーマを使う。 */
 type ValidateOptions = {
   partial?: boolean;
 };
@@ -61,6 +63,16 @@ const toFieldErrors = (issues: { path: PropertyKey[]; message: string }[]): Vali
   return errors;
 };
 
+/**
+ * レポート本文フィールド（title/content/category/author/tags/summary/publishDate）を検証・正規化する。
+ *
+ * `externalUrls` はここでは扱わず `validateExternalUrls` が担当する。
+ * 成功時は正規化済みの `data` と空の `errors`、失敗時は空の `data` と `errors`（先勝ち）を返す。
+ *
+ * @param input 検証対象の生入力（unknown。zod 側で寛容に正規化する）
+ * @param options `partial: true` で部分更新スキーマを使う（未指定フィールドを許容）
+ * @returns 正規化済みデータとフィールド別エラーの組
+ */
 export const validateReportInput = (
   input: unknown,
   options: ValidateOptions = {},
@@ -84,6 +96,16 @@ export const validateReportInput = (
 
 const URL_PATTERN = /^https?:\/\//;
 
+/**
+ * 外部URL配列を検証・正規化する。
+ *
+ * URL は必須かつ `http(s)://` 始まり、label は任意で最大長チェック。
+ * エラーキーは `externalUrls.{index}.url` / `externalUrls.{index}.label` の形で、
+ * フロントが該当行にエラーを紐付けられるようにする。未指定（undefined/null）は空データとして許容する。
+ *
+ * @param urls 検証対象（配列でなければ全体エラーを返す）
+ * @returns トリム済みの `data` とインデックス付きの `errors`
+ */
 export const validateExternalUrls = (
   urls: unknown,
 ): { data: ExternalUrlInput[]; errors: Record<string, string> } => {

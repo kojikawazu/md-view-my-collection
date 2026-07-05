@@ -10,20 +10,31 @@ import ConfirmationModal from '@/components/organisms/ConfirmationModal';
 import ReportMarkdown from '@/components/organisms/ReportMarkdown';
 
 interface DetailPageProps {
+  /** テーマ（配色・フォント・角丸などのデザイントークン一式） */
   theme: DesignSystem;
+  /** 表示対象のレポート。未取得／存在しない場合は undefined */
   report?: ReportItem;
+  /** ログイン中ユーザー。null の場合は未ログイン（編集・削除ボタンを出さない） */
   user: User | null;
+  /** 削除実行ハンドラ。成否を MutationResult で返す（呼び出し側が API を担う） */
   onDelete: (id: string) => Promise<MutationResult>;
 }
 
+/**
+ * レポート詳細画面。本文（Markdown）・外部URL・タグを表示する。
+ * ログイン済みユーザーにのみ編集・削除の導線を出す認証ガードを持ち、
+ * 削除確認モーダルからの削除実行と結果ハンドリングを担う。
+ */
 const DetailPage: React.FC<DetailPageProps> = ({ theme, report, user, onDelete }) => {
   const router = useRouter();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const { colors, fontHeader, fontPrimary, borderRadius } = theme;
+  // publishDate を優先し、無ければ createdAt を使い、ISO の日付部分のみ表示する。
   const displayDate = report
     ? (report.publishDate || report.createdAt || '').split('T')[0]
     : '';
+  // 著者名はログイン中ユーザー名に統一（未ログイン時は 'Manager'）。単一管理者運用のため。
   const displayAuthor = user?.username ?? 'Manager';
 
   if (!report) {
@@ -128,6 +139,7 @@ const DetailPage: React.FC<DetailPageProps> = ({ theme, report, user, onDelete }
           setDeleteError(null);
           const result = await onDelete(report.id);
           if (!result.ok) {
+            // 認証切れ・権限不足はログイン画面へ誘導。それ以外はその場でエラー表示する。
             if (result.status === 401 || result.status === 403) {
               router.push('/login');
             } else {

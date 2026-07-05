@@ -4,15 +4,37 @@ import { prisma } from '@/lib/db';
 import { validateReportInput, validateExternalUrls } from '@/lib/validation';
 import { requireAdmin } from '@/lib/auth-server';
 
+/** タグマッピング行に、関連する `ReportTag` を結合した型。 */
 type TagMapping = ReportTagMapping & { ReportTag: ReportTag };
 
+/** 一覧取得用の Report 行。本文（content）は省き、タグと外部 URL を結合した型。 */
 type ReportListRow = Omit<Report, 'content'> & { ReportTagMapping: TagMapping[]; ExternalUrl: ExternalUrl[] };
 
+/**
+ * タグマッピングの配列からタグ名だけを取り出す。
+ *
+ * @param mappings - `ReportTag` を結合済みのタグマッピング配列
+ * @returns タグ名の配列
+ */
 const mapTags = (mappings: TagMapping[]) => mappings.map((m) => m.ReportTag.name);
 
+/**
+ * 外部 URL の Prisma 行を API レスポンス形へ整形する。
+ *
+ * @param urls - 外部 URL の Prisma 行配列
+ * @returns `{ id, url, label }` に絞った配列
+ */
 const mapExternalUrls = (urls: ExternalUrl[]) =>
   urls.map((eu) => ({ id: eu.id, url: eu.url, label: eu.label }));
 
+/**
+ * 一覧用の Report 行を API レスポンス形へ整形する。
+ *
+ * 一覧では本文を返さないため `content` は空文字にし、日付は ISO 文字列へ変換する。
+ *
+ * @param report - タグ・外部 URL を結合済みの一覧用 Report 行
+ * @returns 一覧項目としての Report オブジェクト
+ */
 const toReportListItem = (report: ReportListRow) => ({
   id: report.id,
   title: report.title,
@@ -27,6 +49,18 @@ const toReportListItem = (report: ReportListRow) => ({
   externalUrls: mapExternalUrls(report.ExternalUrl),
 });
 
+/**
+ * クエリ文字列を整数へ変換し、指定範囲にクランプする。
+ *
+ * 値が null・非数値なら undefined を返す。小数は切り捨て、`min`/`max` 指定時は
+ * 範囲外の値を境界値へ丸める（不正な limit/offset で過大なクエリを投げないための防御）。
+ *
+ * @param value - クエリ文字列の生値（未指定なら null）
+ * @param range - クランプ範囲
+ * @param range.min - 下限値（任意）。これ未満は下限へ丸める
+ * @param range.max - 上限値（任意）。これ超過は上限へ丸める
+ * @returns クランプ済みの整数。変換不能なら undefined
+ */
 const parseNumber = (value: string | null, range: { min?: number; max?: number } = {}) => {
   if (value === null) return undefined;
   const parsed = Number(value);
@@ -37,6 +71,16 @@ const parseNumber = (value: string | null, range: { min?: number; max?: number }
   return integer;
 };
 
+/**
+ * レポート一覧を新しい順で返す（公開・認可不要）。
+ *
+ * クエリ `limit`（1〜1000）/ `offset`（0〜）でページングし、総件数を `x-total-count`、
+ * limit 指定時は `x-limit`/`x-offset` をレスポンスヘッダに付与する。
+ * レスポンスは CDN キャッシュ（`s-maxage=60, stale-while-revalidate=300`）を付与する。
+ *
+ * @param request - 受信リクエスト（URL のクエリで `limit`/`offset` を受け取る）
+ * @returns 一覧項目の配列 JSON。失敗時は 500 で `{ error }`
+ */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -82,6 +126,15 @@ export async function GET(request: NextRequest) {
   }
 }
 
+/**
+ * レポートを新規作成する（管理者のみ）。
+ *
+ * 入力を zod で検証し、レポート本体・タグ（upsert してマッピング作成）・外部 URL を
+ * 単一トランザクションで登録する。作成結果を整形して返す。
+ *
+ * @param request - 受信リクエスト（Authorization ヘッダで管理者判定、ボディに作成内容）
+ * @returns 作成した Report を 201 で返す。認可失敗は 401/403、検証エラーは 400 で `{ errors }`、失敗時は 500
+ */
 export async function POST(request: NextRequest) {
   const auth = await requireAdmin(request, 'api/reports');
   if (!auth.ok) return auth.response;

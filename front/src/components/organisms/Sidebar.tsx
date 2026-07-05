@@ -5,15 +5,27 @@ import CategoryButton from '@/components/molecules/CategoryButton';
 import { DesignSystem } from '@/types';
 import { CATEGORIES } from '@/constants';
 
+/** サイドバーの props。 */
 interface SidebarProps {
+  /** 配色・フォント・サイドバー配置スタイルなどのデザインシステム */
   theme: DesignSystem;
+  /** 表示候補となるタグの生リスト（重複・先頭 `#`・空白を含みうる） */
   tags: string[];
+  /** 現在選択中のカテゴリ。未選択時は `null` */
   selectedCategory: string | null;
+  /** カテゴリ選択の切り替えコールバック（解除時は `null`） */
   onSelectCategory: (category: string | null) => void;
+  /** 現在選択中のタグ（正規化済みの value）。未選択時は `null` */
   selectedTag: string | null;
+  /** タグ選択の切り替えコールバック（解除時は `null`） */
   onSelectTag: (tag: string | null) => void;
 }
 
+/**
+ * 左サイドバー。固定カテゴリ一覧とトレンドタグによる絞り込み UI を提供する。
+ * 同じカテゴリ/タグを再クリックすると選択解除（`null`）としてトグルする。
+ * デザインテーマの引用文パネルも表示する。中〜大画面（md 以上）でのみ表示する。
+ */
 const Sidebar: React.FC<SidebarProps> = ({
   theme,
   tags,
@@ -24,8 +36,11 @@ const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const { colors, fontHeader, sidebarStyle, borderRadius } = theme;
 
+  // 表示用ラベル: 先頭の `#` を除去し前後空白を落とす（`#` は CSS の before で付与するため）
   const normalizeTag = (tag: string) => tag.replace(/^#/, '').trim();
+  // 比較・選択判定用の値: 大文字小文字を無視するため小文字化する
   const normalizeTagValue = (tag: string) => normalizeTag(tag).toLowerCase();
+  // 正規化後の表示ラベルで重複排除し、ラベル（表示用）と value（判定用）の組へ整形する
   const visibleTags = Array.from(
     new Set(tags.map(normalizeTag).filter(Boolean)),
   ).map((tag) => ({

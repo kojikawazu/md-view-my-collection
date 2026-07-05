@@ -5,12 +5,21 @@ import LoadingOverlay from './LoadingOverlay';
 import { useLoginForm } from '@/hooks/useLoginForm';
 import { DesignSystem } from '@/types';
 
+/** ログインフォームの props。 */
 interface LoginFormProps {
+  /** 配色・フォント・角丸などのデザインシステム */
   theme: DesignSystem;
+  /** メール/パスワードによるログイン処理。成功時 `null`、失敗時はエラーメッセージを返す */
   onLogin: (email: string, password: string) => Promise<string | null>;
+  /** Google OAuth ログイン処理。成功時 `null`、失敗時はエラーメッセージを返す */
   onLoginWithGoogle: () => Promise<string | null>;
 }
 
+/**
+ * ログイン画面のフォーム。認証状態は `useLoginForm` フックに委譲し、本体は描画に専念する。
+ * `NEXT_PUBLIC_AUTH_MODE` により入力手段を出し分ける:
+ * `local`（E2E 専用）はメール/パスワード入力、既定の `supabase` は Google OAuth ボタンを表示する。
+ */
 const LoginForm: React.FC<LoginFormProps> = ({ theme, onLogin, onLoginWithGoogle }) => {
   const {
     email,
@@ -24,6 +33,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ theme, onLogin, onLoginWithGoogle
   } = useLoginForm({ onLogin, onLoginWithGoogle });
 
   const { colors, fontHeader, borderRadius } = theme;
+  // 認証モード。未設定時は本番想定の supabase（Google OAuth）にフォールバックする
   const authMode = process.env.NEXT_PUBLIC_AUTH_MODE ?? 'supabase';
 
   return (

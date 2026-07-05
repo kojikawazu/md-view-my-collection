@@ -6,6 +6,10 @@ import FormPage from '@/components/pages/FormPage';
 import { useAppState } from '@/hooks/useAppState';
 import { useReport } from '@/hooks/useReport';
 
+/**
+ * レポート編集のクライアントコンポーネント。
+ * URL の ID から対象レポートを取得し、更新ハンドラ（`updateReport`）とともに `FormPage` へ渡す。
+ */
 export default function ReportEditClient() {
   const params = useParams();
   const { theme, reports, currentUser, updateReport, isHydrated } = useAppState();
@@ -15,7 +19,7 @@ export default function ReportEditClient() {
 
   if (!reportId) return null;
 
-  // Pass the full report (with content) as a single-item array for useReportForm lookup
+  // 本文を含む完全なレポートを単一要素の配列で渡し、useReportForm 側の ID 検索に合わせる
   const reportsForForm = report ? [report] : [];
 
   return (

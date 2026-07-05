@@ -21,6 +21,10 @@ export const metadata: Metadata = {
   description: 'A design-forward report journal for modern teams.',
 };
 
+/**
+ * アプリ全体のルートレイアウト（サーバーコンポーネント）。
+ * 全ページを `AppStateProvider` で包んでグローバル状態を供給し、フォント変数とメタデータを適用する。
+ */
 export default function RootLayout({
   children,
 }: Readonly<{

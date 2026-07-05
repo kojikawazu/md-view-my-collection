@@ -4,13 +4,21 @@ import React from 'react';
 import Button from '@/components/atoms/Button';
 
 interface UserAuthSectionProps {
+  /** ログイン中ユーザーの表示名。 */
   username: string;
+  /** 「Logout」押下時に呼ぶ。ログアウト処理を親に委ねる。 */
   onLogout: () => void;
+  /** 補助ラベル（Authenticated as）へ付与する追加クラス。 */
   mutedClassName?: string;
+  /** ユーザー名へ付与する追加クラス。 */
   textClassName?: string;
+  /** ログアウトボタンの強調（アクセント背景）クラス。 */
   accentClassName?: string;
+  /** ログアウトボタンの角丸クラス。 */
   borderRadius?: string;
 }
+
+/** ヘッダー右部の認証状態表示。ログイン中ユーザー名とログアウトボタンを並べる。 */
 
 const UserAuthSection: React.FC<UserAuthSectionProps> = ({
   username,

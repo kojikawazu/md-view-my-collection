@@ -11,19 +11,34 @@ import PaginationNav from '@/components/molecules/PaginationNav';
 import { DesignSystem, ReportItem } from '@/types';
 
 interface ListPageProps {
+  /** テーマ（配色・フォント・角丸などのデザイントークン一式） */
   theme: DesignSystem;
+  /** 一覧表示するレポート群（サーバー側で取得済みのものを受け取る） */
   reports: ReportItem[];
 }
 
+/**
+ * レポート一覧画面。サーバーから受け取ったレポートを、カテゴリ／タグの
+ * 選択状態でフィルタし、ページネーションして表示する。
+ * 各カードから詳細ページ（`/report/:id`）へ遷移する。
+ */
 const ListPage: React.FC<ListPageProps> = ({ theme, reports }) => {
   const { colors, fontHeader, fontPrimary, borderRadius } = theme;
   const { selectedCategory, selectedTag, setSelectedCategory, setSelectedTag, currentUser } = useAppState();
 
+  // 一覧画面に入るたびに前回のフィルタ選択を解除し、常に全件表示から始める。
+  // （サイドバー等でのフィルタ状態はグローバルに持続するため、ここでリセットする）
   useEffect(() => {
     setSelectedCategory(null);
     setSelectedTag(null);
   }, [setSelectedCategory, setSelectedTag]);
 
+  /**
+   * タグ文字列を比較用に正規化する。先頭の `#` を除去し、前後空白を落とし、
+   * 小文字化することで、表記ゆれ（`#UI` / `ui` 等）を吸収して照合する。
+   *
+   * @param tag - 正規化対象のタグ文字列
+   */
   const normalizeTagValue = (tag: string) => tag.replace(/^#/, '').trim().toLowerCase();
   const visibleReports = reports.filter((report) => {
     if (selectedCategory && report.category !== selectedCategory) return false;
@@ -34,11 +49,19 @@ const ListPage: React.FC<ListPageProps> = ({ theme, reports }) => {
     return true;
   });
 
+  // フィルタ条件が変わったらページネーションを1ページ目へ戻すためのキー。
+  // このキーの変化を usePagination が検知して現在ページをリセットする。
   const filterKey = `${selectedCategory ?? ''}|${selectedTag ?? ''}`;
   const { currentPage, totalPages, pageNumbers, updatePage, paginateSlice } =
     usePagination(visibleReports.length, filterKey);
   const paginatedReports = paginateSlice(visibleReports);
 
+  /**
+   * カード表示用の日付を求める。publishDate を優先し、無ければ createdAt に
+   * フォールバックする。ISO 形式（`T` 区切り）の場合は日付部分のみを取り出す。
+   *
+   * @param report - 日付を取り出す対象レポート
+   */
   const getDisplayDate = (report: ReportItem) => {
     const raw = report.publishDate || report.createdAt || '';
     return raw.includes('T') ? raw.split('T')[0] : raw;
@@ -64,6 +87,8 @@ const ListPage: React.FC<ListPageProps> = ({ theme, reports }) => {
 
       <div className="grid gap-8 grid-cols-1 lg:grid-cols-2">
         {paginatedReports.map((report) => {
+          // 著者名はレポート個別の値ではなく、ログイン中ユーザー名（未ログイン時は
+          // 'Manager'）に統一して表示する。運用上、投稿者は単一の管理者を前提とするため。
           const displayAuthor = currentUser?.username ?? 'Manager';
           return (
             <article
