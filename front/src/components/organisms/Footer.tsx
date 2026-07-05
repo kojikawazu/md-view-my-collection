@@ -3,10 +3,16 @@
 import React from 'react';
 import { DesignSystem } from '@/types';
 
+/** フッターの props。 */
 interface FooterProps {
+  /** 配色・フォントなどのデザインシステム */
   theme: DesignSystem;
 }
 
+/**
+ * ページ最下部に固定表示するフッター。
+ * アプリ名・説明と、現在の年を反映した著作権表記を表示する。
+ */
 const Footer: React.FC<FooterProps> = ({ theme }) => {
   const { colors, fontHeader } = theme;
 

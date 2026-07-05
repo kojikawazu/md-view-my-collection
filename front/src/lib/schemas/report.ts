@@ -15,6 +15,7 @@ import { CATEGORIES } from '@/constants';
  * `z.preprocess` で内側に取り込み、サーバーの後方互換を保つ。
  */
 
+/** 各フィールドの文字数・件数の上限。エラーメッセージにも埋め込む単一ソース。 */
 export const LIMITS = {
   title: 200,
   summary: 500,
@@ -217,6 +218,7 @@ export const reportPatchSchema = z
 
 // --- レスポンススキーマ ---
 
+/** 外部 URL 1 件（レスポンス）。id 付きで label は null 許容。 */
 export const externalUrlItemSchema = z
   .object({
     id: z.string().meta({ example: 'eu_123' }),
@@ -225,6 +227,7 @@ export const externalUrlItemSchema = z
   })
   .meta({ id: 'ExternalUrlItem' });
 
+/** レポート 1 件（レスポンス）。一覧 API では `content` は空文字で返る。 */
 export const reportItemSchema = z
   .object({
     id: z.string().meta({ example: 'rep_123' }),
@@ -241,6 +244,7 @@ export const reportItemSchema = z
   })
   .meta({ id: 'ReportItem' });
 
+/** タグ名の配列（レスポンス）。 */
 export const tagListSchema = z.array(z.string()).meta({ id: 'TagList', example: ['#AI', '#Cloud'] });
 
 /** バリデーションエラーレスポンス（フィールド名 → 日本語メッセージ）。 */
@@ -253,6 +257,9 @@ export const errorSchema = z
   .object({ error: z.string() })
   .meta({ id: 'ErrorResponse', example: { error: 'Not found' } });
 
+/** レポート新規作成リクエストの推論型。 */
 export type ReportCreateInput = z.infer<typeof reportCreateSchema>;
+/** レポート更新（部分）リクエストの推論型。 */
 export type ReportPatchInput = z.infer<typeof reportPatchSchema>;
+/** レポート 1 件（レスポンス）の推論型。 */
 export type ReportItemOutput = z.infer<typeof reportItemSchema>;

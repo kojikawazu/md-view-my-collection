@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { ReportItem } from '@/types';
 
 /**
- * Fetches a single report with full content from /api/reports/[id].
- * Returns the cached report from the list (without content) immediately,
- * then replaces it with the full report once the API responds.
+ * 単一レポートを本文込みで `/api/reports/[id]` から取得するフック。
+ *
+ * 一覧由来の本文なしキャッシュ（`listReport`）を即座に表示し、API 応答後に全文へ差し替える
+ * ことで、詳細画面の初期表示を待たせない。local モードや既に本文を持つ場合は fetch を省く。
  *
  * @param reportId - 取得対象レポートの ID（未定義なら fetch しない）
  * @param listReport - 一覧から渡る本文なしのキャッシュ。即時表示の初期値に使う
@@ -25,20 +26,19 @@ export const useReport = (
   useEffect(() => {
     if (!reportId) return;
 
-    // In local mode, the list already has full content
+    // local モードは一覧が既に本文を持つため、そのまま使う。
     if (dataMode === 'local') {
       setReport(listReport);
       return;
     }
 
-    // If list report already has content (optimistic update after create/edit),
-    // use it directly without fetching
+    // 作成/編集直後の楽観更新などで本文を既に持っていれば、fetch せずそのまま使う。
     if (listReport?.content) {
       setReport(listReport);
       return;
     }
 
-    // Show list metadata immediately while fetching full content
+    // 全文取得の間、一覧のメタ情報を先に表示しておく。
     if (listReport) {
       setReport(listReport);
     }

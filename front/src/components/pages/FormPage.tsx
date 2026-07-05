@@ -9,14 +9,25 @@ import ExternalUrlFieldList from '@/components/molecules/ExternalUrlFieldList';
 import ConfirmationModal from '@/components/organisms/ConfirmationModal';
 
 interface FormPageProps {
+  /** テーマ（配色・フォント・角丸などのデザイントークン一式） */
   theme: DesignSystem;
+  /** 既存レポート群。編集時に reportId から初期値を引き当てるために使う */
   reports?: ReportItem[];
+  /** 送信ハンドラ（新規作成／更新）。成否を MutationResult で返す */
   onSubmit: (data: Omit<ReportItem, 'id'>) => Promise<MutationResult>;
+  /** ログイン中ユーザー。フォームのロジック（権限・著者情報）に利用する */
   user: User | null;
+  /** 編集対象のレポートID。未指定なら新規投稿モードとして扱う */
   reportId?: string;
+  /** ハイドレーション完了フラグ。未完了時は描画を抑止してSSR不一致を避ける */
   isHydrated?: boolean;
 }
 
+/**
+ * レポートの新規投稿・編集フォーム画面。reportId の有無で新規／編集モードを
+ * 切り替える。入力・バリデーション・外部URLの増減・送信確認モーダルといった
+ * フォームロジックは useReportForm フックに委譲し、本コンポーネントは描画に専念する。
+ */
 const FormPage: React.FC<FormPageProps> = ({
   theme,
   reports,
@@ -44,6 +55,8 @@ const FormPage: React.FC<FormPageProps> = ({
     goBack,
   } = useReportForm({ user, reportId, reports, onSubmit, isHydrated });
 
+  // ハイドレーション未完了の間は描画しない（クライアント専用の初期値でSSRとの
+  // マークアップ不一致が起きるのを避けるため）。
   if (!isHydrated) return null;
 
   const fieldLabelClass = colors.muted;

@@ -2,6 +2,10 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { AUTH_COOKIE_NAME } from '../../../constants';
 
+/**
+ * Markdown スタイル検証ラボの認証ゲート付きレイアウト（サーバーコンポーネント）。
+ * 認証 Cookie を検証し、未ログインなら `/login` へリダイレクトして配下のラボページへのアクセスを制限する。
+ */
 export default async function MarkdownLabLayout({
   children,
 }: Readonly<{

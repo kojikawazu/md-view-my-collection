@@ -4,12 +4,19 @@ import React from 'react';
 import Button from '@/components/atoms/Button';
 
 interface FilterIndicatorProps {
+  /** 選択中のカテゴリ。null なら未選択でバッジを出さない。 */
   category: string | null;
+  /** 選択中のタグ。null なら未選択でバッジを出さない。 */
   tag: string | null;
+  /** 「Clear」押下時に呼ぶ。フィルタ解除を親に委ねる。 */
   onClear: () => void;
+  /** バッジへ付与する追加クラス。 */
   badgeClassName?: string;
+  /** 補助テキスト（Filter ラベル/Clear ボタン）へ付与する追加クラス。 */
   mutedClassName?: string;
 }
+
+/** 適用中のカテゴリ/タグフィルタをバッジ表示し、解除ボタンを出す。どちらも未選択なら描画しない。 */
 
 const FilterIndicator: React.FC<FilterIndicatorProps> = ({
   category,
@@ -18,6 +25,7 @@ const FilterIndicator: React.FC<FilterIndicatorProps> = ({
   badgeClassName = '',
   mutedClassName = '',
 }) => {
+  // カテゴリ・タグとも未選択ならフィルタ表示自体を出さない。
   if (!category && !tag) return null;
 
   return (

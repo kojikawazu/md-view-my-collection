@@ -6,6 +6,11 @@ import DetailPage from '@/components/pages/DetailPage';
 import { useAppState } from '@/hooks/useAppState';
 import { useReport } from '@/hooks/useReport';
 
+/**
+ * レポート詳細のクライアントコンポーネント。
+ * URL の ID から対象レポートを特定し、一覧のキャッシュを初期値に `useReport` で詳細（本文含む）を取得して、
+ * テーマ・ログインユーザー・削除ハンドラとともに `DetailPage` へ渡す。
+ */
 export default function ReportDetailClient() {
   const params = useParams();
   const { theme, reports, currentUser, deleteReport } = useAppState();

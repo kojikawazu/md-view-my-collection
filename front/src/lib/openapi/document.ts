@@ -25,10 +25,23 @@ const isAllowedRequestSchema = z
 const isAllowedSchema = z.object({ allowed: z.boolean() }).meta({ id: 'IsAllowedResponse' });
 const okSchema = z.object({ ok: z.boolean() }).meta({ id: 'OkResponse' });
 
+/**
+ * `application/json` のリクエストボディ定義を組み立てる短縮ヘルパー。
+ *
+ * @param schema ボディの zod スキーマ
+ * @returns OpenAPI の requestBody 用オブジェクト
+ */
 const jsonBody = <T extends z.ZodType>(schema: T) => ({
   content: { 'application/json': { schema } },
 });
 
+/**
+ * `application/json` のレスポンス定義を組み立てる短縮ヘルパー。
+ *
+ * @param description レスポンスの説明
+ * @param schema レスポンスボディの zod スキーマ
+ * @returns OpenAPI の response 用オブジェクト
+ */
 const jsonResponse = <T extends z.ZodType>(description: string, schema: T) => ({
   description,
   content: { 'application/json': { schema } },
@@ -43,8 +56,18 @@ const reportListQuery = z.object({
   offset: z.string().optional().meta({ description: 'スキップ件数（0〜）', example: '0' }),
 });
 
+/** 生成する OpenAPI ドキュメントの仕様バージョン。 */
 export const OPENAPI_VERSION = '3.1.0';
 
+/**
+ * 全エンドポイントを含む OpenAPI ドキュメントを組み立てる。
+ *
+ * パス定義とスキーマ参照をまとめ、`createDocument` で OpenAPI 3.1 ドキュメントを返す。
+ * `scripts/gen-openapi.ts`（`docs/openapi.json` 生成）と `/api/openapi`（Swagger UI 用）から呼ばれる。
+ *
+ * @param version `info.version` に載せる API バージョン（既定 `'0.0.0'`）
+ * @returns 生成された OpenAPI ドキュメントオブジェクト
+ */
 export const buildOpenApiDocument = (version = '0.0.0') =>
   createDocument({
     openapi: OPENAPI_VERSION,

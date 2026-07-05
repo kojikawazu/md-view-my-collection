@@ -6,12 +6,21 @@ import NavLink from '@/components/molecules/NavLink';
 import UserAuthSection from '@/components/molecules/UserAuthSection';
 import { DesignSystem, User } from '@/types';
 
+/** ヘッダーの props。 */
 interface HeaderProps {
+  /** 配色・フォント・ヘッダー配置スタイルなどのデザインシステム */
   theme: DesignSystem;
+  /** ログイン中ユーザー。未ログイン時は `null` */
   user: User | null;
+  /** ログアウト操作のコールバック */
   onLogout: () => void;
 }
 
+/**
+ * グローバルヘッダー。ロゴとナビゲーションを表示する。
+ * ログイン時は投稿系リンクとユーザー認証セクションを、未ログイン時はログインボタンを出し分ける。
+ * `theme.headerStyle === 'sticky'` の場合は画面上部に固定する。
+ */
 const Header: React.FC<HeaderProps> = ({ theme, user, onLogout }) => {
   const { colors, fontHeader, headerStyle, borderRadius } = theme;
 

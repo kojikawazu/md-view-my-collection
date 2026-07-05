@@ -6,15 +6,19 @@ import { DesignSystem } from '@/types';
 import ReportMarkdown from '@/components/organisms/ReportMarkdown';
 
 interface MarkdownLabPageProps {
+  /** テーマ（配色・フォント・角丸などのデザイントークン一式） */
   theme: DesignSystem;
 }
 
+/** Markdown 表示スタイルの現行採用パターン。ラボ画面のヘッダー表示に使う。 */
 const ACTIVE_VARIANT = {
   id: 'v7',
   label: 'Pattern 07 - Code Focus',
   note: 'Selected baseline. Code contrast, quote emphasis, and URL visibility are tuned in this pattern.',
 } as const;
 
+// スタイル比較用の固定サンプル Markdown。見出し・リスト・引用・コード・表・
+// mermaid・画像など、表示調整で確認したい要素を一通り含めている。
 const MARKDOWN_SAMPLE = [
   '# Quarter Strategy Snapshot',
   '',
@@ -79,6 +83,11 @@ const MARKDOWN_SAMPLE = [
   '![Local sample image](/next.svg)',
 ].join('\n');
 
+/**
+ * Markdown スタイル検証用のラボ画面。固定サンプル（MARKDOWN_SAMPLE）を
+ * 現行採用パターンで ReportMarkdown により描画し、配色・間隔・可読性を
+ * 目視で確認するための開発向けページ。
+ */
 const MarkdownLabPage: React.FC<MarkdownLabPageProps> = ({ theme }) => {
   const { colors, fontHeader, borderRadius } = theme;
 
