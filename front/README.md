@@ -115,6 +115,8 @@ pnpm build    # 本番ビルド
 pnpm start    # ビルド成果物を配信
 ```
 
+> リポジトリ root から `make dev` / `make build` / `make test` などでも実行できます（`front/` の pnpm scripts を委譲するラッパー）。一覧は root で `make` を実行。
+
 ## 動作モード（local / supabase）
 
 このアプリは認証・データ取得をそれぞれ2モードで切り替えます。環境変数 `NEXT_PUBLIC_AUTH_MODE` / `NEXT_PUBLIC_DATA_MODE` で制御し、**未設定なら supabase モード**になります。
