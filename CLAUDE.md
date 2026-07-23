@@ -48,6 +48,7 @@ Markdownレポートの保存・閲覧UIを提供するNext.jsアプリ。
 | `environment.md` | 全体 | 環境変数一覧・管理方針 |
 | `error-handling.md` | 全体 | エラーハンドリング方針（バリデーション・ログ・HTTPステータス） |
 | `git-workflow.md` | 全体 | ブランチ・コミット・PR 規約 |
+| `github-issue.md` | 全体 | GitHub issue 駆動開発（ブランチと対で起票・open/close で進捗管理・PR で自動クローズ） |
 | `security.md` | 全体 | セキュリティ設計方針（認証・RLS・XSS対策・シークレット管理） |
 | `testing.md` | 全体 | テスト方針・コマンド・配置規約（Vitest + Playwright） |
 | `frontend.md` | `front/src/components/**`, `front/src/app/**`, `front/src/hooks/**` | Next.js App Router フロントエンド設計・アトミックデザイン規約 |
