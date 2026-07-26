@@ -6,6 +6,9 @@
 //   - 本番時: サーバーレスのウォーム起動間でインスタンスを使い回し、コールドスタート時の
 //     DB 再接続コストを削減する（`.claude/rules/database.md` の方針）。
 
+// Client Component から誤って import されたらビルドを失敗させる。
+// このモジュールは `DATABASE_URL` を扱うため、クライアントに引き込むと接続情報がバンドルに混入する。
+import 'server-only';
 import { PrismaClient } from '@prisma/client';
 
 /** グローバルに Prisma シングルトンを退避するための型拡張。 */

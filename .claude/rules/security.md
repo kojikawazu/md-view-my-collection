@@ -31,3 +31,4 @@ globs:
 - ローカル環境: `.env.local`（`.gitignore` に追加必須）
 - 本番環境: Vercel 環境変数で管理
 - `ADMIN_EMAIL` / `DATABASE_URL` はサーバーサイド専用（`NEXT_PUBLIC_` プレフィックスを付けない）
+- サーバー専用モジュールは先頭で `import 'server-only'` し、Client Component からの import をビルド時に失敗させる（`frontend.md` のレイヤ依存ルールと対になる機械的ガード）

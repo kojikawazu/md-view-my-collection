@@ -60,7 +60,7 @@ app  →  components  →  hooks  →  lib（API クライアント・サーバ�
 
 - **アトミックデザイン内も一方向**にする。`atoms/` は `molecules/` `organisms/` `pages/` を import しない。汎用度の高いものほど下位（`atoms → molecules → organisms → pages` の向きにのみ依存する）。
 - **`app/api/`（Route Handlers）から `components/` や `hooks/` を import しない**。API はサーバー側の層であり、UI 層に依存してはならない（`api.md` 参照）。
-- **サーバー専用モジュールを Client Component から import しない**。特に `lib/db.ts`（Prisma）・`lib/auth-server.ts` は `ADMIN_EMAIL` / `DATABASE_URL` を扱うため、**クライアントに引き込むとシークレットがバンドルに混入する**（`security.md`）。`server-only` パッケージで境界を機械的に守ることを推奨する。
+- **サーバー専用モジュールを Client Component から import しない**。特に `lib/db.ts`（Prisma）・`lib/auth-server.ts` は `ADMIN_EMAIL` / `DATABASE_URL` を扱うため、**クライアントに引き込むとシークレットがバンドルに混入する**（`security.md`）。両モジュールは先頭で **`import 'server-only'`** しており、Client Component から import されるとビルドが失敗する。サーバー専用モジュールを新設する場合も同様に付ける。
 - **`hooks/` は JSX を返さない**。返したくなったらそれはコンポーネントであり、`components/` に置く。
 
 禁止例:
