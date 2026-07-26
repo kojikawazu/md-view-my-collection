@@ -37,6 +37,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 設定は .markdownlint-cli2.jsonc（リポジトリルート）。base/ は変更禁止のため除外済み。
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # markdownlint-cli2-action は cli2 のバージョンを同梱しており指定できないため、
+      # npx でバージョンを固定して実行する。CI とローカル（make lint-docs）で
+      # 同じバージョンを使わないと、MD051 の全角括弧・コロンの扱いのように
+      # 版差で結果が食い違い、ローカル green / CI red が起きる。
+      # 設定は .markdownlint-cli2.jsonc（リポジトリルート）。base/ は除外済み。
       - name: Lint Markdown
-        uses: DavidAnson/markdownlint-cli2-action@v20
+        run: npx --yes markdownlint-cli2@0.23.1
