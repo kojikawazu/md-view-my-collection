@@ -4,7 +4,7 @@
  * 配色・レイアウト・角丸などの見た目を 1 オブジェクトに集約し、UI コンポーネントへ
  * props として流し込むための「テーマの単一ソース」。色やフォントの値は Tailwind の
  * ユーティリティクラス文字列（例: `bg-[#faf7f5]`）をそのまま保持する設計で、
- * 利用側は `className` に展開するだけでよい（`constants.tsx` の `ESPRESSO_THEME` 参照）。
+ * 利用側は `className` に展開するだけでよい（`constants.ts` の `ESPRESSO_THEME` 参照）。
  */
 export interface DesignSystem {
   /** テーマ識別子（`espresso` 等）。テーマ切替時のキーに使う。 */
@@ -91,7 +91,7 @@ export interface ReportItem {
    * 実体は詳細 API（`GET /api/reports/[id]`）でのみ取得できる点に注意。
    */
   content: string;
-  /** カテゴリ。固定リスト（`constants.tsx` の `CATEGORIES`）のいずれか。 */
+  /** カテゴリ。固定リスト（`constants.ts` の `CATEGORIES`）のいずれか。 */
   category: string;
   /** 著者名。 */
   author: string;
