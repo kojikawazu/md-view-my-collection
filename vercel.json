@@ -5,5 +5,5 @@
       "main": true
     }
   },
-  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- ':(exclude)docs' ':(exclude).claude' ':(exclude).github' ':(exclude)*.md'"
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- ':(top,exclude)docs' ':(top,exclude).claude' ':(top,exclude).github' ':(top,exclude)*.md'"
 }
