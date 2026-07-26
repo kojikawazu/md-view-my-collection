@@ -22,9 +22,10 @@
 ## デプロイ設定（確定）
 
 - 対象ディレクトリ: `front/` のみ（`base/` は対象外）。
-- ブランチ: `main` のみ自動デプロイ。`vercel.json` の `git.deploymentEnabled` で `main` 以外の発火を止める。
+- ブランチ: `main` のみ自動デプロイ。`front/vercel.json` の `git.deploymentEnabled` で `main` 以外の発火を止める。
 - プレビュー: 不要（上記設定により PR ブランチではデプロイしない）。
-- スキップ条件: `vercel.json` の `ignoreCommand` により、`docs/` / `.claude/` / `.github/` / `*.md` **のみ**の変更ではビルドを実行しない。
+- スキップ条件: `front/vercel.json` の `ignoreCommand` により、`docs/` / `.claude/` / `.github/` / `*.md` **のみ**の変更ではビルドを実行しない。
+- **設定ファイルの置き場所**: `vercel.json` は **Vercel の Root Directory（`front`）に置く**。リポジトリルートに置いても読み込まれない（実測で確認済み / #159）。`ignoreCommand` の cwd も Root Directory になるため、パススペックは `:(top,exclude)` でリポジトリルート基準に固定する。
 
 > **デプロイの発火制御は 2 系統ある。** GitHub Actions（`test.yml` の `paths-filter`）と Vercel の Git 連携は独立しており、**Vercel は Actions のパスフィルタを見ない**。ドキュメントのみの変更で Actions が止まっていても、Vercel 側を設定しなければデプロイは走る（実例: PR #150）。両方を揃えて初めて「ドキュメント変更でデプロイしない」が成立する。
 
