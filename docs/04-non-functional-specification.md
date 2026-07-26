@@ -22,8 +22,12 @@
 ## デプロイ設定（確定）
 
 - 対象ディレクトリ: `front/` のみ（`base/` は対象外）。
-- ブランチ: `main` のみ自動デプロイ。
-- プレビュー: 不要。
+- ブランチ: `main` のみ自動デプロイ。`vercel.json` の `git.deploymentEnabled` で `main` 以外の発火を止める。
+- プレビュー: 不要（上記設定により PR ブランチではデプロイしない）。
+- スキップ条件: `vercel.json` の `ignoreCommand` により、`docs/` / `.claude/` / `.github/` / `*.md` **のみ**の変更ではビルドを実行しない。
+
+> **デプロイの発火制御は 2 系統ある。** GitHub Actions（`test.yml` の `paths-filter`）と Vercel の Git 連携は独立しており、**Vercel は Actions のパスフィルタを見ない**。ドキュメントのみの変更で Actions が止まっていても、Vercel 側を設定しなければデプロイは走る（実例: PR #150）。両方を揃えて初めて「ドキュメント変更でデプロイしない」が成立する。
+
 - 環境変数: Supabase接続用の `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`、OAuthリダイレクト用の `NEXT_PUBLIC_SITE_URL` を設定（一覧: `.claude/rules/environment.md`）。
 - ビルド: Next.js標準（`pnpm install` → `pnpm build`）。
 
