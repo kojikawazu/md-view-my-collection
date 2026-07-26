@@ -19,6 +19,10 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      // `server-only` は "react-server" 条件でのみ空モジュールに解決され、それ以外では
+      // 読み込むだけで throw する。IT は素の node でルートハンドラを直接 import するため、
+      // 空実装へ明示的に向けないとスイートが起動しない（本番のガードには影響しない）。
+      'server-only': path.resolve(__dirname, './node_modules/server-only/empty.js'),
     },
   },
 });

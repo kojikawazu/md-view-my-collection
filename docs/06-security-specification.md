@@ -33,5 +33,6 @@
 - 本番環境: Vercel 環境変数で管理。
 - `ADMIN_EMAIL` / `DATABASE_URL` はサーバーサイド専用（`NEXT_PUBLIC_` プレフィックスを付けない）。
 - シークレット・認証情報をコードにハードコードしない。
+- サーバー専用モジュール（`front/src/lib/db.ts` / `front/src/lib/auth-server.ts`）は先頭で `import 'server-only'` する。Client Component から誤って import された場合に**ビルドを失敗させ**、シークレットのクライアントバンドル混入を機械的に防ぐ。
 
 > 環境変数の一覧は `.claude/rules/environment.md` を参照。

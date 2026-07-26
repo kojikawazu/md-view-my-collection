@@ -2,6 +2,9 @@
 // Bearer トークンを Supabase で検証したうえで `ADMIN_EMAIL` 許可リストと照合する。
 // RLS と合わせた二重防御の「アプリ側」を担う（`.claude/rules/security.md`）。
 
+// Client Component から誤って import されたらビルドを失敗させる。
+// このモジュールは `ADMIN_EMAIL` を読むため、クライアントに引き込むと許可リストが露出する。
+import 'server-only';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
