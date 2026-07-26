@@ -89,7 +89,9 @@ jobs:
 
 **Vercel / Netlify / Cloud Run などの Git 連携は、GitHub Actions のパスフィルタを一切参照しない。** Actions 側でジョブを止めても、PaaS 側の設定を変えなければデプロイは走る。**発火制御は 2 系統あると認識し、両方を揃える**。
 
-本プロジェクトの設定（`vercel.json`）:
+**設定ファイルは PaaS が見る場所に置く。** Vercel は `vercel.json` を**プロジェクトの Root Directory から読む**（本プロジェクトは `front`）。リポジトリルートに置いても**黙って無視される**ため、「設定したのに効かない」が起きる（#159）。
+
+本プロジェクトの設定（`front/vercel.json`）:
 
 | 目的 | 設定 |
 |---|---|
