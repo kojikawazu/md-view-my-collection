@@ -223,3 +223,22 @@
 - [x] zod + zod-openapi 導入。`front/src/lib/schemas/` を契約の単一ソース化し、`lib/validation.ts` を zod アダプタへ移行（既存 45 テスト互換維持 / 2026-06-13）
 - [x] `pnpm gen:openapi` で `docs/openapi.json`（OpenAPI 3.1）を生成。`docs/07-api-specification.md` の契約記述を生成物参照へ置換（2026-06-13）
 - [x] Swagger UI を `/docs`（管理者のみ）に導入。スペックは管理者ゲート付き `/api/openapi` から取得（2026-06-13）
+
+## ルールと実装の乖離解消（Issue #142）
+
+`.claude/rules/` と実装・CI・ドキュメントを機械的に突き合わせ、検出した乖離をサブ issue に分割して対応した（2026-07-26）。
+
+- [x] 認証ログからメールアドレスを除去（`AppStateProvider.tsx` / Issue #143 / PR #152）
+- [x] カスタムフック 6 本に戻り値型を明示し、コメントを型メンバーへ移動（Issue #144 / PR #154）
+- [x] `api.md` のレスポンス整形をマッパー許可リスト方式に緩和し、`server-only` を導入（Issue #145 / PR #155）
+- [x] CSP を `Report-Only` で導入。付随セキュリティヘッダー 4 種は強制（Issue #147 / PR #156）
+- [x] `constants.tsx` を `constants.ts` にリネーム（Issue #148 / PR #153）
+- [x] `.claude/rules/` の記載漏れ 3 件を補完（IT・typecheck・frontmatter / Issue #149 / PR #150）
+- [x] Vercel のデプロイ発火を制御（Issue #151 / PR #157・#160・#161）
+- [ ] レートリミットの実装（設計のみ完了 / Issue #146 / PR #158）
+- [ ] Vercel のデプロイ抑止が実際に効くことの観測（Issue #159）
+
+### 積み残し
+
+- レートリミット本体の実装（Upstash Redis + 環境変数 2 つの設定が前提 / Issue #146）
+- CSP の `Report-Only` → 強制への切り替え、`script-src` の nonce 化（Issue #147 のフォローアップ）
