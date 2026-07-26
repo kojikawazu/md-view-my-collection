@@ -5,10 +5,14 @@
 FRONT := front
 PNPM  := pnpm
 
+# .github/workflows/docs.yml と必ず同じ値にする。版差で MD051 等の判定が変わり、
+# ローカル green / CI red が起きるため、バージョンを固定して両者を揃える。
+MARKDOWNLINT_VERSION := 0.23.1
+
 .DEFAULT_GOAL := help
 
 .PHONY: help install dev build start \
-        lint typecheck format check \
+        lint typecheck format check lint-docs lint-docs-fix \
         test test-watch test-integration test-e2e test-e2e-ui test-e2e-report \
         gen-openapi gen-test-schema \
         prisma-pull prisma-generate
@@ -50,6 +54,14 @@ typecheck:
 ## Prettier で整形
 format:
 	cd $(FRONT) && $(PNPM) format
+
+## Markdown lint（docs.yml と同じバージョンで実行）
+lint-docs:
+	npx --yes markdownlint-cli2@$(MARKDOWNLINT_VERSION)
+
+## Markdown lint の自動修正
+lint-docs-fix:
+	npx --yes markdownlint-cli2@$(MARKDOWNLINT_VERSION) --fix
 
 ## lint + typecheck をまとめて実行（CI static-analysis 相当）
 check: lint typecheck

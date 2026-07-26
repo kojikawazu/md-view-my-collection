@@ -40,7 +40,7 @@ Markdown レポートの保存・閲覧 UI の**実装ディレクトリ**です
 
 ## ディレクトリ構成
 
-```
+```text
 front/
 ├── src/
 │   ├── app/                     App Router のルート
@@ -87,7 +87,6 @@ pnpm install   # postinstall で prisma generate が自動実行される
 cp .env.local.example .env.local
 ```
 
-
 - `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Supabase クライアント
 - `NEXT_PUBLIC_SITE_URL` — Google OAuth リダイレクト先
 - `ADMIN_EMAIL`（**サーバー専用**） — 管理者メール許可リスト（カンマ区切り）
@@ -116,6 +115,8 @@ pnpm start    # ビルド成果物を配信
 ```
 
 > リポジトリ root から `make dev` / `make build` / `make test` などでも実行できます（`front/` の pnpm scripts を委譲するラッパー）。一覧は root で `make` を実行。
+>
+> ドキュメントの Markdown lint のみ `front/` ではなくリポジトリ全体が対象で、`make lint-docs`（修正は `make lint-docs-fix`）で実行します。CI（`.github/workflows/docs.yml`）と同じバージョンを使うため、必ずこの target 経由で実行してください。
 
 ## 動作モード（local / supabase）
 
