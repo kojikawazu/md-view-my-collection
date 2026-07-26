@@ -19,15 +19,38 @@ const initialErrorFromUrl = (): string | null => {
   return errorParam === 'unauthorized' ? '許可されていないメールアドレスです。' : null;
 };
 
+/** ログインフォームの状態と操作。 */
+type UseLoginFormResult = {
+  /** メール入力値。 */
+  email: string;
+  /** メール入力値を更新する。 */
+  setEmail: (email: string) => void;
+  /** パスワード入力値。 */
+  password: string;
+  /** パスワード入力値を更新する。 */
+  setPassword: (password: string) => void;
+  /** 表示中のエラーメッセージ。`null` はエラーなし。初期値は URL の `?error=unauthorized` 由来 */
+  error: string | null;
+  /** 送信中フラグ。**成功時は遷移するため解除されない**（失敗時のみ false に戻る） */
+  isSubmitting: boolean;
+  /** メール/パスワードで送信する。未入力の場合は何もしない */
+  handleSubmit: (event: React.FormEvent) => void;
+  /** Google OAuth を開始する。リダイレクトが走るため成功時は戻ってこない */
+  handleGoogleLogin: () => void;
+};
+
 /**
  * ログインフォームの状態と送信ハンドラを管理するフック。
  *
  * 入力値・エラー・送信中フラグを保持する。送信成功時は画面遷移が起きるため
  * `isSubmitting` はあえて解除せず、失敗時（メッセージあり）のみ false に戻して再入力を許す。
  *
- * @returns 入力値・setter・`error`・`isSubmitting`・送信/Googleログインの各ハンドラ
+ * @returns フォームの状態と各ハンドラ
  */
-export const useLoginForm = ({ onLogin, onLoginWithGoogle }: UseLoginFormOptions) => {
+export const useLoginForm = ({
+  onLogin,
+  onLoginWithGoogle,
+}: UseLoginFormOptions): UseLoginFormResult => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(initialErrorFromUrl);

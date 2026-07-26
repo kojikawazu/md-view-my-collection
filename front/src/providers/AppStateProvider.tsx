@@ -71,7 +71,7 @@ const AppStateContext = createContext<AppState | undefined>(undefined);
  * @returns アプリ横断の状態と操作
  * @throws {Error} `AppStateProvider` の外で呼ばれた場合
  */
-export const useAppState = () => {
+export const useAppState = (): AppState => {
   const context = useContext(AppStateContext);
   if (!context) {
     throw new Error('useAppState must be used within AppStateProvider');

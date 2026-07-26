@@ -1,6 +1,14 @@
 import { useEffect, useState } from 'react';
 import { ReportItem } from '@/types';
 
+/** レポート詳細の取得結果。 */
+type UseReportResult = {
+  /** 表示対象のレポート。未取得・取得失敗時は `undefined`（「該当なし」ではない） */
+  report: ReportItem | undefined;
+  /** 本文の取得中のみ true。一覧キャッシュを表示中や local モードでは false のまま */
+  isLoading: boolean;
+};
+
 /**
  * 単一レポートを本文込みで `/api/reports/[id]` から取得するフック。
  *
@@ -9,12 +17,12 @@ import { ReportItem } from '@/types';
  *
  * @param reportId - 取得対象レポートの ID（未定義なら fetch しない）
  * @param listReport - 一覧から渡る本文なしのキャッシュ。即時表示の初期値に使う
- * @returns 現在のレポート（`report`）と取得中フラグ（`isLoading`）
+ * @returns レポートと取得中フラグ
  */
 export const useReport = (
   reportId: string | undefined,
   listReport: ReportItem | undefined,
-) => {
+): UseReportResult => {
   const [report, setReport] = useState<ReportItem | undefined>(listReport);
   const [isLoading, setIsLoading] = useState(false);
 
