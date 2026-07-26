@@ -1,7 +1,7 @@
 # APIルート設計書（認証認可・DB操作の移行）
 
 > 本書は仕様（What）に加え、APIルート移行時の**設計判断（How）**を含む設計書です。
-
+>
 > **API 契約（パス・リクエスト/レスポンス・ステータス）の正準は [`openapi.json`](openapi.json)（zod スキーマから `pnpm gen:openapi` で生成）。本書は設計判断・補足・エンドポイント概要を担う。**
 
 ## 目次
@@ -95,16 +95,19 @@
 **決定: 現行の「全件取得 → クライアント側フィルタ/ページング」モデルをそのまま維持する。**
 
 理由:
+
 - 現行UIは AppStateProvider に全レポートを保持し、一覧のフィルタ/ページング・詳細画面のID解決・編集画面のデータ反映をすべてクライアント側で行っている（`ListPage.tsx:28`, `report/[id]/page.tsx:12`, `report/[id]/edit/page.tsx:19`）。
 - server-driven pagination に切り替えると、詳細/編集の個別fetchと一覧のサーバーサイドフィルタリングが必要になり、UI層の変更が大きくなる。
 - レポート件数は現状数百件規模を想定しており、全件取得でパフォーマンス問題は発生しない。
 
 **APIへの影響:**
+
 - `GET /api/reports` は **デフォルトで全件返却**する（`limit` パラメータのデフォルトは設けない）。
 - `limit` / `offset` パラメータは将来のserver-driven pagination用に受け付けるが、省略時は全件を返す。
 - クライアントは引数なしで `fetch('/api/reports')` を叩き、全件を受け取る。
 
 **将来:**
+
 - レポートが1000件を超える規模になった場合、server-driven paginationへの移行を検討する（別Issue）。
 
 ### DJ-2. タグの canonical form: `#` 付きで維持する
@@ -112,6 +115,7 @@
 **決定: タグの canonical form は `#` 付き（例: `#AI`, `#Cloud`）を維持する。**
 
 理由:
+
 - 現行の全レイヤーが `#` 付きを前提に動作している:
   - `constants.tsx:25`: `TRENDING_TAGS = ['#AI', '#UIUX', '#Minimal', '#Nature']`
   - `useReportForm.ts:62`: 入力時に `#` を自動付与
@@ -124,6 +128,7 @@
 - `#` なしに寄せると、既存 `ReportTag.name` のデータ移行、UI/E2E全面修正が必要。
 
 **APIへの影響:**
+
 - `validation.ts` の `normalizeTags()` は `#` を剥がさない。配列入力はそのまま保持、文字列入力は `#` が無ければ付与する。
 - APIレスポンスの `tags` フィールドは `#` 付き配列（例: `["#AI", "#Cloud"]`）。
 - `toReportItem()` は `ReportTag.name` をそのまま返す（変換不要）。
@@ -133,10 +138,12 @@
 **決定: Provider関数を `async` / result-returning に変更し、エラーを呼び出し元に返す。**
 
 理由:
+
 - 現行の `addReport` / `updateReport` / `deleteReport` は `void` 契約で、APIエラー時にUIが無反応になる。
 - youtube-my-collection の `useVideoForm` が API応答のエラーを form に返すパターンを踏襲する。
 
 **AppState インターフェース変更:**
+
 ```typescript
 // 変更前
 addReport: (report: Omit<ReportItem, 'id'>) => void;
@@ -150,6 +157,7 @@ deleteReport: (id: string) => Promise<MutationResult>;
 ```
 
 **MutationResult 型:**
+
 ```typescript
 type MutationResult =
   | { ok: true }
@@ -161,6 +169,7 @@ type MutationResult =
 **呼び出し元の変更:**
 
 `useReportForm.ts`:
+
 ```typescript
 // 変更前
 const handleConfirmSubmit = () => {
@@ -188,6 +197,7 @@ const handleConfirmSubmit = async () => {
 ```
 
 `DetailPage.tsx`（削除）:
+
 ```typescript
 // 変更前
 const handleConfirmDelete = () => {
@@ -204,6 +214,7 @@ const handleConfirmDelete = async () => {
 ```
 
 **useReportForm の onSubmit 型変更:**
+
 ```typescript
 // 変更前
 onSubmit: (data: Omit<ReportItem, 'id'>) => void;
@@ -217,10 +228,12 @@ onSubmit: (data: Omit<ReportItem, 'id'>) => Promise<MutationResult>;
 **決定: 初回 `getSession()` でも `accessToken` を設定する。**
 
 理由:
+
 - 現行は `getSession()` で `currentUser` を復元するが `accessToken` は保持していない。
 - リロード直後の POST/PATCH/DELETE が 401 になる余地がある。
 
 **実装箇所（AppStateProvider 初期化）:**
+
 ```typescript
 // 初回マウント時の init 内
 const { data } = await supabase.auth.getSession();
@@ -250,6 +263,7 @@ if (event === 'SIGNED_OUT') {
 **決定: APIルート専用の統合テストスイートを追加する。**
 
 理由:
+
 - 既存 E2E は `NEXT_PUBLIC_AUTH_MODE=local` / `NEXT_PUBLIC_DATA_MODE=local` で動作し、APIルート/Prismaを通らない。
 - 本番経路（supabase モード → APIルート → Prisma → DB）の回帰を CI で検知できない。
 
@@ -262,6 +276,7 @@ if (event === 'SIGNED_OUT') {
 | E2E (既存) | UI全体（localモード） | あり | `AUTH_MODE=local`, `DATA_MODE=local` |
 
 **IT（統合テスト）の構成（実装済み）:**
+
 - ファイル: `front/tests/integration/*.test.ts`（reports / reports-id / tags / auth / openapi）。
 - ランナー: Vitest（node 環境）。`vitest.integration.config.ts` + `pnpm test:integration`。UT（`pnpm test`）とは分離。
 - DB: **Testcontainers で実 Postgres を起動**（`@testcontainers/postgresql`）。`globalSetup` で 1 度だけ起動し、DDL を適用、`DATABASE_URL` をコンテナに向ける。テスト間は `TRUNCATE ... RESTART IDENTITY CASCADE`、終了時にコンテナ破棄（テストデータを残さない）。
@@ -279,11 +294,13 @@ if (event === 'SIGNED_OUT') {
 **決定: サーバー側バリデーションでもカテゴリ固定リストを検証する。**
 
 理由:
+
 - 要件定義（`docs/02-requirements-specification.md`）でカテゴリは固定リスト。
 - 現行UIも `constants.tsx:24` の `CATEGORIES` 配列で固定。
 - サーバー側がノーチェックだと、API直叩きで不正カテゴリが入る。
 
 **実装:**
+
 ```typescript
 // validation.ts
 import { CATEGORIES } from '@/constants';
@@ -309,6 +326,7 @@ if (!partial || hasField(input, 'category')) {
 `validation.ts` から `@/constants` を直接 import する。分離は不要。
 
 理由:
+
 - `constants.tsx` は `'use client'` ディレクティブなし、React import なし、JSX なし。
 - 中身は `DesignSystem` 型の import と純粋なデータ定義（`ESPRESSO_THEME`, `CATEGORIES`, `TRENDING_TAGS`, `AUTH_COOKIE_NAME`）のみ。
 - `.tsx` 拡張子は `DesignSystem` 型参照のためだが、Next.js / TypeScript はサーバー側からの `.tsx` import を問題なく解決する。
@@ -320,7 +338,7 @@ if (!partial || hasField(input, 'category')) {
 
 ### ファイル構成
 
-```
+```text
 youtube-my-collection/front/src/
 ├── lib/
 │   ├── auth.ts            # クライアント側認証関数（signInWithGoogle, signOut）
@@ -338,7 +356,7 @@ youtube-my-collection/front/src/
 
 ### 認可フロー
 
-```
+```text
 クライアント
   → fetch('/api/reports', { headers: { Authorization: 'Bearer <token>' } })
     → APIルート
@@ -367,6 +385,7 @@ youtube-my-collection/front/src/
 ### 1. `front/src/lib/auth-server.ts` — サーバー側認可ミドルウェア
 
 youtube-my-collection の `auth-server.ts` をベースに、以下のパフォーマンス改善を追加（#47）:
+
 - Supabase クライアントをモジュールスコープで生成し warm invocation 間で再利用
 - 認証済みトークンをインメモリキャッシュ（TTL 5分）し、同一トークンの2回目以降は Supabase HTTP 往復をスキップ
 - `supabase.auth.getUser(token)` は明示的に JWT を渡すため、共有クライアントでも auth 状態の混線は起きない
@@ -451,6 +470,7 @@ export const requireAdmin = async (
 ```
 
 **youtube版との差分:**
+
 - `ADMIN_EMAIL` をカンマ区切りで複数対応（md-viewの既存仕様を維持）
 - Supabase クライアントをモジュールスコープで再利用（youtube版はリクエストごと生成）
 - 認証トークンのインメモリキャッシュを追加（TTL 5分、最大100件で自動evict）
@@ -529,6 +549,7 @@ export type MutationResult =
 **ファイル:** `front/src/app/api/auth/admin/route.ts`
 
 **`requireAdmin()` との使い分け（設計判断）:**
+
 - `/api/auth/admin` は **boolean 判定専用**のエンドポイントであり、`requireAdmin()` を直接流用しない。
   - 非管理者は 403 ではなく **200 `{ isAdmin: false }`** を返す（クライアントが判定結果を受け取り自分でハンドリングする）。
   - `requireAdmin()` は CRUD エンドポイント（POST/PATCH/DELETE）の入り口で使い、非管理者を **403 で拒否**する。
@@ -536,6 +557,7 @@ export type MutationResult =
 - Supabase クライアントはモジュールスコープで生成し、warm invocation 間で再利用する。`supabase.auth.getUser(token)` は明示的に JWT を渡すため、共有 auth 状態の混線は起きない。
 
 **localモード対応:**
+
 - E2E互換のため、既存 `/api/auth/is-allowed` (POST) も当面維持する。
 - 新規実装では `/api/auth/admin` (GET) を優先的に使用する。
 
@@ -549,6 +571,7 @@ export type MutationResult =
 - 一覧は `select` で `content` を除外し `toReportListItem()` が `content: ''` を返す（ペイロード削減）。本文は `GET /api/reports/{id}` でのみ取得する。
 
 **Prisma操作（全件取得時の例）:**
+
 ```typescript
 const limit = parsedLimit;  // undefined = 全件
 const offset = parsedOffset ?? 0;
@@ -571,12 +594,14 @@ const [totalCount, reports] = await prisma.$transaction([
 ### `POST /api/reports` / `PATCH /api/reports/[id]` のタグ同期
 
 **処理フロー（共通）:**
+
 1. `requireAdmin()` で認可チェック。
 2. `validateReportInput()`（PATCH は `{ partial: true }`）でバリデーション（カテゴリ固定リスト含む）。契約の正準は `lib/schemas/`（zod）。
 3. Prismaトランザクションで Report + ReportTag + ReportTagMapping（+ 外部URL）を同期。
 4. 作成/更新済みレポートを返却。
 
 **タグ同期（# 付き canonical form / トランザクション内）:**
+
 ```typescript
 await prisma.$transaction(async (tx) => {
   const report = await tx.report.create({ data: { ... } });  // PATCH は update
@@ -648,6 +673,7 @@ interface AppState {
 ### AppStateProvider CRUD の修正
 
 **addReport の変更例:**
+
 ```typescript
 // 変更後
 const addReport = async (report: Omit<ReportItem, 'id'>): Promise<MutationResult> => {
@@ -786,7 +812,7 @@ youtube-my-collection のパターンを踏襲。
 
 ### クライアント側エラー処理フロー（DJ-3）
 
-```
+```text
 API レスポンス
   ├─ 200/201 → MutationResult { ok: true }
   ├─ 400     → MutationResult { ok: false, status: 400, fieldErrors: {...} }
@@ -803,7 +829,7 @@ API レスポンス
 
 ## ファイル構成（移行後）
 
-```
+```text
 front/src/
 ├── app/api/
 │   ├── auth/
@@ -873,6 +899,7 @@ front/src/
 ## 移行フェーズ
 
 ### Phase 1: 基盤ファイル追加
+
 - `lib/auth-server.ts` 作成
 - `lib/db.ts` 作成
 - `lib/validation.ts` 作成
@@ -881,6 +908,7 @@ front/src/
 - ビルド確認
 
 ### Phase 2: APIルート追加 + API統合テスト
+
 - `api/auth/admin/route.ts` 作成
 - `api/reports/route.ts` 作成（GET: 全件デフォルト + POST）
 - `api/reports/[id]/route.ts` 作成（GET + PATCH + DELETE）
@@ -888,6 +916,7 @@ front/src/
 - API統合テスト作成・実行（API-001〜API-014）
 
 ### Phase 3: クライアント側の接続切り替え
+
 - AppStateProvider: `accessToken` 状態追加（DJ-4: 初回getSession + onAuthStateChange）
 - AppStateProvider: CRUD を fetch APIルートに変更（`MutationResult` 返却）
 - `useReportForm.ts`: `onSubmit` を `async` に変更、サーバーエラー表示追加
@@ -899,6 +928,7 @@ front/src/
 - ビルド確認
 
 ### Phase 4: 認証エンドポイント統一（任意）
+
 - `/api/auth/is-allowed` の呼び出しを `/api/auth/admin` に切り替え
 - localモードの互換性を確認
 - E2Eテスト全パス確認

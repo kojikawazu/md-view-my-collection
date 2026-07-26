@@ -59,6 +59,7 @@ flowchart TD
 ```
 
 ## 概要
+
 `front/src/components/` のフラット構成をアトミックデザイン4階層（Atoms / Molecules / Organisms / Pages）に再編成する。
 ロジックは `hooks/` に、状態管理は `providers/` に分離する。
 段階的に移行し、各フェーズでE2Eテストの全パスを確認する。
@@ -73,7 +74,7 @@ domain/state の分割は別 Issue で扱う。
 
 ## 現状の構成
 
-```
+```text
 front/src/components/
 ├── AppLink.tsx              # Link + ローディングトリガー
 ├── AppShell.tsx             # Header + Sidebar + Main + Footer レイアウト
@@ -94,7 +95,7 @@ front/src/components/
 
 ### Provider/Shell のスコープ（現状）
 
-```
+```text
 layout.tsx
   └── AppStateProvider          ← 全ルート共通（認証/レポート/フィルタ状態）
         ├── AppShell             ← /, /report/*, /report/markdown-lab
@@ -107,6 +108,7 @@ layout.tsx
 ```
 
 **課題:**
+
 - Atom（AppLink）とOrganism（Header）が同一ディレクトリに混在
 - ページコンポーネントが巨大（ListPage: 190行、FormPage: 200行）で内部にAtom/Molecule相当が埋め込み
 - 再利用可能なUI部品（ボタン、バッジ、フォームフィールド）が各コンポーネントにインライン定義
@@ -133,6 +135,7 @@ layout.tsx
 **決定: `useLoading` を context-optional にする。**
 
 `useLoading` を provider 非存在時に no-op を返すよう変更する。
+
 ```ts
 // 変更前: provider 必須（例外送出）
 export const useLoading = () => {
@@ -271,7 +274,7 @@ LoginPage 内のインラインスピナー（`LoginPage.tsx:52-58`）を削除�
 
 ## 層間の依存方向ルール
 
-```
+```text
 許可される依存方向（上位 → 下位のみ）:
 
   Pages → Organisms → Molecules → Atoms
@@ -304,12 +307,13 @@ LoginPage 内のインラインスピナー（`LoginPage.tsx:52-58`）を削除�
 providers を直接 import できるのは `layout.tsx` 等の Provider 設置ポイントのみ。
 
 ### AppLink の例外について
+
 AppLink は atom だが `useLoading` に依存する。ただし `useLoading` は context-optional（no-op fallback）のため、
 provider 非存在でも安全に動作する。この1件のみ「atom → hooks」の依存を許可する。
 
 ## 移行後のディレクトリ構造
 
-```
+```text
 front/src/
 ├── components/
 │   ├── atoms/
@@ -378,6 +382,7 @@ front/src/
 ## 移行フェーズ
 
 ### Phase 1: ディレクトリ作成 + providers/hooks分離 + Atoms抽出
+
 - `components/atoms/`, `components/molecules/`, `components/organisms/`, `hooks/`, `providers/` ディレクトリを作成
 - `AppStateProvider.tsx`, `LoadingContext.tsx` を `providers/` に移動
 - `useAppState`, `useLoading` を `hooks/` に分離（re-export）
@@ -389,11 +394,13 @@ front/src/
 - E2E全パス確認
 
 ### Phase 2: Molecules抽出
+
 - Atoms を組み合わせた Molecules（FormField, AuthorInfo, FilterIndicator, PaginationNav, NavLink, CategoryButton, ReportCardMeta, UserAuthSection）を作成
 - 既存コンポーネント内のインライン定義を Molecules に置き換え
 - E2E全パス確認
 
 ### Phase 3: Organisms再編成 + hooks抽出
+
 - Header, Sidebar, Footer を `organisms/` に移動し、Molecules を利用するようリファクタ
 - ReportCard を ListPage から抽出して `organisms/` に配置
 - ReportForm を FormPage から抽出
@@ -406,6 +413,7 @@ front/src/
 - E2E全パス確認
 
 ### Phase 4: Pages整理 + 最終クリーンアップ
+
 - Pages を整理し、Organisms + hooks を利用するよう簡素化
 - 各階層に `index.ts`（barrel export）を配置
 - 旧ファイルの削除・import整理
@@ -420,18 +428,21 @@ front/src/
 ## 設計方針
 
 ### theme（DesignSystem）の受け渡し
+
 - **Atoms**: `theme` を受け取らない。`variant` / `size` / `className` 等のセマンティックな props で制御
 - **Molecules**: 基本的に `theme` を受け取らない。className の受け渡し程度
 - **Organisms 以上**: `theme` を受け取り、Atoms/Molecules の props に変換する責務を担う
 - Context 化は本 Issue のスコープ外
 
 ### フィルタ状態の所有者
+
 - カテゴリ/タグの選択状態は **AppStateProvider（グローバル）が保持**する
 - Sidebar は AppShell 経由で provider のフィルタ操作関数を受け取る（現状維持）
 - ListPage は `useAppState` 経由でフィルタ状態を読み取り、レポートの絞り込みを行う
 - `useReportFilter` フックは作成しない
 
 ### hooks 設計方針
+
 - UIロジック（ページネーション、フォーム）はカスタムフックに分離
 - コンポーネントは「表示」に専念し、フックから状態と操作を受け取る
 - `useAppState` / `useLoading` は `hooks/` から re-export し、import元を統一
@@ -440,16 +451,19 @@ front/src/
 - hooks はコンポーネントを import しない（JSX を返さない）
 
 ### LoginForm のローディング責務
+
 - `isSubmitting` 状態は `useLoginForm` フックが管理する
 - LoginForm が `useLoginForm` から `isSubmitting` を受け取り、内部で LoadingOverlay を表示する
 - LoginPage は LoginForm を配置するだけで、ローディング表示に関与しない
 
 ### barrel export
+
 - 各階層に `index.ts` を配置し、外部からの import を簡潔にする
 - 例: `import { Button, Badge } from '@/components/atoms'`
 - 例: `import { usePagination } from '@/hooks'`
 
 ### 命名規則
+
 - Atom/Molecule: 汎用名（`Button`, `FormField`）
 - Organism: 具体名（`ReportCard`, `LoginForm`）
 - Hook: `use〜` プレフィックス

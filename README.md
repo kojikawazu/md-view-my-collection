@@ -39,7 +39,7 @@ TypeScript + Next.js 16（App Router）/ React 19 + TailwindCSS v4 を中核に�
 
 ## ディレクトリ構成
 
-```
+```text
 .
 ├── front/   実装（Next.js App Router）— 開発はここで行う
 ├── docs/    番号付き仕様書（01〜11、フラット構成）
