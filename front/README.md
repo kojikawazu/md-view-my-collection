@@ -40,7 +40,7 @@ Markdown レポートの保存・閲覧 UI の**実装ディレクトリ**です
 
 ## ディレクトリ構成
 
-```
+```text
 front/
 ├── src/
 │   ├── app/                     App Router のルート
@@ -86,7 +86,6 @@ pnpm install   # postinstall で prisma generate が自動実行される
 ```bash
 cp .env.local.example .env.local
 ```
-
 
 - `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Supabase クライアント
 - `NEXT_PUBLIC_SITE_URL` — Google OAuth リダイレクト先

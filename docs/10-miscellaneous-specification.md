@@ -128,7 +128,7 @@ Markdown ライブラリ調査とデータ品質チェック結果を収録す�
 
 本プロジェクトでは以下の3ライブラリを組み合わせて Markdown を安全にレンダリングしている。
 
-```
+```text
 Markdown文字列
   → remark-parse（Markdown → mdast）
   → remark-gfm（GFM 拡張の解析）
@@ -174,7 +174,7 @@ unified / remark / rehype エコシステム上に構築されており、`dange
 | 本プロジェクトのバージョン | ^10.1.0 |
 | ライセンス | MIT |
 | モジュール形式 | ESM のみ（CommonJS 非対応） |
-| リポジトリ | https://github.com/remarkjs/react-markdown |
+| リポジトリ | <https://github.com/remarkjs/react-markdown> |
 
 ---
 
@@ -190,7 +190,7 @@ unified / remark / rehype エコシステム上に構築されており、`dange
 
 ## 2. レンダリングパイプライン
 
-```
+```text
 Markdown文字列
   → [remark-parse] → mdast（Markdown 抽象構文木）
   → [remarkPlugins による変換]（例: remark-gfm）
@@ -369,7 +369,7 @@ GitHub Flavored Markdown（GFM）拡張構文をパース・シリアライズ�
 | 本プロジェクトのバージョン | ^4.0.1 |
 | ライセンス | MIT |
 | モジュール形式 | ESM のみ |
-| リポジトリ | https://github.com/remarkjs/remark-gfm |
+| リポジトリ | <https://github.com/remarkjs/remark-gfm> |
 
 ---
 
@@ -402,6 +402,7 @@ CommonMark の全機能を含みつつ、以下の拡張を追加している。
 | `:---:` | 中央揃え |
 
 **ルール:**
+
 - セル内のパイプは `\|` でエスケープ
 - ヘッダー行と区切り行のセル数は一致が必要
 - 区切り行には最低3つのハイフン
@@ -479,7 +480,7 @@ import stringWidth from 'string-width';
 
 ## 4. unified/remark エコシステムでの位置づけ
 
-```
+```text
 Markdown文字列
   → remark-parse     （Markdown → mdast）
   → remark-gfm       （GFM 拡張のパース）  ← ここ
@@ -554,7 +555,7 @@ HTML を安全にするための rehype プラグイン。
 | 本プロジェクトのバージョン | ^6.0.0 |
 | ライセンス | MIT |
 | モジュール形式 | ESM のみ |
-| リポジトリ | https://github.com/rehypejs/rehype-sanitize |
+| リポジトリ | <https://github.com/rehypejs/rehype-sanitize> |
 
 ---
 
@@ -580,7 +581,7 @@ HTML を安全にするための rehype プラグイン。
 
 ## 2. パイプラインでの配置
 
-```
+```text
 Markdown → remark-parse → mdast → remark-rehype → hast → rehype-sanitize → React 要素
                                                            ↑ ここで動作
 ```
@@ -604,7 +605,7 @@ rehype-sanitize の後にあるプラグインは信頼できるものだけに�
 
 ### 許可されるタグ（全54要素）
 
-```
+```text
 a, b, blockquote, br, code, dd, del, details, div, dl, dt, em,
 h1, h2, h3, h4, h5, h6, hr, i, img, input, ins, kbd, li, ol, p,
 picture, pre, q, rp, rt, ruby, s, samp, section, source, span,
@@ -771,7 +772,7 @@ const schema = deepmerge(defaultSchema, { attributes: { '*': ['className'] } });
 
 ### パイプライン順序の重要性
 
-```
+```text
 安全:   parse → sanitize → stringify
 安全:   parse → sanitize → highlight（信頼済み）
 危険:   parse → 信頼できないプラグイン → stringify（sanitize なし）
@@ -852,6 +853,7 @@ Gemini / Perplexity / ChatGPT で毎日自動生成しているテックニュ�
 > **分類軸の注記:** 本レポートでは記事のトピック領域（Security, Database等）を監査用に使用しているが、アプリ（Report Viewer）の固定カテゴリは `Development / AI / Cloud / Linux / Container / Application / Program / Hobby` の8種である。Security記事・Database記事はアプリ上では `Development` カテゴリに分類される。本レポートのセクション5.1「カテゴリ誤分類」は、このアプリの正式カテゴリに対する誤りを指す。
 
 **検証対象期間:**
+
 - 2026-03-23〜24（最新6件 × 全主張）
 - 2026-02-14〜15（中間2件 × 主要主張）
 
@@ -860,6 +862,7 @@ Gemini / Perplexity / ChatGPT で毎日自動生成しているテックニュ�
 全229件を対象に、ありえないバージョン番号やハルシネーションパターンをSQLで一括検索した。
 
 **検索パターン:**
+
 - `MongoDB 9.0` / `Kubernetes 2.x` / `Docker 5.x` / `Python 4.x`
 - `Gemini 4/5` / `GPT-6/7` / `Next.js 17/18`
 - `Spring Boot 4.x` / `C# 15` / `TypeScript 7.0`
