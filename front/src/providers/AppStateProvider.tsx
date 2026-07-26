@@ -422,7 +422,8 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         await supabase.auth.signOut();
         return '許可されていないメールアドレスです。';
       }
-      console.info('[auth] login', { userId: sessionUser.id, username: sessionUser.email });
+      // メールアドレスは個人情報のためログに出さない（error-handling.md）。追跡は userId で足りる
+      console.info('[auth] login', { userId: sessionUser.id });
       setCurrentUser({
         id: sessionUser.id,
         username: 'Manager',
