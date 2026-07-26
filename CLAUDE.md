@@ -61,8 +61,9 @@ Markdownレポートの保存・閲覧UIを提供するNext.jsアプリ。
 | `dead-code.md` | 全体 | デッドコード禁止（コメントアウト・未使用 export・旧実装・スキップ放置テストを残さない） |
 | `static-analysis.md` | 全体 | 静的解析の運用（Formatter と Linter の役割分担・CI 必須・警告ゼロ・抑制コメントは理由と最小範囲） |
 | `github-actions.md` | `.github/workflows/**` | GitHub Actions の発火ルール（関係あるジョブのみ実行・必須チェックと `paths-ignore` の併用禁止・デプロイは main のみ） |
-| `frontend.md` | `front/src/components/**`, `front/src/app/**`, `front/src/hooks/**` | Next.js App Router フロントエンド設計・アトミックデザイン規約 |
+| `vercel.md` | `front/vercel.json` | Vercel のデプロイ制御（Root Directory 直下に配置・`git.deploymentEnabled` でブランチ限定・`ignoreCommand` でドキュメントのみの変更をスキップ） |
+| `frontend.md` | `front/src/components/**`, `front/src/app/**`, `front/src/hooks/**`, `front/src/repositories/**`, `front/src/schemas/**` | Next.js App Router フロントエンド設計・アトミックデザイン規約・関心別ディレクトリ（`repositories/` に fetch を集約） |
 | `api.md` | `front/src/app/api/**` | Next.js BFF（Route Handlers）設計・API ルール |
-| `database.md` | `front/prisma/**`, `front/src/lib/db.ts`, `front/src/app/api/**` | Prisma ORM 規約・マイグレーション禁止・RLSポリシー |
+| `database.md` | `front/prisma/**`, `front/src/lib/db.ts`, `front/src/app/api/**` | Prisma ORM 規約・マイグレーション禁止・監査列の自動設定・RLSポリシー |
 | `typescript.md` | `front/src/**` | TypeScript 固有規約（type/interface の使い分け・型/定数の配置・any 禁止・enum 回避・`import type`） |
 | `jsdoc.md` | `front/src/**` | JSDoc（TSDoc）ドキュメンテーションコメント規約（公開シンボル必須・型は書かない・why 重視） |

@@ -89,16 +89,7 @@ jobs:
 
 **Vercel / Netlify / Cloud Run などの Git 連携は、GitHub Actions のパスフィルタを一切参照しない。** Actions 側でジョブを止めても、PaaS 側の設定を変えなければデプロイは走る。**発火制御は 2 系統あると認識し、両方を揃える**。
 
-**設定ファイルは PaaS が見る場所に置く。** Vercel は `vercel.json` を**プロジェクトの Root Directory から読む**（本プロジェクトは `front`）。リポジトリルートに置いても**黙って無視される**ため、「設定したのに効かない」が起きる（#159）。
-
-本プロジェクトの設定（`front/vercel.json`）:
-
-| 目的 | 設定 |
-|---|---|
-| `main` 以外でデプロイしない（プレビュー無し） | `git.deploymentEnabled: { "main": true }` |
-| ドキュメントのみの変更でビルドしない | `ignoreCommand` で `docs/` `.claude/` `.github/` `*.md` を除外した差分が空なら終了コード 0（＝スキップ） |
-
-`ignoreCommand` は **終了コード 0 でビルドをスキップ**する（`git diff --quiet` の「差分なし＝0」とちょうど噛み合う）。判定は Actions と同じく**除外リストで書く**（新しいディレクトリが増えたときに黙ってデプロイされなくなる事故を防ぐ）。
+**本プロジェクトの Vercel 側の設定（`front/vercel.json`）の詳細は `.claude/rules/vercel.md` を正準とする。** 同じ除外パスの一覧を本ファイルと二重管理しない（`duplication.md`）。ただし**片方だけ更新すると「CI は動かないのにデプロイは走る」食い違いが起きる**ため、除外パスを変えるときは必ず両方を見る。
 
 ## レビュー観点
 

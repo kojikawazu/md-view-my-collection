@@ -27,8 +27,8 @@ globs: "front/src/components/**,front/src/app/**,front/src/hooks/**,front/src/li
 ## ロジック分離
 
 - クライアントコンポーネントのロジックはカスタムフック（`hooks/`）に切り出す。コンポーネントは UI 描画に専念する。
-- サーバーコンポーネントのデータ取得は `page.tsx` や `lib/` 内のサーバー関数で行う（hooks は使用しない）。
-- `page.tsx` は**データ取得と合成の場**。「薄く」する必要はないが、**ビジネスロジックは置かない**（`lib/` のサーバー関数へ）。
+- サーバーコンポーネントのデータ取得は `page.tsx` から `repositories/` の関数を呼んで行う（hooks は使用しない）。
+- `page.tsx` は**データ取得と合成の場**。「薄く」する必要はないが、**ビジネスロジックは置かない**（データ取得は `repositories/`、計算・整形は `lib/` の純粋関数へ）。
 
 ## 状態管理・Context
 
@@ -41,22 +41,40 @@ globs: "front/src/components/**,front/src/app/**,front/src/hooks/**,front/src/li
 
 > 本プロジェクトはサーバー状態管理ライブラリ（React Query / SWR）と store ライブラリ（Zustand 等）を採用していない。レポートは `AppStateProvider` が全件保持する方針で、その判断理由は `docs/07-api-specification.md` の DJ-1 に記録されている。導入を検討する場合は先にそちらを更新すること。
 
+## 関心別にディレクトリを切る
+
+`types/` `constants/` `schemas/` `repositories/` は**それぞれ独立したディレクトリ**として `src/` 直下に置く。いずれも**単一ファイルにまとめない**（`src/types.ts` / `lib/validation.ts` のような形は禁止）。詳細は `typescript.md`「型定義の配置」「定数の配置」に従う。
+
+| ディレクトリ | 置くもの | 置かないもの |
+|---|---|---|
+| `types/` | 2 箇所以上から参照される型 | 値・ロジック |
+| `constants/` | 全環境で不変な値 | 環境変数・型を導出する定数（`types/` 側へ） |
+| `schemas/` | Zod スキーマ（フォーム・API 契約の検証） | 検証を伴わない型定義（`types/` へ） |
+| `repositories/` | **API アクセス**（`fetch` / API クライアント呼び出し） | UI・画面都合の整形・業務判断 |
+| `lib/` | **通信を持たない純粋ユーティリティ** | API アクセス（`repositories/` へ）・定数・型 |
+
+- **`fetch` を書いてよいのは `repositories/` だけ**。コンポーネント・hooks・`lib/` から直接叩かない。呼び出し口を 1 箇所に閉じることで、認証ヘッダ・エラー処理・リトライの実装が散らばらない。
+- ディレクトリ名は**複数形で統一**する（`types` / `constants` / `schemas` / `repositories`）。
+
+> **未移行（Issue #164）**: 現行は `fetch` が `providers/AppStateProvider.tsx` / `hooks/useReport.ts` / `app/docs/page.tsx` に散在し、Zod スキーマは `lib/schemas/` にある。本節はルールが先行しており、移行は #164 で対応する。**新規のデータ取得は移行を待たず `repositories/` に置いてよい**。
+
 ## レイヤ依存の一方向ルール
 
 **依存は上位から下位への一方向のみ**。下位レイヤが上位レイヤを import してはならない。
 
 ```text
-app  →  components  →  hooks  →  lib（API クライアント・サーバー関数）  →  types.ts / constants.ts
-（ルーティング・合成）（表示） （ロジック）        （通信・DB）                    （最下層）
+app  →  components  →  hooks  →  repositories  →  lib / schemas  →  types / constants
+（ルーティング・合成）（表示） （ロジック）（APIアクセス）（純粋関数・検証）  （最下層）
 ```
 
 | レイヤ | import してよい | import 禁止 |
 |---|---|---|
-| `app/` | `components/`, `hooks/`, `lib/`, `providers/`, `types`, `constants` | （なし。app は誰からも参照されない） |
-| `components/` | 下位の `components/`, `hooks/`, `types`, `constants` | **`app/`**（ページ固有の型・定数を含む） |
-| `hooks/` | `lib/`, `types`, `constants` | **`app/`**, **`components/`**（JSX を返さない） |
-| `lib/` | `types`, `constants` | **`app/`**, **`components/`**, **`hooks/`** |
-| `types.ts` `constants.ts` | （原則どこにも依存しない） | 上位レイヤすべて |
+| `app/` | `components/`, `hooks/`, `repositories/`, `lib/`, `schemas/`, `providers/`, `types`, `constants` | （なし。app は誰からも参照されない） |
+| `components/` | 下位の `components/`, `hooks/`, `lib/`, `types`, `constants` | **`app/`**（ページ固有の型・定数を含む）, **`repositories/`**（データ取得は Server Component か `hooks/` 経由） |
+| `hooks/` | `repositories/`, `lib/`, `schemas/`, `types`, `constants` | **`app/`**, **`components/`**（JSX を返さない） |
+| `repositories/` | `lib/`, `schemas/`, `types`, `constants` | **`app/`**, **`components/`**, **`hooks/`** |
+| `lib/` `schemas/` | `types`, `constants` | 上位レイヤすべて（**`lib/` は通信もしない**） |
+| `types/` `constants/` | （原則どこにも依存しない） | 上位レイヤすべて |
 
 - **アトミックデザイン内も一方向**にする。`atoms/` は `molecules/` `organisms/` `pages/` を import しない。汎用度の高いものほど下位（`atoms → molecules → organisms → pages` の向きにのみ依存する）。
 - **`app/api/`（Route Handlers）から `components/` や `hooks/` を import しない**。API はサーバー側の層であり、UI 層に依存してはならない（`api.md` 参照）。
@@ -86,8 +104,8 @@ app  →  components  →  hooks  →  lib（API クライアント・サーバ�
 
 | 種類 | 役割 | 置き場所 |
 |---|---|---|
-| **API 契約の型** | Route Handlers が返す形。サーバー側の都合で変わる | `lib/schemas/`（zod）から `z.infer` で導出。手書きで再定義しない |
-| **ビューモデル** | 画面が必要とする形。UI 要件で変わる | `types.ts`、単一画面用なら該当コンポーネントにコロケーション |
+| **API 契約の型** | Route Handlers が返す形。サーバー側の都合で変わる | `schemas/`（zod）から `z.infer` で導出。手書きで再定義しない |
+| **ビューモデル** | 画面が必要とする形。UI 要件で変わる | `types/`、単一画面用なら該当コンポーネントにコロケーション |
 
 本プロジェクトは **Route Handlers を BFF として持つ一体型**のため、**変換は BFF（`app/api/`）に閉じる**。API は画面単位のレスポンス型を定義してその形に整形して返し、**フロント側で再変換しない**（変換層を二重に置かない。`api.md`「レスポンス整形」と対になる規定）。
 
@@ -97,11 +115,11 @@ app  →  components  →  hooks  →  lib（API クライアント・サーバ�
 
 ## バリデーション
 
-- スキーマの正準は **`lib/schemas/`（zod）**。`typescript.md`「スキーマバリデーションは Zod に統一する」に従い、`yup` 等と**混在させない**。
+- スキーマの正準は **`schemas/`（zod）**。`typescript.md`「スキーマバリデーションは Zod に統一する」に従い、`yup` 等と**混在させない**。
 - **スキーマを単一の真実とする**。フォームの型は `z.infer<typeof schema>` で導出し、同じ形を手書きしない。
 - **クライアント検証は UX のためのものであり、セキュリティ担保ではない**。Route Handler 側で必ず検証する（信頼境界が違うため、この重複は必要 — `duplication.md`）。
 - **Server Action を導入する場合、引数も必ずサーバー側で `parse` する**。Server Action は公開エンドポイントと同等であり、フォームを経由せず直接呼び出せる。
-- 同じ入力ルールなら、**Route Handler と同じ Zod スキーマを共有**する（`lib/schemas/` を双方から参照）。制約値だけでも定数で共有する。
+- 同じ入力ルールなら、**Route Handler と同じ Zod スキーマを共有**する（`schemas/` を双方から参照）。制約値だけでも定数で共有する。
 
 ## インポート
 
