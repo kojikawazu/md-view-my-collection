@@ -78,29 +78,36 @@ type OnSelect = (id: string) => void;
 | 参照範囲 | 置き場所 |
 |---|---|
 | **1 ファイルに閉じる** | その定義ファイル内にコロケーション（`export` しない） |
-| **2 ファイル以上** / レイヤ・機能をまたぐ | `front/src/types.ts` に集約して `export` |
+| **2 ファイル以上** / レイヤ・機能をまたぐ | `front/src/types/` に集約して `export` |
+
+### 置き場所（ディレクトリを切る）
+
+- 集約先は**ソースルート直下の `types/` ディレクトリ**（本プロジェクトは **`front/src/types/`**）。
+- **単一ファイルにまとめない。** `src/types.ts` / `lib/type.ts` のように 1 ファイルへ全型を詰め込む形は禁止。必ず**ディレクトリを切り、ドメイン単位でファイルを分ける**。
+- **`lib/` `utils/` の下に型ファイルを置かない。** `lib/` は「関数の置き場」、`types/` は「型の置き場」で分離する。
+- 命名は**ディレクトリが複数形の `types`、ファイルはドメイン名の単数形**（`types/report.ts` / `types/theme.ts`）。
+
+> **未移行（Issue #163）**: 現行は `front/src/types.ts`（単一ファイル・138 行）のまま。本節はルールが先行しており、移行は #163 で対応する。**新規の型は移行を待たず本節に従って `types/` へ置いてよい**。
 
 ### 運用ルール
 
-- **最初から `types.ts` に置かない。** まず定義ファイル内に書き、**2 箇所目の参照が発生した時点で `types.ts` へ昇格**させる。先回りの集約は、使われない共通型と不要な依存を増やす。
+- **最初から `types/` に置かない。** まず定義ファイル内に書き、**2 箇所目の参照が発生した時点で `types/` へ昇格**させる。先回りの集約は、使われない共通型と不要な依存を増やす。
 - **昇格時は元ファイルに型を残さない**（re-export も含む）。定義は常に 1 箇所。
-- 本プロジェクトは**単一ファイル `front/src/types.ts` に集約**する。ドメインが少なく、分割よりも 1 箇所を見れば済むことの利点が上回るため。
-- **`types.ts` が肥大化したら `types/` ディレクトリへ分割**し、ドメイン単位でファイルを分ける（`types/report.ts` / `types/theme.ts`）。**分割しても barrel（`types/index.ts` からの一括 re-export）は作らない** — 循環参照・バンドル肥大・tree-shaking 阻害の原因になるため、`import type { Report } from '@/types/report'` と**実ファイルを直接 import** する。
-- API 契約の型は**手書きしない**。`src/lib/schemas/`（zod）から `z.infer` で導出する（後述「スキーマバリデーションは Zod に統一する」）。
+- **barrel（`types/index.ts` からの一括 re-export）は作らない** — 循環参照・バンドル肥大・tree-shaking 阻害の原因になるため、`import type { Report } from '@/types/report'` と**実ファイルを直接 import** する。
+- API 契約の型は**手書きしない**。`schemas/`（zod）から `z.infer` で導出する（後述「スキーマバリデーションは Zod に統一する」）。
 
 ### 分類の目安
 
-- **`types.ts` に置く**: ドメインエンティティ、テーマ等の横断的な型、複数画面で共有する union リテラル、共通のユーティリティ型
+- **`types/` に置く**: ドメインエンティティ、テーマ等の横断的な型、複数画面で共有する union リテラル、共通のユーティリティ型
 - **コロケーションのまま**: コンポーネントの props 型（コンポーネントと 1:1 で、UI の変更と同時に変わる）、そのファイル内でしか使わない内部型・引数オブジェクト型
-- **`lib/schemas/` に置く**: API のリクエスト/レスポンス型（zod スキーマから導出する。`types.ts` に手書きで再定義しない）
+- **`schemas/` に置く**: API のリクエスト/レスポンス型（zod スキーマから導出する。`types/` に手書きで再定義しない）
 
 ```ts
 // コンポーネント固有 → コロケーション（export しない）
 type ReportCardProps = { report: Report; onSelect: (id: string) => void };
 export function ReportCard({ report, onSelect }: ReportCardProps) { /* ... */ }
 
-// 複数箇所から参照 → front/src/types.ts に集約
-// types.ts
+// 複数箇所から参照 → front/src/types/report.ts に集約
 export type ReportCategory = 'Development' | 'AI' | 'Cloud';
 export type Report = { id: string; title: string; category: ReportCategory };
 ```
@@ -115,7 +122,7 @@ export type Report = { id: string; title: string; category: ReportCategory };
 
 `front/src/components/{atoms,molecules,organisms,pages}/index.ts` の barrel export は `frontend.md`（アトミックデザイン規約）で**維持することが定められており、そちらが優先**する。レイヤ単位の公開面を 1 箇所に集約する意図があり、型・定数の「先回り集約」とは目的が異なる。
 
-## 定数の配置（`src/constants.ts` 集約）
+## 定数の配置（`src/constants/` 集約）
 
 **マジックナンバー・マジック文字列を直接書かない。** 分岐条件・API パス・ストレージキー・上限値・リトライ回数などのリテラルは名前付き定数にする。名前が付いていない値は、検索もできず変更漏れも検出できない。
 
@@ -124,13 +131,23 @@ export type Report = { id: string; title: string; category: ReportCategory };
 | 参照範囲 | 置き場所 |
 |---|---|
 | **1 ファイルに閉じる** | その定義ファイルの先頭で `const` 宣言（`export` しない） |
-| **2 ファイル以上** / レイヤ・機能をまたぐ | `front/src/constants.ts` に集約して `export` |
+| **2 ファイル以上** / レイヤ・機能をまたぐ | `front/src/constants/` に集約して `export` |
+
+### 置き場所（ディレクトリを切る）
+
+型と同じ方針で決める（詳細は「型定義の配置」の同名節）。
+
+- 集約先は**ソースルート直下の `constants/` ディレクトリ**（本プロジェクトは **`front/src/constants/`**）。
+- **単一ファイルにまとめない。** `src/constants.ts` / `lib/constants.ts` のように 1 ファイルへ全定数を詰め込む形は禁止。**ディレクトリを切り、ドメイン単位でファイルを分ける**。
+- 命名は**ディレクトリが複数形の `constants`**。
+
+> **未移行（Issue #163）**: 現行は `front/src/constants.ts`（単一ファイル・52 行）のまま。型と同じく移行は #163 で対応する。
 
 ### 運用ルール
 
 - **`lib/` や `utils/` に定数を混ぜない。** 「関数の置き場」と「値の置き場」を分けると、変更時に探す範囲が狭まる。
-- 昇格の運用は型と同じ: まず使う場所に書き、**2 箇所目の参照が発生した時点で `constants.ts` へ移す**。移動時は元ファイルに残さない（re-export も含む）。
-- 本プロジェクトは**単一ファイル `front/src/constants.ts` に集約**する（テーマ定義・初期データ）。肥大化したら `constants/` ディレクトリへドメイン単位で分割し、そのとき **barrel（`constants/index.ts`）は作らない**（理由は型と同じ）。
+- 昇格の運用は型と同じ: まず使う場所に書き、**2 箇所目の参照が発生した時点で `constants/` へ移す**。移動時は元ファイルに残さない（re-export も含む）。
+- **barrel（`constants/index.ts`）は作らない**（理由は型と同じ）。
 - **JSX を含まない定数ファイルは `.ts` にする。** JSX を持たないのに `.tsx` にすると、React 前提のファイルだと誤読される。
 - **`as const` を付ける。** 付けないとリテラル型が `string` / `number` に広がり、union の導出や補完が効かなくなる。
 - 命名は `UPPER_SNAKE_CASE`。オブジェクト定数のキーも同様に揃える。

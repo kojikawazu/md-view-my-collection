@@ -22,12 +22,12 @@
 ## デプロイ設定（確定）
 
 - 対象ディレクトリ: `front/` のみ（`base/` は対象外）。
-- ブランチ: `main` のみ自動デプロイ。`front/vercel.json` の `git.deploymentEnabled` で `main` 以外の発火を止める。
+- ブランチ: `main` のみ自動デプロイ。`front/vercel.json` の `git.deploymentEnabled` を **`{"**": false, "main": true}`** とする。**`deploymentEnabled` は拒否リスト**（未指定ブランチは既定で `true`）のため、`{"main": true}` だけでは Preview が止まらない。
 - プレビュー: 不要（上記設定により PR ブランチではデプロイしない）。
-- スキップ条件: `front/vercel.json` の `ignoreCommand` により、`docs/` / `.claude/` / `.github/` / `*.md` **のみ**の変更ではビルドを実行しない。
-- **設定ファイルの置き場所**: `vercel.json` は **Vercel の Root Directory（`front`）に置く**。リポジトリルートに置いても読み込まれない（実測で確認済み / #159）。`ignoreCommand` の cwd も Root Directory になるため、パススペックは `:(top,exclude)` でリポジトリルート基準に固定する。
+- ビルドスキップ: **設定しない**（`ignoreCommand` を使わない）。ドキュメントのみの変更でも main へのマージではビルドが走る。**失敗が静かに起きる**（デプロイは成功扱いのまま本番だけ古くなる）性質があり、節約できるビルド 1〜2 分に見合わないため。判断根拠は `.claude/rules/vercel.md`「2. ビルドスキップ」を参照。
+- **設定ファイルの置き場所**: `vercel.json` は **Vercel の Root Directory（`front`）に置く**。リポジトリルートに置いても読み込まれない（実測で確認済み / #159）。
 
-> **デプロイの発火制御は 2 系統ある。** GitHub Actions（`test.yml` の `paths-filter`）と Vercel の Git 連携は独立しており、**Vercel は Actions のパスフィルタを見ない**。ドキュメントのみの変更で Actions が止まっていても、Vercel 側を設定しなければデプロイは走る（実例: PR #150）。両方を揃えて初めて「ドキュメント変更でデプロイしない」が成立する。
+> **デプロイの発火制御は 2 系統ある。** GitHub Actions（`test.yml` の `paths-filter`）と Vercel の Git 連携は独立しており、**Vercel は Actions のパスフィルタを見ない**（実例: PR #150）。ただし**パスによる実行制御は、本番状態を壊さない CI 側（`paths-ignore`）に寄せる**。Vercel 側はブランチ単位の制御（`deploymentEnabled`）に留める。
 
 - 環境変数: Supabase接続用の `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`、OAuthリダイレクト用の `NEXT_PUBLIC_SITE_URL` を設定（一覧: `.claude/rules/environment.md`）。
 - ビルド: Next.js標準（`pnpm install` → `pnpm build`）。
