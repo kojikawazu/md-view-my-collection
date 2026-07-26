@@ -19,6 +19,7 @@ globs:
 - **レートリミット**を導入する。特に**認証系エンドポイント**（`/api/auth/admin` / `/api/auth/is-allowed`）は、総当たりや列挙を許さないよう厳しく制限する。
   - **現状 Route Handlers に実装は無い**（未対応）。実装は別 issue で扱う。本項は導入時の方針を定めるもので、既存コードの違反を意味しない。
 - **CSP（Content-Security-Policy）ヘッダー**を設定する。Markdown 由来の HTML を描画するため、`rehype-sanitize` によるサニタイズと**多層防御**にする（片方だけに依存しない）。
+  - 実装は `front/next.config.ts` の `headers()`。**現状は `Content-Security-Policy-Report-Only`（観測中）**であり、違反を確認してから強制に切り替える。付随ヘッダー（`X-Frame-Options` / `Referrer-Policy` / `X-Content-Type-Options` / `Permissions-Policy`）は強制済み。ディレクティブの一覧と根拠は `docs/06-security-specification.md` を参照。
 
 ## インジェクション対策
 
