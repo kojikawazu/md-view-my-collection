@@ -20,6 +20,29 @@
 
 - 全通信は **HTTPS** を必須とする（Vercel デプロイで自動適用）。
 - **CORS** は許可するオリジンを明示的に指定する（`*` は本番で使用しない）。
+- **セキュリティヘッダー**を全レスポンスに付与する（`front/next.config.ts` の `headers()`）。
+
+| ヘッダー | 値 | 状態 |
+|---|---|---|
+| `Content-Security-Policy-Report-Only` | 下表のディレクティブ | **観測中**（強制ではない） |
+| `X-Content-Type-Options` | `nosniff` | 強制 |
+| `X-Frame-Options` | `DENY` | 強制 |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` | 強制 |
+| `Permissions-Policy` | `camera=(), microphone=(), geolocation=()` | 強制 |
+
+### CSP ディレクティブ
+
+| ディレクティブ | 値 | 理由 |
+|---|---|---|
+| `default-src` / `base-uri` / `form-action` | `'self'` | 既定を自オリジンに限定する |
+| `object-src` | `'none'` | プラグイン埋め込みを一切許可しない |
+| `frame-ancestors` | `'none'` | クリックジャッキング対策（`X-Frame-Options` と多層） |
+| `script-src` | `'self' 'unsafe-inline' 'unsafe-eval'` | Next.js のハイドレーション用インラインスクリプトのため。**nonce 化は今後の課題** |
+| `style-src` | `'self' 'unsafe-inline'` | Tailwind / Swagger UI のインラインスタイルのため |
+| `img-src` | `'self' data: blob: https:` | Markdown 本文が外部画像を参照しうるため |
+| `connect-src` | `'self' <NEXT_PUBLIC_SUPABASE_URL>` | Supabase Auth / API との通信を許可する |
+
+**Report-Only から始める理由**: いきなり強制すると Supabase Auth のリダイレクトや `/docs`（Swagger UI）が壊れうる。本番で違反レポートを観測してから `Content-Security-Policy` へ切り替える。Markdown の XSS 対策は `rehype-sanitize` が一次防御であり、CSP はその**多層防御**の位置づけ。
 
 ## インジェクション対策
 
