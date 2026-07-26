@@ -27,9 +27,19 @@ globs: "front/src/components/**,front/src/app/**,front/src/hooks/**,front/src/li
 ## ロジック分離
 
 - クライアントコンポーネントのロジックはカスタムフック（`hooks/`）に切り出す。コンポーネントは UI 描画に専念する。
-- サーバーコンポーネントのデータ取得は `page.tsx` や `lib/` 内のサーバー関数で行う。
+- サーバーコンポーネントのデータ取得は `page.tsx` や `lib/` 内のサーバー関数で行う（hooks は使用しない）。
+- `page.tsx` は**データ取得と合成の場**。「薄く」する必要はないが、**ビジネスロジックは置かない**（`lib/` のサーバー関数へ）。
+
+## 状態管理・Context
+
+- **Context は cross-cutting かつ低頻度変更**の関心事に限定する: 認証/セッション、テーマ、ローディング表示、feature flag。
+- 頻繁に変わる状態を Context に載せない（**value が変わるたび配下のコンシューマが再レンダリングされる**）。
+- Context は関心事ごとに分割し、provider の value は memo 化する。本プロジェクトが `AppStateProvider`（認証・レポート CRUD）と `LoadingContext`（ローディング表示）を分けているのはこの理由による。
+- **Next.js 固有**: Context の provider は Client Component（`"use client"`）必須。Server Component は Context を参照できないため、**provider は必要な client 境界に置き、ツリー全体を包まない**。
 - **Context value・カスタムフックの戻り値は型を先に定義し、各メンバーにコメントを付ける**（インラインのオブジェクトリテラルで済ませない）。これらは定義ファイルを開かずに使われるため、コメントが唯一の説明になる。詳細は `jsdoc.md`「状態・ロジック層のコメント」に従う。
 - コンポーネント内に閉じた `useState`・ハンドラ関数は一律必須にしない（「なぜ」が非自明なときのみ）。
+
+> 本プロジェクトはサーバー状態管理ライブラリ（React Query / SWR）と store ライブラリ（Zustand 等）を採用していない。レポートは `AppStateProvider` が全件保持する方針で、その判断理由は `docs/07-api-specification.md` の DJ-1 に記録されている。導入を検討する場合は先にそちらを更新すること。
 
 ## レイヤ依存の一方向ルール
 
