@@ -15,7 +15,7 @@ Markdownレポートの保存・閲覧UIを提供するNext.jsアプリ。
 
 - `front/src/app/` — App Routerのルート（`/`, `/login`, `/report/*`）
 - `front/src/components/` — 共通UIコンポーネント
-- `front/src/constants.tsx` — テーマ・初期データ
+- `front/src/constants.ts` — テーマ・初期データ
 - `front/src/types.ts` — 型定義
 - `front/src/lib/` — ユーティリティ
 

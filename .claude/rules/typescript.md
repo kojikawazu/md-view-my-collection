@@ -115,7 +115,7 @@ export type Report = { id: string; title: string; category: ReportCategory };
 
 `front/src/components/{atoms,molecules,organisms,pages}/index.ts` の barrel export は `frontend.md`（アトミックデザイン規約）で**維持することが定められており、そちらが優先**する。レイヤ単位の公開面を 1 箇所に集約する意図があり、型・定数の「先回り集約」とは目的が異なる。
 
-## 定数の配置（`src/constants.tsx` 集約）
+## 定数の配置（`src/constants.ts` 集約）
 
 **マジックナンバー・マジック文字列を直接書かない。** 分岐条件・API パス・ストレージキー・上限値・リトライ回数などのリテラルは名前付き定数にする。名前が付いていない値は、検索もできず変更漏れも検出できない。
 
@@ -124,14 +124,14 @@ export type Report = { id: string; title: string; category: ReportCategory };
 | 参照範囲 | 置き場所 |
 |---|---|
 | **1 ファイルに閉じる** | その定義ファイルの先頭で `const` 宣言（`export` しない） |
-| **2 ファイル以上** / レイヤ・機能をまたぐ | `front/src/constants.tsx` に集約して `export` |
+| **2 ファイル以上** / レイヤ・機能をまたぐ | `front/src/constants.ts` に集約して `export` |
 
 ### 運用ルール
 
 - **`lib/` や `utils/` に定数を混ぜない。** 「関数の置き場」と「値の置き場」を分けると、変更時に探す範囲が狭まる。
-- 昇格の運用は型と同じ: まず使う場所に書き、**2 箇所目の参照が発生した時点で `constants.tsx` へ移す**。移動時は元ファイルに残さない（re-export も含む）。
-- 本プロジェクトは**単一ファイル `front/src/constants.tsx` に集約**する（テーマ定義・初期データ）。肥大化したら `constants/` ディレクトリへドメイン単位で分割し、そのとき **barrel（`constants/index.ts`）は作らない**（理由は型と同じ）。
-- **JSX を含まない定数ファイルは `.ts` にする。** 現行の `constants.tsx` は JSX を含まないため `.ts` が正しい（拡張子の是正は別途）。
+- 昇格の運用は型と同じ: まず使う場所に書き、**2 箇所目の参照が発生した時点で `constants.ts` へ移す**。移動時は元ファイルに残さない（re-export も含む）。
+- 本プロジェクトは**単一ファイル `front/src/constants.ts` に集約**する（テーマ定義・初期データ）。肥大化したら `constants/` ディレクトリへドメイン単位で分割し、そのとき **barrel（`constants/index.ts`）は作らない**（理由は型と同じ）。
+- **JSX を含まない定数ファイルは `.ts` にする。** JSX を持たないのに `.tsx` にすると、React 前提のファイルだと誤読される。
 - **`as const` を付ける。** 付けないとリテラル型が `string` / `number` に広がり、union の導出や補完が効かなくなる。
 - 命名は `UPPER_SNAKE_CASE`。オブジェクト定数のキーも同様に揃える。
 

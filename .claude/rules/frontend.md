@@ -46,7 +46,7 @@ globs: "front/src/components/**,front/src/app/**,front/src/hooks/**,front/src/li
 **依存は上位から下位への一方向のみ**。下位レイヤが上位レイヤを import してはならない。
 
 ```text
-app  →  components  →  hooks  →  lib（API クライアント・サーバー関数）  →  types.ts / constants.tsx
+app  →  components  →  hooks  →  lib（API クライアント・サーバー関数）  →  types.ts / constants.ts
 （ルーティング・合成）（表示） （ロジック）        （通信・DB）                    （最下層）
 ```
 
@@ -56,7 +56,7 @@ app  →  components  →  hooks  →  lib（API クライアント・サーバ�
 | `components/` | 下位の `components/`, `hooks/`, `types`, `constants` | **`app/`**（ページ固有の型・定数を含む） |
 | `hooks/` | `lib/`, `types`, `constants` | **`app/`**, **`components/`**（JSX を返さない） |
 | `lib/` | `types`, `constants` | **`app/`**, **`components/`**, **`hooks/`** |
-| `types.ts` `constants.tsx` | （原則どこにも依存しない） | 上位レイヤすべて |
+| `types.ts` `constants.ts` | （原則どこにも依存しない） | 上位レイヤすべて |
 
 - **アトミックデザイン内も一方向**にする。`atoms/` は `molecules/` `organisms/` `pages/` を import しない。汎用度の高いものほど下位（`atoms → molecules → organisms → pages` の向きにのみ依存する）。
 - **`app/api/`（Route Handlers）から `components/` や `hooks/` を import しない**。API はサーバー側の層であり、UI 層に依存してはならない（`api.md` 参照）。
@@ -73,7 +73,7 @@ app  →  components  →  hooks  →  lib（API クライアント・サーバ�
 
 | 逆流したい理由 | 正しい解き方 |
 |---|---|
-| 上位の型・定数を下位でも使いたい | その型・定数を **`types.ts` / `constants.tsx` へ移動**し、上下双方がそこを参照する |
+| 上位の型・定数を下位でも使いたい | その型・定数を **`types.ts` / `constants.ts` へ移動**し、上下双方がそこを参照する |
 | 上位のロジックを下位でも使いたい | 共通処理を**下位の `hooks/` または `lib/` の純粋関数へ抽出**し、双方から呼ぶ |
 | 下位から上位の状態を変えたい | **呼ばない**。**props でコールバックを受け取る**（イベントは上へ、データは下へ） |
 | 子が親のレイアウトを知りたい | 知らせない。**props / children で親が渡す**（子は自分の見た目だけに責任を持つ） |

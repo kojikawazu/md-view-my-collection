@@ -298,8 +298,8 @@ LoginPage 内のインラインスピナー（`LoginPage.tsx:52-58`）を削除�
 | **Molecules** | Atoms, React, 外部ライブラリ |
 | **Organisms** | Atoms, Molecules, React, 外部ライブラリ, hooks |
 | **Pages** | Atoms, Molecules, Organisms, hooks |
-| **hooks** | providers, `types.ts`, `constants.tsx`, 外部ライブラリ（コンポーネント import 禁止） |
-| **providers** | `types.ts`, `constants.tsx`, `lib/`, 外部ライブラリ |
+| **hooks** | providers, `types.ts`, `constants.ts`, 外部ライブラリ（コンポーネント import 禁止） |
+| **providers** | `types.ts`, `constants.ts`, `lib/`, 外部ライブラリ |
 | **設置ポイント**（`layout.tsx` 等） | providers を直接 import して Provider ツリーを構築する唯一の場所 |
 
 **UI コンポーネント（atoms〜pages）から providers を直接 import しない。**
@@ -376,7 +376,7 @@ front/src/
 │   ├── db.ts
 │   └── validation.ts
 ├── types.ts
-└── constants.tsx
+└── constants.ts
 ```
 
 ## 移行フェーズ
