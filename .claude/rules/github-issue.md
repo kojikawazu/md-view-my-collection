@@ -1,3 +1,8 @@
+---
+description: GitHub issue 運用（ブランチと対で issue を作成し open/close で進捗管理）
+globs: 
+---
+
 # GitHub issue 運用
 
 開発の作業単位を GitHub issue で管理する。

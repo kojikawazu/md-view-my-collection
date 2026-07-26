@@ -50,13 +50,13 @@ Markdownレポートの保存・閲覧UIを提供するNext.jsアプリ。
 |---|---|---|
 | `coding-standards.md` | 全体 | コーディング規約（TypeScript/pnpm/ESLint/Prettier） |
 | `documentation.md` | 全体 | ドキュメント更新・設計書管理ルール（影響マップ + opt-out の完了条件） |
-| `commands.md` | 全体 | Build & Dev コマンド（pnpm dev / build / format 等） |
+| `commands.md` | 全体 | Build & Dev コマンド（pnpm dev / build / typecheck / format / gen:* 等） |
 | `environment.md` | 全体 | 環境変数一覧・管理方針 |
 | `error-handling.md` | 全体 | エラーハンドリング方針（バリデーション・ログ・HTTPステータス） |
 | `git-workflow.md` | 全体 | ブランチ・コミット・PR 規約 |
 | `github-issue.md` | 全体 | GitHub issue 駆動開発（ブランチと対で起票・open/close で進捗管理・PR で自動クローズ） |
 | `security.md` | 全体 | セキュリティ設計方針（認証・RLS・XSS対策・シークレット管理） |
-| `testing.md` | 全体 | テスト方針・コマンド・配置規約（Vitest + Playwright） |
+| `testing.md` | 全体 | テスト方針・コマンド・配置規約（UT: Vitest / IT: Vitest + Testcontainers / E2E: Playwright） |
 | `duplication.md` | 全体 | 重複と共通化の判断基準（同じ知識のみ共通化・3回目で共通化・`common`/`util` を置き場にしない） |
 | `dead-code.md` | 全体 | デッドコード禁止（コメントアウト・未使用 export・旧実装・スキップ放置テストを残さない） |
 | `static-analysis.md` | 全体 | 静的解析の運用（Formatter と Linter の役割分担・CI 必須・警告ゼロ・抑制コメントは理由と最小範囲） |

@@ -216,6 +216,7 @@
 - [x] docs index を youtube-my-collection の構成・文体を参考に再構成（`docs/README.md` / 2026-06-10）
 - [x] docs/ 全仕様書（01〜11・README）にアンカーリンク付き目次を追加（h3まで・形式統一 / 2026-06-10）
 - [x] root/front README の役割分担と重複解消（技術スタック・開発手順を front に集約 / PR #75 / 2026-06-12）
+- [x] `rules-update` スキルのテンプレートと `.claude/rules/` を全文突合し、記載漏れ 3 件を補完（`testing.md` に IT / `commands.md` に typecheck・gen:* / `github-issue.md` の frontmatter / Issue #149 / 2026-07-26）
 
 ## API / バリデーション基盤
 
