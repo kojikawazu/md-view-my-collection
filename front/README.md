@@ -115,6 +115,8 @@ pnpm start    # ビルド成果物を配信
 ```
 
 > リポジトリ root から `make dev` / `make build` / `make test` などでも実行できます（`front/` の pnpm scripts を委譲するラッパー）。一覧は root で `make` を実行。
+>
+> ドキュメントの Markdown lint のみ `front/` ではなくリポジトリ全体が対象で、`make lint-docs`（修正は `make lint-docs-fix`）で実行します。CI（`.github/workflows/docs.yml`）と同じバージョンを使うため、必ずこの target 経由で実行してください。
 
 ## 動作モード（local / supabase）
 
