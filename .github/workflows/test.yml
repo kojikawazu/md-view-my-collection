@@ -1,19 +1,33 @@
 name: Test
 
+# コード変更用のワークフロー。ドキュメント変更（docs.yml）とは発火条件を分ける。
+# front/ 配下でも .md はドキュメントなので除外し、テストを回さない。
+#
+# 注意: ワークフローレベルの paths を使っているため、このワークフローを
+# ブランチ保護の required status check に指定してはならない。ドキュメントのみの PR で
+# ワークフローが起動せず、必須チェックが pending のままマージ不能になる。
+# 必須化する場合は paths を外し、変更判定ジョブ + job レベル if: に切り替える。
+# 詳細は .claude/rules/github-actions.md を参照。
 on:
   pull_request:
     paths:
       - "front/**"
+      - "!front/**/*.md"
       - ".github/workflows/test.yml"
   push:
     branches:
       - main
     paths:
       - "front/**"
+      - "!front/**/*.md"
       - ".github/workflows/test.yml"
 
 permissions:
   contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   static-analysis:

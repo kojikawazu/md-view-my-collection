@@ -19,6 +19,7 @@
 - [API / バリデーション基盤](#api--バリデーション基盤)
 
 ## 要件定義
+
 - [x] 最新UIレイアウト要求を作成（`docs/03-functional-specification.md`）
 - [x] 要件定義ドラフトを作成（`docs/02-requirements-specification.md`）
 - [x] コーディング規約を明文化（`docs/02-requirements-specification.md`）
@@ -28,10 +29,12 @@
 - [x] ログ方針を確定（本番/開発ともconsole、セキュリティ配慮）
 
 ## リポジトリ構成
+
 - [x] `base/` を `front/` にコピーして実装用ディレクトリを用意（開発開始時のみ）
 - [x] `base/` を読み取り専用扱いとする運用ルールを整備
 
 ## フロントエンド実装（front/）
+
 - [x] 画面ルーティングを維持（一覧/詳細/新規/編集/ログイン）
 - [x] UI要件に沿って画面を実装/調整
 - [x] ログイン/ログアウト動作を実装
@@ -78,6 +81,7 @@
 - [x] `NEXT_PUBLIC_ADMIN_EMAIL` を廃止し、`ADMIN_EMAIL` のサーバー判定API経由で管理者メール制御を実装（Issue #28 / PR #29 / 2026-02-12 動作確認OK）
 
 ## データ/永続化
+
 - [x] 保存先の確定（Supabase等）
 - [x] Report/Userスキーマを確定
 - [x] 投稿/編集/削除のデータ連携
@@ -85,6 +89,7 @@
 - [x] RLSポリシーを全テーブル（Report/ReportTag/ReportTagMapping）に設定（公開閲覧 + 認証ユーザーのみ書き込み / 2026-03-22）
 
 ## テスト
+
 - [x] E2Eテスト基盤を導入
 - [x] 主要導線のE2Eテスト作成（一覧/詳細/投稿/編集/削除/ログイン）
 - [x] E2Eテスト仕様（正常/準正常/異常）を定義（`docs/08-test-specification.md`）
@@ -102,12 +107,14 @@
 - [ ] E2E/シナリオの実 DB 化（Supabase CLI ローカルスタック・実 Auth/RLS・テストデータ後始末必須 / PR2 予定）
 
 ## デプロイ/運用
+
 - [x] Vercelプロジェクトを作成
 - [x] Vercel自動デプロイを設定（mainのみ、プレビューなし）
 - [x] 本番環境変数を整備（必要が出た場合のみ）
 - [x] 本番動作確認（Google OAuth/初期表示）
 
 ## パフォーマンス改善
+
 - [x] ローディング最低表示時間を1000ms→300msに短縮（体感速度改善 / 2026-03-23）
 - [x] PrismaClientを本番でもグローバル再利用に変更（コールドスタート時のDB再接続削減 / 2026-03-23）
 - [x] Supabaseクライアントをモジュールスコープで初期化に変更（`auth-server.ts`, `api/auth/admin` / 2026-03-23）
@@ -125,6 +132,7 @@
 - [x] サイドバーの TRENDING TAGS が横長になる問題を修正（`Sidebar.tsx` の `<aside>` に固定幅 `w-64` + `shrink-0` を追加 / Issue #60）
 
 ## 残タスク
+
 - [x] allowedDevOrigins 警告の対応
 - [x] Supabase DB連携の動作確認（実データCRUD）
 - [ ] 監査/ログの強化（必要なら）
@@ -151,6 +159,7 @@
 - [x] ローディング表示の不一致（ログイン済み/キャッシュ時）を解消
 
 ## 開発再開メモ
+
 - [x] `front/` のNext.js再構築後、baseレイアウトの反映を開始する。
 - [x] Prettier設定を追加（package.jsonのscript/依存追加、.prettierrc/.prettierignore）。
 - [x] `front/src/types.ts` を作成してbaseの型を移植。
@@ -160,6 +169,7 @@
 - [x] SupabaseログインにGoogle OAuthを追加（localはE2E用に維持）
 
 ## アトミックデザイン移行（Issue #37）
+
 - [x] アトミックデザイン設計書を作成（`docs/09-architecture-specification.md`）
 - [x] Phase 1: ディレクトリ作成 + providers/hooks分離 + Atoms抽出
 - [x] Phase 2: Molecules抽出
@@ -168,6 +178,7 @@
 - [x] 全フェーズ完了後の最終E2E + ビルド確認
 
 ## APIルート移行（認証認可・DB操作 / youtube-my-collection踏襲 / Issue #42）
+
 - [x] APIルート設計書を作成（`docs/07-api-specification.md` / 2026-03-22）
 - [x] 設計レビュー指摘対応: DJ-1〜DJ-8 を設計書に反映（2026-03-22）
   - DJ-1: クライアント側全件保持を維持（GET /api/reports はデフォルト全件返却）
@@ -184,6 +195,7 @@
 - [x] E2Eテスト全パス確認 + ビルド確認（2026-03-22）
 
 ## データ品質
+
 - [x] Reportテーブル全229件のハルシネーション・品質チェック実施（`docs/10-miscellaneous-specification.md` / 2026-03-24）
 - [x] MongoDB 9.0 ハルシネーション修正（3件 → MongoDB 8.x）
 - [x] Milvus 2.5 ミスリード修正（1件 → Milvus 2.6.x）
@@ -195,6 +207,7 @@
 - [ ] Gemini生成プロンプトにソースURL必須化ルールを追加
 
 ## ドキュメント
+
 - [x] ドキュメントを最新状態に整理
 - [x] `npm run dev` 時の `tailwindcss` 解決エラーのバグレポートを起票（Issue #32 / 2026-02-14）
 - [x] 環境変数一覧を docs に追加し、README の参照先を docs に統一（`docs/04-non-functional-specification.md` / 2026-06-10）
@@ -205,6 +218,7 @@
 - [x] root/front README の役割分担と重複解消（技術スタック・開発手順を front に集約 / PR #75 / 2026-06-12）
 
 ## API / バリデーション基盤
+
 - [x] zod + zod-openapi 導入。`front/src/lib/schemas/` を契約の単一ソース化し、`lib/validation.ts` を zod アダプタへ移行（既存 45 テスト互換維持 / 2026-06-13）
 - [x] `pnpm gen:openapi` で `docs/openapi.json`（OpenAPI 3.1）を生成。`docs/07-api-specification.md` の契約記述を生成物参照へ置換（2026-06-13）
 - [x] Swagger UI を `/docs`（管理者のみ）に導入。スペックは管理者ゲート付き `/api/openapi` から取得（2026-06-13）

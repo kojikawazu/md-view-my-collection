@@ -1,0 +1,42 @@
+name: Docs
+
+# ドキュメント変更用のワークフロー。コード側の CI（test.yml）とは発火条件を分ける。
+# 「変更内容に関係のあるジョブだけを動かす」方針に従い、docs/ や .md の変更で
+# テスト・ビルドを回さず、代わりに軽量な markdown lint を実行する。
+# 詳細は .claude/rules/github-actions.md を参照。
+on:
+  pull_request:
+    paths:
+      - "docs/**"
+      - "**/*.md"
+      - ".claude/**"
+      - ".markdownlint-cli2.jsonc"
+      - ".github/workflows/docs.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "docs/**"
+      - "**/*.md"
+      - ".claude/**"
+      - ".markdownlint-cli2.jsonc"
+      - ".github/workflows/docs.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  markdown-lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 設定は .markdownlint-cli2.jsonc（リポジトリルート）。base/ は変更禁止のため除外済み。
+      - name: Lint Markdown
+        uses: DavidAnson/markdownlint-cli2-action@v20

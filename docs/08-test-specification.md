@@ -57,11 +57,13 @@
   - [既存テスト（TC-026〜TC-030）のステータス](#既存テストtc-026tc-030のステータス)
 
 ## 前提データ作成方針
+
 - テスト実行前に初期データを用意できる仕組みを持つ（fixture/seedなど）。
 - ログイン済/未ログインの状態を切り替えられる手段を用意する。
 - 「レポート0件」ケースはデータ初期化で再現する。
 
 ## 実行方法
+
 - 初回のみ: `cd front && pnpm exec playwright install`
 - `cd front && pnpm test:e2e`
 - UIモード: `cd front && pnpm test:e2e:ui`
@@ -69,15 +71,18 @@
 - 既存サーバーを使う場合: `PLAYWRIGHT_BASE_URL=http://127.0.0.1:3000 pnpm test:e2e`
 
 ## CI（GitHub Actions）
+
 - `front/playwright.config.ts` により、CIでは `NEXT_PUBLIC_AUTH_MODE=local` / `NEXT_PUBLIC_DATA_MODE=local` で起動する。
 - Supabaseクライアント初期化のため、CIでは `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` をダミー値で渡す。
 
 ## テストデータ注入
+
 - 各テストで `localStorage` の `espresso_reports` / `espresso_user` を初期化して前提状態を作成する。
 - E2E実行時は `NEXT_PUBLIC_AUTH_MODE=local` を使い、Authをローカルモードで動作させる。
 - E2E実行時は `NEXT_PUBLIC_DATA_MODE=local` を使い、Reportデータをローカルモードで動作させる。
 
 ## 現行の自動テスト実装範囲
+
 - 実装ファイル: `front/tests/e2e/app.spec.ts`
 - 共有ヘルパー: `front/tests/e2e/helpers.ts`（fixture データ・setStorage を分離）
 - カバー済み: TC-001 〜 TC-031, TC-035, TC-036
@@ -95,6 +100,7 @@
 ## 画面×観点マトリクス（前提/手順/期待）
 
 ### 一覧（/）
+
 - 表示
   - 前提: レポートが1件以上ある
   - 手順: `/` を開く
@@ -121,6 +127,7 @@
   - 期待: 1ページ10件で表示、ページ番号は最大5個表示、フィルタ変更時は1ページ目に戻る
 
 ### 詳細（/report/:id）
+
 - 表示
   - 前提: 該当IDが存在
   - 手順: `/report/:id` を開く
@@ -139,6 +146,7 @@
   - 期待: “Report Not Found”
 
 ### 新規作成（/report/new）
+
 - アクセス制御
   - 前提: 未ログイン
   - 手順: `/report/new` 直アクセス
@@ -157,6 +165,7 @@
   - 期待: 一覧先頭に追加される
 
 ### 編集（/report/:id/edit）
+
 - アクセス制御
   - 前提: 未ログイン
   - 手順: `/report/:id/edit` 直アクセス
@@ -175,6 +184,7 @@
   - 期待: 詳細に反映される
 
 ### ログイン（/login）
+
 - 入力必須
   - 前提: 未ログイン
   - 手順: 空入力で送信
@@ -189,6 +199,7 @@
   - 期待: エラーメッセージ表示、ログイン不可
 
 ### 削除/ログアウト
+
 - 削除確認
   - 前提: ログイン済
   - 手順: 詳細で削除 → モーダル
@@ -199,6 +210,7 @@
   - 期待: `/login` に遷移、管理導線非表示
 
 ### Markdown Style Lab（/report/markdown-lab）
+
 - アクセス制御
   - 前提: 未ログイン
   - 手順: `/report/markdown-lab` 直アクセス
@@ -729,6 +741,7 @@
 ## 方針
 
 youtube-my-collection を参考に以下を実施:
+
 1. **helpers.ts への共通処理抽出** — fixture データ、setStorage、createPagedReportsFixture を分離
 2. **準正常系・異常系の追加** — API失敗、二重送信防止、許可メール不一致
 3. **既存 TC-026〜TC-030 は実装済み** — 追加エッジケースを設計
