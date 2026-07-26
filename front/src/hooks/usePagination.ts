@@ -8,6 +8,20 @@ interface UsePaginationOptions {
   maxPageButtons?: number;
 }
 
+/** ページング状態と、それを操作する関数。 */
+type UsePaginationResult = {
+  /** 表示中のページ番号（1 始まり）。総ページ数でクランプ済みのため範囲外にならない */
+  currentPage: number;
+  /** 総ページ数。0 件でも 1 を返す（ページ番号の計算を破綻させないため） */
+  totalPages: number;
+  /** ページ番号ボタンとして表示する番号の並び。現在ページを中央に寄せ、最大 `maxPageButtons` 件 */
+  pageNumbers: number[];
+  /** 表示ページを変更する。範囲外の値は [1, 総ページ数] にクランプされる */
+  updatePage: (nextPage: number) => void;
+  /** 全件配列から現在ページ分だけを切り出す。API の再取得は伴わない（クライアント側ページング） */
+  paginateSlice: <T>(items: T[]) => T[];
+};
+
 /**
  * 一覧のページング状態を管理するフック。
  *
@@ -19,13 +33,13 @@ interface UsePaginationOptions {
  * @param totalItems 全アイテム数（総ページ数の算出に使う）
  * @param filterKey 現在のフィルタを表す文字列。変化すると 1 ページ目へリセットする
  * @param options 1 ページ件数・ページ番号ボタン数の上書き
- * @returns `currentPage`・`totalPages`・表示用 `pageNumbers`・`updatePage`・`paginateSlice`
+ * @returns ページング状態と操作関数
  */
 export const usePagination = (
   totalItems: number,
   filterKey: string,
   options: UsePaginationOptions = {},
-) => {
+): UsePaginationResult => {
   const { itemsPerPage = 10, maxPageButtons = 5 } = options;
   const [paginationState, setPaginationState] = useState(() => ({
     page: 1,

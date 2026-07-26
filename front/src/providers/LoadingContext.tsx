@@ -37,7 +37,7 @@ export const LoadingProvider = ({
  *
  * @returns ローディング開始関数を持つオブジェクト。プロバイダー外では no-op を返す
  */
-export const useLoading = () => {
+export const useLoading = (): LoadingContextValue => {
   const context = useContext(LoadingContext);
   return context ?? { startLoading: () => {} };
 };

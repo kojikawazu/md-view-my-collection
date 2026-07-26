@@ -17,6 +17,42 @@ interface UseReportFormOptions {
   isHydrated?: boolean;
 }
 
+/** レポートフォームの状態と操作。 */
+type UseReportFormResult = {
+  /** フォームの入力値。編集時は `reports` から引いた既存値で初期化される */
+  formData: Omit<ReportItem, 'id'>;
+  /** タグ未入力エラー。`null` はエラーなし */
+  tagError: string | null;
+  /** サーバー起因のエラーメッセージ。`null` はエラーなし */
+  serverError: string | null;
+  /** 項目別エラー。キーはフィールド名、外部URLは `externalUrls.{index}.{url|label}` 形式 */
+  fieldErrors: Record<string, string>;
+  /** 外部URL入力行。`url` が空の行は送信対象から除外される */
+  externalUrls: ExternalUrlInput[];
+  /** 送信確認モーダルの開閉状態。 */
+  showConfirmModal: boolean;
+  /** 送信確認モーダルの開閉を切り替える。 */
+  setShowConfirmModal: (show: boolean) => void;
+  /** 汎用フィールドの変更を反映する。該当項目のエラーはその場でクリアされる */
+  handleChange: (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+  ) => void;
+  /** タグ入力（カンマ区切り）を `#` 付き canonical form に正規化して反映する。 */
+  handleTagsChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  /** 送信前チェックを行い、通れば確認モーダルを開く。この時点では API を呼ばない */
+  handleSubmitAttempt: (event: React.FormEvent) => void;
+  /** 実際に送信する。失敗時は認証エラーなら `/login` へ、それ以外はエラー状態に反映する */
+  handleConfirmSubmit: () => Promise<void>;
+  /** 空の外部URL入力行を 1 行追加する。 */
+  addExternalUrl: () => void;
+  /** 指定行を削除する。後続行のフィールドエラーキーも index を詰めて貼り替える */
+  removeExternalUrl: (index: number) => void;
+  /** 指定行の `url` または `label` を更新する。 */
+  updateExternalUrl: (index: number, field: 'url' | 'label', value: string) => void;
+  /** 直前の画面へ戻る。保存は行わない */
+  goBack: () => void;
+};
+
 /**
  * レポート作成/編集フォームの状態・バリデーション・送信を管理するフック。
  *
@@ -24,7 +60,7 @@ interface UseReportFormOptions {
  * （いずれも `isHydrated` 完了後に実行し、初期化前の誤判定を避ける）。
  * 送信は確認モーダルを挟む二段構え（`handleSubmitAttempt` → `handleConfirmSubmit`）。
  *
- * @returns フォーム値・各種エラー・外部URL操作・確認モーダル制御・各ハンドラ
+ * @returns フォームの状態と各ハンドラ
  */
 export const useReportForm = ({
   user,
@@ -32,7 +68,7 @@ export const useReportForm = ({
   reports,
   onSubmit,
   isHydrated = true,
-}: UseReportFormOptions) => {
+}: UseReportFormOptions): UseReportFormResult => {
   const router = useRouter();
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [tagError, setTagError] = useState<string | null>(null);
