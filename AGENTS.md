@@ -42,8 +42,18 @@ Configuration:
 
 - This snapshot does not include Git history, so no established commit message convention is visible.
 - Use short, imperative commit messages (e.g., "Add report filter state").
-- PRs should include: a clear summary, testing notes (or "Not tested"), and screenshots for UI changes.
 - Start development work on a separate branch (do not work directly on `main`).
+- PR body sections are fixed per change type; the canonical spec is `.claude/rules/pr-description.md` (do not restate its sections here). The files under `.github/PULL_REQUEST_TEMPLATE/` are skeletons of that rule (select one with `gh pr create --template <name>.md`).
+- Attach screenshots for UI changes (before/after). This is not part of the PR body sections.
+
+## Rules
+
+Detailed rules live in `.claude/rules/` (canonical; do not duplicate their text here). See the table in `CLAUDE.md` for the full list and scopes.
+
+Always applied (no glob scope):
+
+- `.claude/rules/pr-description.md` — required sections of the PR description, by change type.
+- `.claude/rules/lessons-learned.md` — how to record lessons learned into `docs/lessons-learned.md`.
 
 ## Agent-Specific Notes
 
