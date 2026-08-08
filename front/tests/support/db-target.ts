@@ -11,14 +11,11 @@
  * 「未設定なら安全側」に見えて、実際は「値が入っていれば危険側」に倒れる。
  */
 
-/**
- * テスト用 DB として接続を許可するホスト。
- *
- * ローカルの使い捨て DB のみを想定する。Testcontainers はホストの 127.0.0.1 にポートを
- * 公開するため、この 3 つで足りる。**リモートホストを足さない** — 追加した時点で、本番を
- * 含む任意のホストへ到達し得る状態に戻る。
- */
-const ALLOWED_HOSTS = ['localhost', '127.0.0.1', '::1'] as const;
+import {
+  ALLOWED_DB_HOSTS,
+  extractDatabaseHost,
+  isAllowedDbHost,
+} from '../../scripts/db-host-allowlist';
 
 /** テスト DB を起動する手順。ガード失敗時のメッセージに載せ、回避策として接続先を書き換えられるのを防ぐ。 */
 const RECOVERY_HINT =
@@ -35,21 +32,6 @@ type TargetSource =
   | 'testcontainers';
 
 /**
- * URL からホスト名を取り出す。IPv6 リテラルの角括弧は除去する。
- *
- * @param url - 検証対象の接続 URL
- * @returns ホスト名。URL として解釈できない場合は `null`
- */
-function extractHostname(url: string): string | null {
-  try {
-    // `new URL('postgresql://u:p@[::1]:5432/db').hostname` は '[::1]' を返すため角括弧を剥がす。
-    return new URL(url).hostname.replace(/^\[|\]$/g, '');
-  } catch {
-    return null;
-  }
-}
-
-/**
  * 接続先がローカルの使い捨て DB を指していることを検証する。破壊的操作の**前**に呼ぶ。
  *
  * seed / migrate / `TRUNCATE` / `deleteMany()` を実行してからの検知では手遅れになるため、
@@ -61,7 +43,7 @@ function extractHostname(url: string): string | null {
  * @throws {Error} URL として解釈できない場合、またはホストが許可リストに無い場合
  */
 export function assertLocalDatabaseTarget(url: string, source: TargetSource): string {
-  const hostname = extractHostname(url);
+  const hostname = extractDatabaseHost(url);
 
   if (hostname === null) {
     throw new Error(
@@ -69,12 +51,10 @@ export function assertLocalDatabaseTarget(url: string, source: TargetSource): st
     );
   }
 
-  // `includes` は引数を ALLOWED_HOSTS のリテラル union に狭めるためキャストが要る。
-  // `some` + `===` なら string のまま比較でき、アサーションを持ち込まずに済む。
-  if (!ALLOWED_HOSTS.some((allowed) => allowed === hostname)) {
+  if (!isAllowedDbHost(hostname)) {
     throw new Error(
       `テスト DB の接続先がローカルではありません: host=${hostname}（出どころ: ${source}）。` +
-        `許可されるのは ${ALLOWED_HOSTS.join(' / ')} のみです。` +
+        `許可されるのは ${ALLOWED_DB_HOSTS.join(' / ')} のみです。` +
         `本番 DB を破壊しないため中断しました。${RECOVERY_HINT}`,
     );
   }

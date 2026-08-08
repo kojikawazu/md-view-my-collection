@@ -1,13 +1,16 @@
 import { config } from 'dotenv';
 import { defineConfig } from 'prisma/config';
+import { assertPrismaCommandAllowed } from './scripts/prisma-guard';
 
 // このファイルは Prisma CLI の全サブコマンドで読み込まれる。`.env.local` を明示的に読むため、
 // ここで解決される接続先は **本番 Supabase** になる（開発用 Supabase 環境は存在しない）。
 // 正当な用途は `prisma db pull`（DB 側で管理されているスキーマの取り込み）と
 // `prisma generate` / `migrate diff`（DB へ接続しない）に限られる。
-// 破壊的サブコマンド（`db push` / `migrate reset` / `migrate dev` / `migrate deploy`）は
-// `.claude/rules/production-data.md` および `database.md` で禁止されている。
 config({ path: '.env.local' });
+
+// 破壊的サブコマンドが本番へ届くのを、設定を解決する前に止める。
+// ルール（`production-data.md` / `database.md`）による禁止に加えた機械的なガード。
+assertPrismaCommandAllowed(process.argv, process.env.DATABASE_URL);
 
 export default defineConfig({
   schema: 'prisma/schema.prisma',

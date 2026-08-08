@@ -40,6 +40,8 @@ globs:
 | `assertLocalDatabaseTarget(url, source)` | 既にある URL を検証する。破壊的操作の前に呼ぶ |
 | `hasTestDatabaseUrlOverride()` | 上書きの有無。コンテナ起動が必要かの判断に使う |
 
+許可ホストの定義は `front/scripts/db-host-allowlist.ts` にあり、**Prisma CLI のガード（`scripts/prisma-guard.ts` / `production-data.md`）と共有している**。ここを緩めると両方の防御が同時に緩む。
+
 > **例外**: `front/prisma.config.ts` は `DATABASE_URL`（本番）を意図的に使う。`prisma db pull` が DB 側で管理されているスキーマを取り込むための正当な経路であり、テスト用の接続先解決には一切関与しない。破壊的サブコマンドの禁止は `production-data.md` を参照。
 
 ## ディレクトリ配置

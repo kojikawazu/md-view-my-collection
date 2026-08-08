@@ -10,7 +10,12 @@ export default defineConfig({
     // tests/support/ を含めるのは、接続先ガード（db-target.ts）が本番 DB 破壊を防ぐ
     // 実装であり、それ自体に UT が必須のため（.claude/rules/testing.md）。本番バンドルに
     // 混ぜないよう src/ ではなく tests/ 側に置いている。
-    include: ['src/**/*.{test,spec}.{ts,tsx}', 'tests/support/**/*.{test,spec}.ts'],
+    include: [
+      'src/**/*.{test,spec}.{ts,tsx}',
+      'tests/support/**/*.{test,spec}.ts',
+      // scripts/ の破壊防止ガード（prisma-guard.ts）も UT 必須のため対象に含める。
+      'scripts/**/*.{test,spec}.ts',
+    ],
     exclude: ['node_modules', 'tests/e2e/**', 'tests/integration/**'],
     pool: 'vmThreads',
     // Node v24 OOM occurs during worker cleanup (after all tests complete).
