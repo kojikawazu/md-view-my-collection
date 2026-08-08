@@ -59,6 +59,7 @@ Markdownレポートの保存・閲覧UIを提供するNext.jsアプリ。
 | `github-issue.md` | 全体 | GitHub issue 駆動開発（ブランチと対で起票・open/close で進捗管理・PR で自動クローズ） |
 | `security.md` | 全体 | セキュリティ設計方針（認証・RLS・XSS対策・シークレット管理） |
 | `production-data.md` | 全体 | 本番データの保護（本番 Supabase への破壊的操作の禁止・AI エージェントへの制約・例外手順） |
+| `codex.md` | 全体 | Codex 利用時のエージェント運用（AGENTS.md の階層適用・Claude 固有機能の読み替え・PR 承認/マージをしない） |
 | `testing.md` | 全体 | テスト方針・コマンド・配置規約（UT: Vitest / IT: Vitest + Testcontainers / E2E: Playwright） |
 | `duplication.md` | 全体 | 重複と共通化の判断基準（同じ知識のみ共通化・3回目で共通化・`common`/`util` を置き場にしない） |
 | `dead-code.md` | 全体 | デッドコード禁止（コメントアウト・未使用 export・旧実装・スキップ放置テストを残さない） |

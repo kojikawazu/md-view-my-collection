@@ -54,6 +54,7 @@ Always applied (no glob scope):
 
 - `.claude/rules/pr-description.md` — required sections of the PR description, by change type.
 - `.claude/rules/lessons-learned.md` — how to record lessons learned into `docs/lessons-learned.md`.
+- `.claude/rules/codex.md` — how Codex should operate here: read every `AGENTS.md` from the repository root down to the file being changed, translate Claude-Code-specific features into their Codex equivalents (ask before guessing), and **never approve or merge a pull request**.
 - `.claude/rules/production-data.md` — **never write to the production database.** There is no development Supabase environment: the only Supabase project is production, and the only disposable database is the Testcontainers Postgres that `pnpm test:integration` starts. Supabase MCP is connected, so write tools (`execute_sql` with DML/DDL, `apply_migration`) reach production directly — use read-only tools only, and stop and report instead of switching targets to work around an error.
 
 ## Agent-Specific Notes

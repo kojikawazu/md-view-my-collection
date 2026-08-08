@@ -31,6 +31,6 @@ globs:
 | コンポーネント設計（アトミックデザイン）・技術スタックの変更 | `docs/09-architecture-specification.md`、`CLAUDE.md` |
 | 外部 URL 仕様の変更 | `docs/03-functional-specification.md`（機能）／`docs/05-data-specification.md`（データ）／`docs/07-api-specification.md`（API）／`docs/09-architecture-specification.md`（コンポーネント） |
 | Markdown ライブラリ・データ品質などの参照資料 | `docs/10-miscellaneous-specification.md` |
-| `.claude/rules/` ルールの追加・削除・説明変更 | `CLAUDE.md` の Rules テーブル |
+| `.claude/rules/` ルールの追加・削除・改名・説明変更・適用範囲（`globs`）変更 | `CLAUDE.md` の Rules テーブル、`AGENTS.md`（glob を持たない常時適用ルールは「常に適用するルール」へ） |
 
 該当する変更がない場合はスキップする。
