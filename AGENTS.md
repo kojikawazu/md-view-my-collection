@@ -48,10 +48,11 @@ Configuration:
 
 ## Rules
 
-Detailed rules live in `.claude/rules/` (canonical; do not duplicate their text here). See the table in `CLAUDE.md` for the full list and scopes.
+Detailed rules live in `.claude/rules/` (canonical; do not duplicate their text here). **`CLAUDE.md` holds the full list** with scopes.
 
-Always applied (no glob scope):
+Listed below are the rules that constrain what an agent may *do* — not the shape of the code it writes. Getting these wrong is hard to undo, so read them before acting. **This is not the full list** (see `CLAUDE.md`); rules about types, layering, naming, tests and the like are caught by CI and review instead.
 
+- `.claude/rules/github-issue.md` — one issue per branch, closed by `Closes #<n>` in the PR. **Run `gh issue list --state open` and read every title before filing** — keyword search alone has already produced a duplicate here.
 - `.claude/rules/pr-description.md` — required sections of the PR description, by change type.
 - `.claude/rules/lessons-learned.md` — how to record lessons learned into `docs/lessons-learned.md`.
 - `.claude/rules/codex.md` — how Codex should operate here: read every `AGENTS.md` from the repository root down to the file being changed, translate Claude-Code-specific features into their Codex equivalents (ask before guessing), and **never approve or merge a pull request**.
