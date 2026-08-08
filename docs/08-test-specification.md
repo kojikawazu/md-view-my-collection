@@ -93,6 +93,7 @@
 - 実装ファイル: `front/tests/integration/*.test.ts`（reports / reports-id / tags / auth / openapi）。共有ヘルパー: `tests/integration/helpers.ts`。
 - 実行: `pnpm test:integration`（Vitest・node 環境。UT の `pnpm test` とは分離）。CI の playwright ジョブで UT の後に実行。
 - DB: **Testcontainers で実 Postgres を起動**。`globalSetup` で 1 度だけ起動し `tests/integration/schema.sql`（`pnpm gen:test-schema` 生成物）を適用。テスト間 `TRUNCATE`、終了時にコンテナ破棄（**テストデータを残さない**）。前提として **Docker が必要**。
+- **接続先ガード**: 接続先の解決は `front/tests/support/db-target.ts` に集約する。`DATABASE_URL`（本番 Supabase を指す）は**参照しない**。上書きは `TEST_DATABASE_URL` のみで、いずれの経路もホスト allowlist（`localhost` / `127.0.0.1` / `::1`）を通り、**DDL 適用より前に**非ローカルなら throw する。ガード自体の UT は `front/tests/support/__tests__/db-target.test.ts`（21 ケース。`DATABASE_URL` 汚染への耐性を含む）。背景は `.claude/rules/production-data.md` と Issue #168。
 - 方式: route ハンドラを in-process で直接呼び出し（`NextRequest`）、Prisma は実コンテナに接続。認証は `vi.mock('@supabase/supabase-js')` でモック（`requireAdmin` の 401/403/200 分岐は実検証）。
 - カバー: GET 一覧（ページング・content 除外・ヘッダ）/ POST 作成（201・タグ upsert・外部URL・400・401・403）/ GET 詳細（200・404）/ PATCH（部分更新・タグ置換・URL 全削除・404=P2025・400・401/403）/ DELETE（200・CASCADE 実確認・404・401/403）/ tags GET / auth.admin / auth.is-allowed（local・supabase）/ openapi ゲート。33 ケース。
 - RLS/実 Auth は IT のスコープ外（Prisma オーナー接続で RLS はバイパス）。E2E の実 DB 化（Supabase CLI）で別途カバー予定。
