@@ -53,7 +53,9 @@ Markdownレポートの保存・閲覧UIを提供するNext.jsアプリ。
 | `commands.md` | 全体 | Build & Dev コマンド（pnpm dev / build / typecheck / format / gen:* 等） |
 | `environment.md` | 全体 | 環境変数一覧・管理方針 |
 | `error-handling.md` | 全体 | エラーハンドリング方針（バリデーション・ログ・HTTPステータス） |
-| `git-workflow.md` | 全体 | ブランチ・コミット・PR 規約 |
+| `git-workflow.md` | 全体 | ブランチ運用・コミットメッセージ・マージ条件（PR 本文の中身は `pr-description.md`） |
+| `pr-description.md` | 全体 | PR 初回コメントの必須セクション（変更種別ごとに固定。`.github/PULL_REQUEST_TEMPLATE/` は本ルールを写した骨格） |
+| `lessons-learned.md` | 全体 | 誤り・失敗・ハマりから得た教訓を `docs/lessons-learned.md` に追記・蓄積する運用 |
 | `github-issue.md` | 全体 | GitHub issue 駆動開発（ブランチと対で起票・open/close で進捗管理・PR で自動クローズ） |
 | `security.md` | 全体 | セキュリティ設計方針（認証・RLS・XSS対策・シークレット管理） |
 | `testing.md` | 全体 | テスト方針・コマンド・配置規約（UT: Vitest / IT: Vitest + Testcontainers / E2E: Playwright） |

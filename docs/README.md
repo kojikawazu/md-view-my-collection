@@ -28,6 +28,14 @@ md-view-my-collection の仕様・設計ドキュメント一覧。プロジェ�
 | 10 | [その他仕様書](10-miscellaneous-specification.md) | Markdown ライブラリ調査・データ品質チェックレポート |
 | 11 | [タスク](11-tasks.md) | 開発タスク・進捗管理 |
 
+## 継続記録
+
+連番仕様書が「埋めて完成させる」ものであるのに対し、以下は**追記し続ける**ドキュメント。
+
+| ドキュメント | 概要 |
+|---|---|
+| [教訓ログ](lessons-learned.md) | 誤り・失敗・ハマりから得た教訓。運用ルールは [../.claude/rules/lessons-learned.md](../.claude/rules/lessons-learned.md) |
+
 ## 運用
 
 - 作業開始前に [11-tasks.md](11-tasks.md) を確認し、完了後に更新する。
