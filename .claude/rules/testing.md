@@ -32,13 +32,24 @@ globs:
 - **失敗メッセージに接続先ホストと復旧手順**（テスト DB の起動方法）を含める。原因が分からないと、回避策として接続先を書き換えられてしまう。
 - **ガード自体に UT を書く。** 特に「`DATABASE_URL` に本番 URL が入っていてもガードが汚染されない」ことは、事故の直接原因に対応する回帰テストとして必須。
 
-> **実装状況**: ガードは未導入（Issue #176 で対応）。現行の IT は `tests/integration/global-setup.ts` が Testcontainers の URI で `DATABASE_URL` を常に上書きするため結果的に安全だが、**接続先が非ローカルだったときに失敗する仕組みは無い**。本節はルールが先行しており、新規のテスト・スクリプトは移行を待たず本節に従うこと。
+**実装は `front/tests/support/db-target.ts`**（Issue #176）。接続先を必要とするテスト・スクリプトは、新規・既存を問わず必ずこのモジュールを経由する。
+
+| 関数 | 用途 |
+|---|---|
+| `resolveTestDatabaseUrl(containerUrl?)` | 接続先を解決する。`TEST_DATABASE_URL` → 引数の順に採用し、必ず検証を通す |
+| `assertLocalDatabaseTarget(url, source)` | 既にある URL を検証する。破壊的操作の前に呼ぶ |
+| `hasTestDatabaseUrlOverride()` | 上書きの有無。コンテナ起動が必要かの判断に使う |
+
+> **例外**: `front/prisma.config.ts` は `DATABASE_URL`（本番）を意図的に使う。`prisma db pull` が DB 側で管理されているスキーマを取り込むための正当な経路であり、テスト用の接続先解決には一切関与しない。破壊的サブコマンドの禁止は `production-data.md` を参照。
 
 ## ディレクトリ配置
 
 - ユニットテスト: `front/src/<module>/__tests__/` に配置する
 - 統合テスト: `front/tests/integration/` に配置する
 - E2Eテスト: `front/tests/e2e/` に配置する
+- テスト補助モジュール（接続先ガード等）: `front/tests/support/` に置き、その UT は `front/tests/support/__tests__/` に配置する
+  - **`src/` に置かない**。本番バンドルに混ざるうえ、`dead-code.md` の「未使用 export」として扱われてしまうため
+  - この UT は `pnpm test`（`vitest.config.ts`）で実行される。`tests/e2e` / `tests/integration` のみ別ランナーに分かれる
 
 ## 実行コマンド（`front/` ディレクトリで実行）
 

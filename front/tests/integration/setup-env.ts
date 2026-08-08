@@ -1,8 +1,11 @@
 import { inject } from 'vitest';
+import { assertLocalDatabaseTarget } from '../support/db-target';
 
 // 各ワーカーで、テスト本体（および Prisma シングルトン `@/lib/db` の import）より前に
 // DATABASE_URL をテストコンテナの接続先へ確定させる。
-process.env.DATABASE_URL = inject('databaseUrl');
+// globalSetup で検証済みだが、ワーカーは別プロセスで起動するため、Prisma が読む直前の
+// 値をここでも検証する（検証済みの値が渡ってくる前提に寄りかからない）。
+process.env.DATABASE_URL = assertLocalDatabaseTarget(inject('databaseUrl'), 'testcontainers');
 
 // requireAdmin / auth ルートが参照する env。Supabase 呼び出し自体は setup-auth-mock.ts で
 // モックするため、URL/KEY はダミーで良い。ADMIN_EMAIL は認可判定に必須。
