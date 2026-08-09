@@ -17,7 +17,8 @@
     "test:e2e:report": "playwright show-report",
     "gen:openapi": "tsx scripts/gen-openapi.ts",
     "gen:test-schema": "tsx scripts/gen-test-schema.ts",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@prisma/client": "^6.19.2",

@@ -1,8 +1,18 @@
+# 依存・ビルド成果物
 node_modules
 .next
 dist
 build
+
+# テスト・レポートの出力
 coverage
 playwright-report
 test-results
+
+# シークレット
 .env*
+
+# 生成物（整形すると生成のたびに差分が出る）
+pnpm-lock.yaml
+prisma/generated
+tests/integration/schema.sql
