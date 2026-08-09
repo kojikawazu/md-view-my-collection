@@ -88,7 +88,12 @@ const titleSchema = z
       .min(1, 'タイトルは必須です。')
       .max(LIMITS.title, `タイトルは${LIMITS.title}文字以内です。`),
   )
-  .meta({ type: 'string', description: 'レポートタイトル', example: 'Kubernetes 入門', maxLength: LIMITS.title });
+  .meta({
+    type: 'string',
+    description: 'レポートタイトル',
+    example: 'Kubernetes 入門',
+    maxLength: LIMITS.title,
+  });
 
 const contentSchema = z
   .preprocess(
@@ -98,7 +103,12 @@ const contentSchema = z
       .min(1, '本文は必須です。')
       .max(LIMITS.content, `本文は${LIMITS.content}文字以内です。`),
   )
-  .meta({ type: 'string', description: 'Markdown 本文', example: '# 見出し\\n\\n本文', maxLength: LIMITS.content });
+  .meta({
+    type: 'string',
+    description: 'Markdown 本文',
+    example: '# 見出し\\n\\n本文',
+    maxLength: LIMITS.content,
+  });
 
 const authorSchema = z
   .preprocess(toStringValue, z.string().min(1, '著者は必須です。'))
@@ -122,10 +132,18 @@ const categorySchema = z
   });
 
 const summarySchema = z
-  .preprocess(toStringValue, z.string().max(LIMITS.summary, `要約は${LIMITS.summary}文字以内です。`))
+  .preprocess(
+    toStringValue,
+    z.string().max(LIMITS.summary, `要約は${LIMITS.summary}文字以内です。`),
+  )
   // 空文字は null に正規化する
   .transform((value) => (value ? value : null))
-  .meta({ type: 'string', description: '要約（空文字は null）', example: '記事の要約', maxLength: LIMITS.summary });
+  .meta({
+    type: 'string',
+    description: '要約（空文字は null）',
+    example: '記事の要約',
+    maxLength: LIMITS.summary,
+  });
 
 const publishDateSchema = z
   .preprocess(parsePublishDate, z.union([z.date(), z.null()]).optional())
@@ -158,7 +176,12 @@ const tagsCreateSchema = z
         message: `タグは${LIMITS.tag}文字以内です。`,
       }),
   )
-  .meta({ type: 'array', items: { type: 'string' }, description: 'タグ（`#` 付き canonical）', example: ['#AI', '#Cloud'] });
+  .meta({
+    type: 'array',
+    items: { type: 'string' },
+    description: 'タグ（`#` 付き canonical）',
+    example: ['#AI', '#Cloud'],
+  });
 
 /** 更新: タグは省略可・空配列可。 */
 const tagsPatchSchema = tagsBaseSchema.meta({
@@ -174,11 +197,17 @@ export const externalUrlInputSchema = z
     url: z
       .preprocess(
         toStringValue,
-        z.string().min(1, 'URLは必須です。').regex(URL_PATTERN, 'URLはhttp://またはhttps://で始まる必要があります。'),
+        z
+          .string()
+          .min(1, 'URLは必須です。')
+          .regex(URL_PATTERN, 'URLはhttp://またはhttps://で始まる必要があります。'),
       )
       .meta({ type: 'string', format: 'uri', example: 'https://example.com' }),
     label: z
-      .preprocess(toStringValue, z.string().max(LIMITS.label, `ラベルは${LIMITS.label}文字以内です。`))
+      .preprocess(
+        toStringValue,
+        z.string().max(LIMITS.label, `ラベルは${LIMITS.label}文字以内です。`),
+      )
       .meta({ type: 'string', example: 'Example', maxLength: LIMITS.label }),
   })
   // preprocess により入力型が unknown になるため、必須フィールドを明示する
@@ -236,7 +265,10 @@ export const reportItemSchema = z
     content: z.string().meta({ description: '一覧 API では空文字' }),
     category: z.string().meta({ example: 'AI' }),
     author: z.string().meta({ example: 'Editor' }),
-    publishDate: z.string().nullable().meta({ format: 'date-time', example: '2024-01-15T00:00:00.000Z' }),
+    publishDate: z
+      .string()
+      .nullable()
+      .meta({ format: 'date-time', example: '2024-01-15T00:00:00.000Z' }),
     createdAt: z.string().meta({ format: 'date-time' }),
     updatedAt: z.string().meta({ format: 'date-time' }),
     tags: z.array(z.string()).meta({ example: ['#AI', '#Cloud'] }),
@@ -245,7 +277,9 @@ export const reportItemSchema = z
   .meta({ id: 'ReportItem' });
 
 /** タグ名の配列（レスポンス）。 */
-export const tagListSchema = z.array(z.string()).meta({ id: 'TagList', example: ['#AI', '#Cloud'] });
+export const tagListSchema = z
+  .array(z.string())
+  .meta({ id: 'TagList', example: ['#AI', '#Cloud'] });
 
 /** バリデーションエラーレスポンス（フィールド名 → 日本語メッセージ）。 */
 export const validationErrorSchema = z

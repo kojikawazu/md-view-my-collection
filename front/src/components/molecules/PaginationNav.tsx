@@ -47,7 +47,9 @@ const PaginationNav: React.FC<PaginationNavProps> = ({
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
         className={`min-w-[4.5rem] px-3 py-2 text-sm border ${borderClassName} ${borderRadius} ${
-          currentPage === 1 ? 'opacity-40 cursor-not-allowed' : `${surfaceClassName} ${textClassName}`
+          currentPage === 1
+            ? 'opacity-40 cursor-not-allowed'
+            : `${surfaceClassName} ${textClassName}`
         }`}
       >
         前へ
@@ -74,7 +76,9 @@ const PaginationNav: React.FC<PaginationNavProps> = ({
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
         className={`min-w-[4.5rem] px-3 py-2 text-sm border ${borderClassName} ${borderRadius} ${
-          currentPage === totalPages ? 'opacity-40 cursor-not-allowed' : `${surfaceClassName} ${textClassName}`
+          currentPage === totalPages
+            ? 'opacity-40 cursor-not-allowed'
+            : `${surfaceClassName} ${textClassName}`
         }`}
       >
         次へ

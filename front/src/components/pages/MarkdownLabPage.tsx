@@ -97,19 +97,26 @@ const MarkdownLabPage: React.FC<MarkdownLabPageProps> = ({ theme }) => {
         <AppLink href="/" className={`text-sm ${colors.muted} transition-opacity hover:opacity-70`}>
           &larr; All Reports
         </AppLink>
-        <h1 className={`${fontHeader} ${colors.primary} mt-4 text-4xl font-black leading-tight md:text-5xl`}>
+        <h1
+          className={`${fontHeader} ${colors.primary} mt-4 text-4xl font-black leading-tight md:text-5xl`}
+        >
           Markdown Style Lab
         </h1>
         <p className={`${colors.muted} mt-4 max-w-3xl text-sm leading-relaxed md:text-base`}>
-          Pattern 07 is the active baseline for tuning. Font families and palette remain fixed to the current theme.
+          Pattern 07 is the active baseline for tuning. Font families and palette remain fixed to
+          the current theme.
         </p>
       </div>
 
       <div className="mx-auto max-w-5xl">
-        <article className={`${colors.surface} ${colors.border} ${borderRadius} border p-5 shadow-sm md:p-6`}>
+        <article
+          className={`${colors.surface} ${colors.border} ${borderRadius} border p-5 shadow-sm md:p-6`}
+        >
           <header className={`mb-5 border-b ${colors.border} pb-4`}>
             <p className={`${colors.muted} text-[11px] uppercase tracking-[0.2em]`}>Pattern 07</p>
-            <h2 className={`${fontHeader} ${colors.primary} mt-2 text-2xl font-bold`}>{ACTIVE_VARIANT.label}</h2>
+            <h2 className={`${fontHeader} ${colors.primary} mt-2 text-2xl font-bold`}>
+              {ACTIVE_VARIANT.label}
+            </h2>
             <p className={`${colors.muted} mt-2 text-sm leading-relaxed`}>{ACTIVE_VARIANT.note}</p>
           </header>
 

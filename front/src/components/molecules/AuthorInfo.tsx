@@ -37,13 +37,13 @@ const AuthorInfo: React.FC<AuthorInfoProps> = ({
       <div>
         <span className={`block font-bold ${nameClassName}`}>{name}</span>
         {role && (
-          <span className={`block text-[10px] tracking-wider uppercase font-medium ${subtitleClassName}`}>
+          <span
+            className={`block text-[10px] tracking-wider uppercase font-medium ${subtitleClassName}`}
+          >
             {role}
           </span>
         )}
-        {subtitle && !role && (
-          <span className={`block ${subtitleClassName}`}>{subtitle}</span>
-        )}
+        {subtitle && !role && <span className={`block ${subtitleClassName}`}>{subtitle}</span>}
       </div>
     </div>
   );

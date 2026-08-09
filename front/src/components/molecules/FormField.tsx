@@ -16,17 +16,14 @@ interface FormFieldProps {
 
 /** ラベル＋入力＋エラーを縦に並べるフォーム部品。`useId` で採番した id を children に渡しラベルと入力を関連付ける。 */
 
-const FormField: React.FC<FormFieldProps> = ({
-  label,
-  labelClassName = '',
-  error,
-  children,
-}) => {
+const FormField: React.FC<FormFieldProps> = ({ label, labelClassName = '', error, children }) => {
   const id = useId();
 
   return (
     <div className="space-y-2">
-      <SectionLabel htmlFor={id} className={labelClassName}>{label}</SectionLabel>
+      <SectionLabel htmlFor={id} className={labelClassName}>
+        {label}
+      </SectionLabel>
       {children(id)}
       {error && <p className="text-xs text-red-700">{error}</p>}
     </div>

@@ -12,9 +12,7 @@ interface BadgeProps {
 /** カテゴリやステータスを示す小さなラベル用の最小 UI 部品。 */
 const Badge: React.FC<BadgeProps> = ({ children, className = '' }) => {
   return (
-    <span
-      className={`text-[10px] uppercase font-bold tracking-widest px-3 py-1 ${className}`}
-    >
+    <span className={`text-[10px] uppercase font-bold tracking-widest px-3 py-1 ${className}`}>
       {children}
     </span>
   );

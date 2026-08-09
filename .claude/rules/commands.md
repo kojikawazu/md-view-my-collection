@@ -10,14 +10,18 @@ globs:
 ## 開発・ビルド
 
 ```bash
-pnpm install   # 依存インストール（postinstall で prisma generate が自動実行される）
-pnpm dev       # 開発サーバー起動（http://localhost:3000）
-pnpm build     # プロダクションビルド
-pnpm start     # プロダクションビルド配信
-pnpm lint      # ESLint 実行（CI のグリーン条件 / git-workflow.md 参照）
-pnpm typecheck # tsc --noEmit（CI 必須。ビルドは型を検査しないため別途実行する / typescript.md 参照）
-pnpm format    # Prettier 整形
+pnpm install      # 依存インストール（postinstall で prisma generate が自動実行される）
+pnpm dev          # 開発サーバー起動（http://localhost:3000）
+pnpm build        # プロダクションビルド
+pnpm start        # プロダクションビルド配信
+pnpm lint         # ESLint 実行（CI のグリーン条件 / git-workflow.md 参照）
+pnpm typecheck    # tsc --noEmit（CI 必須。ビルドは型を検査しないため別途実行する / typescript.md 参照）
+pnpm format       # Prettier 整形（書き込み）
+pnpm format:check # Prettier 差分ゼロの検証（CI 必須 / static-analysis.md 参照）
 ```
+
+- 整形の設定は `front/.prettierrc` が唯一の正本とする（`.prettierrc.json` 等を併置しない。Prettier は最初に見つけた 1 つだけを読むため、二重に置くと片方が黙って無視される）。
+- 生成物・ロックファイルは `front/.prettierignore` で対象外にする（整形すると生成のたびに差分が出るため）。
 
 ## コード生成
 

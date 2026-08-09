@@ -1,10 +1,5 @@
 import type { ExternalUrlInput } from '@/types';
-import {
-  LIMITS,
-  normalizeTags,
-  reportCreateSchema,
-  reportPatchSchema,
-} from '@/lib/schemas/report';
+import { LIMITS, normalizeTags, reportCreateSchema, reportPatchSchema } from '@/lib/schemas/report';
 
 /**
  * ランタイム検証アダプタ。

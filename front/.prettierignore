@@ -1,8 +1,16 @@
+# 依存・ビルド成果物
 node_modules
 .next
 dist
 build
+
+# テスト・レポートの出力
 coverage
 playwright-report
 test-results
+
+# シークレット
 .env*
+
+# 生成物（pnpm が管理するため、整形しても install のたびに戻る）
+pnpm-lock.yaml

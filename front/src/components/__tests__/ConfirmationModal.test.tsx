@@ -74,7 +74,9 @@ describe('ConfirmationModal', () => {
     let resolveConfirm!: () => void;
     const props = makeProps({
       onConfirm: vi.fn().mockReturnValue(
-        new Promise<void>((res) => { resolveConfirm = res; }),
+        new Promise<void>((res) => {
+          resolveConfirm = res;
+        }),
       ),
     });
     render(<ConfirmationModal {...props} />);
@@ -92,7 +94,9 @@ describe('ConfirmationModal', () => {
     let resolveConfirm!: () => void;
     const props = makeProps({
       onConfirm: vi.fn().mockReturnValue(
-        new Promise<void>((res) => { resolveConfirm = res; }),
+        new Promise<void>((res) => {
+          resolveConfirm = res;
+        }),
       ),
     });
     render(<ConfirmationModal {...props} />);
@@ -111,7 +115,9 @@ describe('ConfirmationModal', () => {
     const user = userEvent.setup();
     let resolveConfirm!: () => void;
     const onConfirm = vi.fn().mockReturnValue(
-      new Promise<void>((res) => { resolveConfirm = res; }),
+      new Promise<void>((res) => {
+        resolveConfirm = res;
+      }),
     );
     render(<ConfirmationModal {...makeProps({ onConfirm })} />);
 
@@ -153,7 +159,8 @@ describe('ConfirmationModal', () => {
 
   it('should allow retry after onConfirm error (M-A-2)', async () => {
     const user = userEvent.setup();
-    const onConfirm = vi.fn()
+    const onConfirm = vi
+      .fn()
       .mockRejectedValueOnce(new Error('First fail'))
       .mockResolvedValueOnce(undefined);
     const props = makeProps({ onConfirm });

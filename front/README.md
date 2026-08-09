@@ -22,19 +22,19 @@ Markdown レポートの保存・閲覧 UI の**実装ディレクトリ**です
 
 ## 技術スタック
 
-| 領域 | 採用技術 |
-|---|---|
-| 言語 | TypeScript 5（strict） |
-| フレームワーク | Next.js 16（App Router） / React 19 |
-| スタイリング | TailwindCSS v4 |
-| Markdown | react-markdown 10 + remark-gfm 4 + rehype-sanitize 6 |
-| 認証 | Supabase Auth（Google OAuth） |
-| DB / ORM | Supabase Postgres（RLS） / Prisma 6（`db pull` のみ・マイグレーション禁止） |
-| BFF | Next.js Route Handlers（`src/app/api/*`） |
-| バリデーション / API契約 | zod 4 + zod-openapi 5（スキーマから OpenAPI 生成） |
-| テスト | Vitest（ユニット / 統合） + Testcontainers（IT用 Postgres） + Playwright（E2E） |
-| 静的解析 | ESLint 9 + Prettier 3 |
-| パッケージマネージャ | **pnpm**（npm / yarn は使用しない） |
+| 領域                     | 採用技術                                                                        |
+| ------------------------ | ------------------------------------------------------------------------------- |
+| 言語                     | TypeScript 5（strict）                                                          |
+| フレームワーク           | Next.js 16（App Router） / React 19                                             |
+| スタイリング             | TailwindCSS v4                                                                  |
+| Markdown                 | react-markdown 10 + remark-gfm 4 + rehype-sanitize 6                            |
+| 認証                     | Supabase Auth（Google OAuth）                                                   |
+| DB / ORM                 | Supabase Postgres（RLS） / Prisma 6（`db pull` のみ・マイグレーション禁止）     |
+| BFF                      | Next.js Route Handlers（`src/app/api/*`）                                       |
+| バリデーション / API契約 | zod 4 + zod-openapi 5（スキーマから OpenAPI 生成）                              |
+| テスト                   | Vitest（ユニット / 統合） + Testcontainers（IT用 Postgres） + Playwright（E2E） |
+| 静的解析                 | ESLint 9 + Prettier 3                                                           |
+| パッケージマネージャ     | **pnpm**（npm / yarn は使用しない）                                             |
 
 詳細な技術選定理由は [../docs/09-architecture-specification.md](../docs/09-architecture-specification.md) を参照。
 
@@ -122,11 +122,11 @@ pnpm start    # ビルド成果物を配信
 
 このアプリは認証・データ取得をそれぞれ2モードで切り替えます。環境変数 `NEXT_PUBLIC_AUTH_MODE` / `NEXT_PUBLIC_DATA_MODE` で制御し、**未設定なら supabase モード**になります。
 
-| | local モード（`=local`） | supabase モード（既定） |
-|---|---|---|
-| 認証（`NEXT_PUBLIC_AUTH_MODE`） | ダミー認証。`ADMIN_EMAIL` 不要 | Supabase Auth（Google OAuth）+ `ADMIN_EMAIL` 照合 |
-| データ（`NEXT_PUBLIC_DATA_MODE`） | localStorage のダミーデータ | Supabase Postgres（Prisma 経由） |
-| 用途 | E2E / UI 確認（`.env.local` 不要） | 開発・本番 |
+|                                   | local モード（`=local`）           | supabase モード（既定）                           |
+| --------------------------------- | ---------------------------------- | ------------------------------------------------- |
+| 認証（`NEXT_PUBLIC_AUTH_MODE`）   | ダミー認証。`ADMIN_EMAIL` 不要     | Supabase Auth（Google OAuth）+ `ADMIN_EMAIL` 照合 |
+| データ（`NEXT_PUBLIC_DATA_MODE`） | localStorage のダミーデータ        | Supabase Postgres（Prisma 経由）                  |
+| 用途                              | E2E / UI 確認（`.env.local` 不要） | 開発・本番                                        |
 
 - 本番は **supabase モードのみ**。local モードは E2E 専用で、本番データは表示しません。
 - E2E 実行時は `playwright.config.ts` が両変数に `local` を注入します（手動設定は不要）。

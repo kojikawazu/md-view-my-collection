@@ -37,19 +37,30 @@ const LoginForm: React.FC<LoginFormProps> = ({ theme, onLogin, onLoginWithGoogle
   const authMode = process.env.NEXT_PUBLIC_AUTH_MODE ?? 'supabase';
 
   return (
-    <div className={`min-h-screen flex items-center justify-center ${colors.background} ${colors.text} p-6`}>
+    <div
+      className={`min-h-screen flex items-center justify-center ${colors.background} ${colors.text} p-6`}
+    >
       <LoadingOverlay visible={isSubmitting} />
-      <div className={`w-full max-w-md bg-white border ${colors.border} p-12 shadow-2xl ${borderRadius}`}>
+      <div
+        className={`w-full max-w-md bg-white border ${colors.border} p-12 shadow-2xl ${borderRadius}`}
+      >
         <div className="text-center mb-10">
-          <h1 className={`${fontHeader} text-3xl font-bold ${colors.primary} mb-2`}>Report Viewer</h1>
-          <p className={`text-sm ${colors.muted} font-medium`}>レポート管理ダッシュボードへアクセス</p>
+          <h1 className={`${fontHeader} text-3xl font-bold ${colors.primary} mb-2`}>
+            Report Viewer
+          </h1>
+          <p className={`text-sm ${colors.muted} font-medium`}>
+            レポート管理ダッシュボードへアクセス
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {authMode === 'local' ? (
             <>
               <div className="space-y-2">
-                <label htmlFor="login-email" className={`block text-[10px] uppercase font-bold tracking-widest ${colors.text} opacity-80`}>
+                <label
+                  htmlFor="login-email"
+                  className={`block text-[10px] uppercase font-bold tracking-widest ${colors.text} opacity-80`}
+                >
                   Email
                 </label>
                 <input
@@ -63,7 +74,10 @@ const LoginForm: React.FC<LoginFormProps> = ({ theme, onLogin, onLoginWithGoogle
                 />
               </div>
               <div className="space-y-2">
-                <label htmlFor="login-password" className={`block text-[10px] uppercase font-bold tracking-widest ${colors.text} opacity-80`}>
+                <label
+                  htmlFor="login-password"
+                  className={`block text-[10px] uppercase font-bold tracking-widest ${colors.text} opacity-80`}
+                >
                   Password
                 </label>
                 <input

@@ -45,7 +45,10 @@ describe('PATCH /api/reports/[id] (integration)', () => {
 
   it('異常: 未認証 401 / 非管理者 403', async () => {
     const id = await seedReport();
-    const unauth = await PATCH(makeRequest(url(id), { method: 'PATCH', body: { title: 'x' } }), routeContext(id));
+    const unauth = await PATCH(
+      makeRequest(url(id), { method: 'PATCH', body: { title: 'x' } }),
+      routeContext(id),
+    );
     expect(unauth.status).toBe(401);
     const forbidden = await PATCH(
       makeRequest(url(id), { method: 'PATCH', body: { title: 'x' }, token: USER_TOKEN }),
@@ -99,7 +102,9 @@ describe('PATCH /api/reports/[id] (integration)', () => {
   });
 
   it('正常: externalUrls を空配列で全削除', async () => {
-    const id = await seedReport({ externalUrls: [{ url: 'https://a.com' }, { url: 'https://b.com' }] });
+    const id = await seedReport({
+      externalUrls: [{ url: 'https://a.com' }, { url: 'https://b.com' }],
+    });
     const res = await PATCH(
       makeRequest(url(id), { method: 'PATCH', body: { externalUrls: [] }, token: ADMIN_TOKEN }),
       routeContext(id),
@@ -115,9 +120,16 @@ describe('DELETE /api/reports/[id] (integration)', () => {
 
   it('異常: 未認証 401 / 非管理者 403', async () => {
     const id = await seedReport();
-    expect((await DELETE(makeRequest(url(id), { method: 'DELETE' }), routeContext(id))).status).toBe(401);
     expect(
-      (await DELETE(makeRequest(url(id), { method: 'DELETE', token: USER_TOKEN }), routeContext(id))).status,
+      (await DELETE(makeRequest(url(id), { method: 'DELETE' }), routeContext(id))).status,
+    ).toBe(401);
+    expect(
+      (
+        await DELETE(
+          makeRequest(url(id), { method: 'DELETE', token: USER_TOKEN }),
+          routeContext(id),
+        )
+      ).status,
     ).toBe(403);
   });
 

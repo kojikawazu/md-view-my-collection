@@ -31,9 +31,7 @@ const DetailPage: React.FC<DetailPageProps> = ({ theme, report, user, onDelete }
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const { colors, fontHeader, fontPrimary, borderRadius } = theme;
   // publishDate を優先し、無ければ createdAt を使い、ISO の日付部分のみ表示する。
-  const displayDate = report
-    ? (report.publishDate || report.createdAt || '').split('T')[0]
-    : '';
+  const displayDate = report ? (report.publishDate || report.createdAt || '').split('T')[0] : '';
   // 著者名はログイン中ユーザー名に統一（未ログイン時は 'Manager'）。単一管理者運用のため。
   const displayAuthor = user?.username ?? 'Manager';
 
@@ -52,7 +50,10 @@ const DetailPage: React.FC<DetailPageProps> = ({ theme, report, user, onDelete }
     <article className="max-w-4xl mx-auto p-8 md:p-12">
       <div className="mb-12">
         <div className="flex items-center gap-3 mb-6">
-          <AppLink href="/" className={`text-sm ${colors.muted} hover:opacity-70 transition-opacity`}>
+          <AppLink
+            href="/"
+            className={`text-sm ${colors.muted} hover:opacity-70 transition-opacity`}
+          >
             &larr; All Reports
           </AppLink>
           <span className="opacity-20">|</span>
@@ -63,7 +64,9 @@ const DetailPage: React.FC<DetailPageProps> = ({ theme, report, user, onDelete }
           </span>
         </div>
 
-        <h1 className={`${fontHeader} text-4xl md:text-6xl font-black ${colors.primary} mb-8 leading-tight`}>
+        <h1
+          className={`${fontHeader} text-4xl md:text-6xl font-black ${colors.primary} mb-8 leading-tight`}
+        >
           {report.title}
         </h1>
 
@@ -121,10 +124,15 @@ const DetailPage: React.FC<DetailPageProps> = ({ theme, report, user, onDelete }
       )}
 
       <div className="mt-16 pt-12 border-t border-inherit">
-        <h4 className={`${fontHeader} text-xs uppercase tracking-widest ${colors.muted} mb-4`}>Tags</h4>
+        <h4 className={`${fontHeader} text-xs uppercase tracking-widest ${colors.muted} mb-4`}>
+          Tags
+        </h4>
         <div className="flex gap-2">
           {report.tags.map((tag) => (
-            <span key={tag} className={`text-[10px] px-3 py-1 bg-neutral-200 ${colors.text} ${borderRadius}`}>
+            <span
+              key={tag}
+              className={`text-[10px] px-3 py-1 bg-neutral-200 ${colors.text} ${borderRadius}`}
+            >
               {tag}
             </span>
           ))}

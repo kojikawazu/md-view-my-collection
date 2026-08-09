@@ -74,7 +74,9 @@ describe('GET /api/reports (integration)', () => {
       externalUrls: { url: string; label: string | null }[];
     }[];
     expect(item.tags).toEqual(['#AI']);
-    expect(item.externalUrls).toEqual([{ id: expect.any(String), url: 'https://example.com', label: 'Note' }]);
+    expect(item.externalUrls).toEqual([
+      { id: expect.any(String), url: 'https://example.com', label: 'Note' },
+    ]);
   });
 });
 

@@ -41,9 +41,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   // 比較・選択判定用の値: 大文字小文字を無視するため小文字化する
   const normalizeTagValue = (tag: string) => normalizeTag(tag).toLowerCase();
   // 正規化後の表示ラベルで重複排除し、ラベル（表示用）と value（判定用）の組へ整形する
-  const visibleTags = Array.from(
-    new Set(tags.map(normalizeTag).filter(Boolean)),
-  ).map((tag) => ({
+  const visibleTags = Array.from(new Set(tags.map(normalizeTag).filter(Boolean))).map((tag) => ({
     label: tag,
     value: normalizeTagValue(tag),
   }));

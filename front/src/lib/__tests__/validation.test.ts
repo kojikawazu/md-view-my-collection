@@ -52,12 +52,13 @@ describe('validateReportInput', () => {
     expect(data.tags).toEqual([]);
   });
 
-  it.each([
-    'Development', 'AI', 'Cloud', 'Linux', 'Container', 'Application', 'Program', 'Hobby',
-  ])('should accept category "%s" (N-7)', (category) => {
-    const { errors } = validateReportInput({ ...validInput, category });
-    expect(errors.category).toBeUndefined();
-  });
+  it.each(['Development', 'AI', 'Cloud', 'Linux', 'Container', 'Application', 'Program', 'Hobby'])(
+    'should accept category "%s" (N-7)',
+    (category) => {
+      const { errors } = validateReportInput({ ...validInput, category });
+      expect(errors.category).toBeUndefined();
+    },
+  );
 
   // --- 準正常系 ---
 
@@ -212,9 +213,7 @@ describe('validateExternalUrls', () => {
   });
 
   it('should error when label exceeds 200 chars (EU-S-3)', () => {
-    const { errors } = validateExternalUrls([
-      { url: 'https://x.com', label: 'a'.repeat(201) },
-    ]);
+    const { errors } = validateExternalUrls([{ url: 'https://x.com', label: 'a'.repeat(201) }]);
     expect(errors['externalUrls.0.label']).toContain('200文字以内');
   });
 

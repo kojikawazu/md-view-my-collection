@@ -100,14 +100,18 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   return (
-    <div className={`${theme.colors.background} ${theme.fontPrimary} ${theme.colors.text} min-h-screen flex flex-col`}>
+    <div
+      className={`${theme.colors.background} ${theme.fontPrimary} ${theme.colors.text} min-h-screen flex flex-col`}
+    >
       <LoadingOverlay
         visible={showLoading}
         fadeOut={fadeOutLoading}
         onFadeOutEnd={() => setShowLoading(false)}
       />
       <LoadingProvider value={{ startLoading: triggerLoading }}>
-        <div className={`transition-opacity duration-700 ${isHydrated ? 'opacity-100' : 'opacity-0'}`}>
+        <div
+          className={`transition-opacity duration-700 ${isHydrated ? 'opacity-100' : 'opacity-0'}`}
+        >
           <Header theme={theme} user={currentUser} onLogout={logout} />
           <div className="flex flex-1 pt-24">
             <Sidebar

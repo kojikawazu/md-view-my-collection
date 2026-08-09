@@ -39,9 +39,7 @@ const ExternalUrlFieldList: React.FC<ExternalUrlFieldListProps> = ({
   borderRadiusClass,
 }) => (
   <div className="space-y-4">
-    <h3 className={`text-xs uppercase tracking-widest ${labelClassName ?? ''}`}>
-      External Links
-    </h3>
+    <h3 className={`text-xs uppercase tracking-widest ${labelClassName ?? ''}`}>External Links</h3>
     {urls.map((eu, i) => (
       <ExternalUrlInput
         key={i}

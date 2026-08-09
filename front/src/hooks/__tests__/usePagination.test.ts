@@ -51,10 +51,9 @@ describe('usePagination', () => {
   });
 
   it('should reset to page 1 when filterKey changes (P-S-2)', () => {
-    const { result, rerender } = renderHook(
-      ({ filterKey }) => usePagination(50, filterKey),
-      { initialProps: { filterKey: 'AI' } },
-    );
+    const { result, rerender } = renderHook(({ filterKey }) => usePagination(50, filterKey), {
+      initialProps: { filterKey: 'AI' },
+    });
     act(() => result.current.updatePage(3));
     expect(result.current.currentPage).toBe(3);
 
@@ -75,10 +74,9 @@ describe('usePagination', () => {
   });
 
   it('should adjust currentPage when totalItems decreases (P-S-5)', () => {
-    const { result, rerender } = renderHook(
-      ({ total }) => usePagination(total, 'all'),
-      { initialProps: { total: 50 } },
-    );
+    const { result, rerender } = renderHook(({ total }) => usePagination(total, 'all'), {
+      initialProps: { total: 50 },
+    });
     act(() => result.current.updatePage(5));
     expect(result.current.currentPage).toBe(5);
 

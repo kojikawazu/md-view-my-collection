@@ -13,13 +13,17 @@ describe('GET /api/auth/admin (integration)', () => {
   });
 
   it('正常: 管理者トークンは {isAdmin:true}', async () => {
-    const res = await adminGet(makeRequest('http://localhost/api/auth/admin', { token: ADMIN_TOKEN }));
+    const res = await adminGet(
+      makeRequest('http://localhost/api/auth/admin', { token: ADMIN_TOKEN }),
+    );
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ isAdmin: true });
   });
 
   it('準正常: 非管理者トークンは {isAdmin:false}（200）', async () => {
-    const res = await adminGet(makeRequest('http://localhost/api/auth/admin', { token: USER_TOKEN }));
+    const res = await adminGet(
+      makeRequest('http://localhost/api/auth/admin', { token: USER_TOKEN }),
+    );
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ isAdmin: false });
   });
@@ -66,12 +70,20 @@ describe('POST /api/auth/is-allowed (integration)', () => {
   it('supabase モード: 管理者トークンは allowed=true / 非管理者は false', async () => {
     process.env.NEXT_PUBLIC_AUTH_MODE = 'supabase';
     const admin = await isAllowedPost(
-      makeRequest('http://localhost/api/auth/is-allowed', { method: 'POST', body: {}, token: ADMIN_TOKEN }),
+      makeRequest('http://localhost/api/auth/is-allowed', {
+        method: 'POST',
+        body: {},
+        token: ADMIN_TOKEN,
+      }),
     );
     expect(await admin.json()).toEqual({ allowed: true });
 
     const user = await isAllowedPost(
-      makeRequest('http://localhost/api/auth/is-allowed', { method: 'POST', body: {}, token: USER_TOKEN }),
+      makeRequest('http://localhost/api/auth/is-allowed', {
+        method: 'POST',
+        body: {},
+        token: USER_TOKEN,
+      }),
     );
     expect(await user.json()).toEqual({ allowed: false });
   });

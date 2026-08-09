@@ -90,7 +90,11 @@ const FormPage: React.FC<FormPageProps> = ({
         </FormField>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <FormField label="カテゴリー" labelClassName={fieldLabelClass} error={fieldErrors.category}>
+          <FormField
+            label="カテゴリー"
+            labelClassName={fieldLabelClass}
+            error={fieldErrors.category}
+          >
             {(id) => (
               <select
                 id={id}
@@ -107,7 +111,11 @@ const FormPage: React.FC<FormPageProps> = ({
               </select>
             )}
           </FormField>
-          <FormField label="タグ (カンマ区切り)" labelClassName={fieldLabelClass} error={tagError || fieldErrors.tags}>
+          <FormField
+            label="タグ (カンマ区切り)"
+            labelClassName={fieldLabelClass}
+            error={tagError || fieldErrors.tags}
+          >
             {(id) => (
               <input
                 id={id}
@@ -136,7 +144,11 @@ const FormPage: React.FC<FormPageProps> = ({
           )}
         </FormField>
 
-        <FormField label="本文 (Markdown)" labelClassName={fieldLabelClass} error={fieldErrors.content}>
+        <FormField
+          label="本文 (Markdown)"
+          labelClassName={fieldLabelClass}
+          error={fieldErrors.content}
+        >
           {(id) => (
             <textarea
               id={id}

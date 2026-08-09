@@ -14,9 +14,12 @@ export async function GET() {
       orderBy: { name: 'asc' },
       select: { name: true },
     });
-    return NextResponse.json(tags.map((t) => t.name), {
-      headers: { 'Cache-Control': 's-maxage=60, stale-while-revalidate=300' },
-    });
+    return NextResponse.json(
+      tags.map((t) => t.name),
+      {
+        headers: { 'Cache-Control': 's-maxage=60, stale-while-revalidate=300' },
+      },
+    );
   } catch (error) {
     console.error('[api/tags] GET failed', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

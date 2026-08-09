@@ -114,6 +114,7 @@
 - [x] Vercel自動デプロイを設定（mainのみ、プレビューなし）
 - [x] 本番環境変数を整備（必要が出た場合のみ）
 - [x] 本番動作確認（Google OAuth/初期表示）
+- [x] Prettier の差分ゼロを CI で検証（`format:check` 追加・`static-analysis` ジョブへ組込み・未整形 39 ファイルを一括整形・`.prettierrc.json` の重複設定を削除・`.git-blame-ignore-revs` 追加 / Issue #186 / 2026-08-09）
 
 ## パフォーマンス改善
 
