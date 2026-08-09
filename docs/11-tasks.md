@@ -105,6 +105,7 @@
 - [x] 統合テスト（IT）基盤を導入: Testcontainers(Postgres) + Auth モックで APIルート×実 DB を検証（`front/tests/integration/`・`pnpm test:integration`・`gen:test-schema` で DDL 生成・33ケース / 2026-07-04）
 - [x] CI（playwright ジョブ）に IT 実行を追加（UT の後 / 2026-07-04）
 - [ ] E2E/シナリオの実 DB 化（Supabase CLI ローカルスタック・実 Auth/RLS・テストデータ後始末必須 / PR2 予定）
+- [x] 本文の Markdown 描画に E2E 回帰ケースを追加（TC-037〜TC-042: 主要記法・GFM テーブル・「・」箇条書き変換・コールアウト・サニタイズ・本文未取得 / `tests/e2e/markdown.spec.ts` / Issue #25 / 2026-08-09）
 - [x] `tsconfig.json` の `exclude` から `tests` を外し、`front/tests/` 配下を `pnpm typecheck` の対象に含めた（型エラー 0 件・Vitest / Playwright とも `globals` 未使用のため型衝突なし / Issue #183 / 2026-08-09）
 
 ## デプロイ/運用

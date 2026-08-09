@@ -33,6 +33,102 @@ export const reportsFixture = [
   },
 ];
 
+// Markdown 描画の回帰検知用 fixture（TC-037〜TC-042）。
+// 本文には ReportMarkdown が担う 3 層の挙動をすべて含める:
+//   1. 標準記法 + GFM（react-markdown / remark-gfm）
+//   2. 独自変換（「・」段落 → ul.dot-bullet-list、h2 の語句 → コールアウト）
+//   3. サニタイズ（rehype-sanitize。生 HTML を実行させない）
+// 記法を削ると対応する TC が意味を失うため、内容の変更時は markdown.spec.ts を必ず併せて見る。
+const MARKDOWN_SHOWCASE_CONTENT = [
+  '# Markdown Rendering Check',
+  '',
+  '**bold text** and *italic text* and ~~struck text~~.',
+  '',
+  '- List item alpha',
+  '- List item beta',
+  '',
+  '> Quoted sentence.',
+  '',
+  '```ts',
+  'const answer = 42;',
+  '```',
+  '',
+  '[Example link](https://example.com/md)',
+  '',
+  '![Alt image text](https://example.com/image.png)',
+  '',
+  '| Col A | Col B |',
+  '| --- | --- |',
+  '| a1 | b1 |',
+  '',
+  // 全角中点始まりの段落。1 段落内の全行が「・」で始まる場合のみ ul へ変換される
+  '・Dot item one',
+  '・Dot item two',
+  '',
+  '## まとめ',
+  '',
+  'Summary callout body.',
+  '',
+  '## 注意点',
+  '',
+  'Warning callout body.',
+  '',
+  '## 動向',
+  '',
+  'Trend callout body.',
+].join('\n');
+
+// サニタイズ検証用の本文。生 HTML が実行されないことを確認する。
+// `window.__xssExecuted` は成功時にも定義されない（＝スクリプトが動いていない証拠）。
+const MARKDOWN_RAW_HTML_CONTENT = [
+  '# Sanitize Check',
+  '',
+  '<script>window.__xssExecuted = true;</script>',
+  '',
+  '<img src="x" onerror="window.__xssExecuted = true;">',
+  '',
+  '<a href="javascript:window.__xssExecuted = true;">javascript link</a>',
+].join('\n');
+
+export const markdownReportsFixture = [
+  {
+    id: 'md-1',
+    title: 'Markdown Showcase',
+    summary: 'Covers every markdown notation the viewer must render.',
+    content: MARKDOWN_SHOWCASE_CONTENT,
+    category: 'Development',
+    author: 'Editor Markdown',
+    publishDate: '2024-12-01',
+    createdAt: '2024-12-01T00:00:00.000Z',
+    tags: ['#Markdown'],
+    externalUrls: [],
+  },
+  {
+    id: 'md-2',
+    title: 'Markdown Sanitize',
+    summary: 'Raw HTML must never be executed.',
+    content: MARKDOWN_RAW_HTML_CONTENT,
+    category: 'Development',
+    author: 'Editor Markdown',
+    publishDate: '2024-12-02',
+    createdAt: '2024-12-02T00:00:00.000Z',
+    tags: ['#Markdown'],
+    externalUrls: [],
+  },
+  {
+    id: 'md-3',
+    title: 'Markdown Empty',
+    summary: 'Body is not fetched yet.',
+    content: '',
+    category: 'Development',
+    author: 'Editor Markdown',
+    publishDate: '2024-12-03',
+    createdAt: '2024-12-03T00:00:00.000Z',
+    tags: ['#Markdown'],
+    externalUrls: [],
+  },
+];
+
 export const createPagedReportsFixture = (count: number) =>
   Array.from({ length: count }, (_, index) => {
     const order = index + 1;
