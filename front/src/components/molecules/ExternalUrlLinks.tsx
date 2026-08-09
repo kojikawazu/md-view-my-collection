@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ExternalUrlItem } from '@/types';
+import type { ExternalUrlItem } from '@/types/report';
 
 interface ExternalUrlLinksProps {
   /** 表示する外部URLの配列。空なら何も描画しない。 */

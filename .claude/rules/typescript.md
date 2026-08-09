@@ -71,7 +71,7 @@ type OnSelect = (id: string) => void;
 - モノレポでフロントとバックエンドを持つ場合、**共有パッケージにスキーマを置いて双方から参照する**ことを検討する（信頼境界が違うため検証自体は両方で必要だが、定義は 1 つでよい）。
 - 用途別のアダプタを使う（`@hono/zod-validator` / `nestjs-zod` / `react-hook-form` の `zodResolver` / VeeValidate の `toTypedSchema`）。**アダプタは変わってもスキーマは変わらない**。
 
-## 型定義の配置（コロケーション / `src/types.ts` 集約）
+## 型定義の配置（コロケーション / `src/types/` 集約）
 
 型を各ファイルに散在させず、**参照範囲**で置き場所を決める。判断軸は「**その型を参照するファイルが 1 つに閉じるか**」。
 
@@ -86,8 +86,6 @@ type OnSelect = (id: string) => void;
 - **単一ファイルにまとめない。** `src/types.ts` / `lib/type.ts` のように 1 ファイルへ全型を詰め込む形は禁止。必ず**ディレクトリを切り、ドメイン単位でファイルを分ける**。
 - **`lib/` `utils/` の下に型ファイルを置かない。** `lib/` は「関数の置き場」、`types/` は「型の置き場」で分離する。
 - 命名は**ディレクトリが複数形の `types`、ファイルはドメイン名の単数形**（`types/report.ts` / `types/theme.ts`）。
-
-> **未移行（Issue #163）**: 現行は `front/src/types.ts`（単一ファイル・138 行）のまま。本節はルールが先行しており、移行は #163 で対応する。**新規の型は移行を待たず本節に従って `types/` へ置いてよい**。
 
 ### 運用ルール
 
@@ -140,8 +138,6 @@ export type Report = { id: string; title: string; category: ReportCategory };
 - 集約先は**ソースルート直下の `constants/` ディレクトリ**（本プロジェクトは **`front/src/constants/`**）。
 - **単一ファイルにまとめない。** `src/constants.ts` / `lib/constants.ts` のように 1 ファイルへ全定数を詰め込む形は禁止。**ディレクトリを切り、ドメイン単位でファイルを分ける**。
 - 命名は**ディレクトリが複数形の `constants`**。
-
-> **未移行（Issue #163）**: 現行は `front/src/constants.ts`（単一ファイル・52 行）のまま。型と同じく移行は #163 で対応する。
 
 ### 運用ルール
 

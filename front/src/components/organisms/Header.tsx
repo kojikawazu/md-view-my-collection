@@ -4,7 +4,8 @@ import React from 'react';
 import AppLink from '@/components/atoms/AppLink';
 import NavLink from '@/components/molecules/NavLink';
 import UserAuthSection from '@/components/molecules/UserAuthSection';
-import { DesignSystem, User } from '@/types';
+import type { DesignSystem } from '@/types/theme';
+import type { User } from '@/types/user';
 
 /** ヘッダーの props。 */
 interface HeaderProps {

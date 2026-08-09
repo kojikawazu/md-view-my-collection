@@ -11,8 +11,12 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { AUTH_COOKIE_NAME, ESPRESSO_THEME } from '@/constants';
-import { DesignSystem, MutationResult, ReportItem, User } from '@/types';
+import { AUTH_COOKIE_NAME } from '@/constants/auth';
+import { ESPRESSO_THEME } from '@/constants/theme';
+import type { MutationResult } from '@/types/api';
+import type { ReportItem } from '@/types/report';
+import type { DesignSystem } from '@/types/theme';
+import type { User } from '@/types/user';
 import { supabase } from '@/lib/supabaseClient';
 
 /**

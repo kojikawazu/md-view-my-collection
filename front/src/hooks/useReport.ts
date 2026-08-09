@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ReportItem } from '@/types';
+import type { ReportItem } from '@/types/report';
 
 /** レポート詳細の取得結果。 */
 type UseReportResult = {

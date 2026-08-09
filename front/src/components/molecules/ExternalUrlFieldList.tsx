@@ -2,7 +2,7 @@
 
 import React from 'react';
 import ExternalUrlInput from './ExternalUrlInput';
-import { ExternalUrlInput as ExternalUrlInputType } from '@/types';
+import type { ExternalUrlInput as ExternalUrlInputType } from '@/types/report';
 
 interface ExternalUrlFieldListProps {
   /** 編集中の外部URL入力行の配列。index が各行の識別子を兼ねる。 */

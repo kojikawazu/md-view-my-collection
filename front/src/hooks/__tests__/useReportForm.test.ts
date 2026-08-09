@@ -1,7 +1,9 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useReportForm } from '../useReportForm';
-import type { MutationResult, ReportItem, User } from '@/types';
+import type { MutationResult } from '@/types/api';
+import type { ReportItem } from '@/types/report';
+import type { User } from '@/types/user';
 
 const mockPush = vi.fn();
 const mockBack = vi.fn();

@@ -8,7 +8,8 @@ import ReportCardMeta from '@/components/molecules/ReportCardMeta';
 import AuthorInfo from '@/components/molecules/AuthorInfo';
 import FilterIndicator from '@/components/molecules/FilterIndicator';
 import PaginationNav from '@/components/molecules/PaginationNav';
-import { DesignSystem, ReportItem } from '@/types';
+import type { ReportItem } from '@/types/report';
+import type { DesignSystem } from '@/types/theme';
 
 interface ListPageProps {
   /** テーマ（配色・フォント・角丸などのデザイントークン一式） */

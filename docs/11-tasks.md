@@ -35,6 +35,7 @@
 
 ## フロントエンド実装（front/）
 
+- [x] `types.ts` / `constants.ts` をドメイン単位のディレクトリへ移行（`types/{theme,report,user,api}.ts` / `constants/{theme,report,auth}.ts`・barrel なし・型 import を `import type` に統一 / Issue #163 / 2026-08-09）
 - [x] 画面ルーティングを維持（一覧/詳細/新規/編集/ログイン）
 - [x] UI要件に沿って画面を実装/調整
 - [x] ログイン/ログアウト動作を実装

@@ -2,8 +2,8 @@
 
 import React from 'react';
 import CategoryButton from '@/components/molecules/CategoryButton';
-import { DesignSystem } from '@/types';
-import { CATEGORIES } from '@/constants';
+import type { DesignSystem } from '@/types/theme';
+import { CATEGORIES } from '@/constants/report';
 
 /** サイドバーの props。 */
 interface SidebarProps {
