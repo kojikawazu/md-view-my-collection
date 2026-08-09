@@ -10,12 +10,12 @@ globs:
 ## 開発・ビルド
 
 ```bash
-pnpm install   # 依存インストール（postinstall で prisma generate が自動実行される）
-pnpm dev       # 開発サーバー起動（http://localhost:3000）
-pnpm build     # プロダクションビルド
-pnpm start     # プロダクションビルド配信
-pnpm lint      # ESLint 実行（CI のグリーン条件 / git-workflow.md 参照）
-pnpm typecheck # tsc --noEmit（CI 必須。ビルドは型を検査しないため別途実行する / typescript.md 参照）
+pnpm install      # 依存インストール（postinstall で prisma generate が自動実行される）
+pnpm dev          # 開発サーバー起動（http://localhost:3000）
+pnpm build        # プロダクションビルド
+pnpm start        # プロダクションビルド配信
+pnpm lint         # ESLint 実行（CI のグリーン条件 / git-workflow.md 参照）
+pnpm typecheck    # tsc --noEmit（CI 必須。ビルドは型を検査しないため別途実行する / typescript.md 参照）
 pnpm format       # Prettier 整形（書き込み）
 pnpm format:check # Prettier 差分ゼロの検証（CI 必須 / static-analysis.md 参照）
 ```

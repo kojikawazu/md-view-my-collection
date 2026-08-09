@@ -12,7 +12,5 @@ test-results
 # シークレット
 .env*
 
-# 生成物（整形すると生成のたびに差分が出る）
+# 生成物（pnpm が管理するため、整形しても install のたびに戻る）
 pnpm-lock.yaml
-prisma/generated
-tests/integration/schema.sql
