@@ -1,0 +1,10 @@
+# git blame から除外するコミット（整形のみで挙動を変えていないもの）。
+#
+# ローカルで有効にする:
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+# GitHub の blame ビューはこのファイルを自動で参照する。
+#
+# 追加してよいのは「整形・リネームのみで、ロジックを 1 行も変えていない」コミットに限る。
+
+# style: Apply Prettier to the whole front workspace (#186)
+ef4edebb7153dbee83e5680758202302ee98bf40
