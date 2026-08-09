@@ -2,7 +2,7 @@ import { z } from 'zod';
 // zod-openapi の型拡張（.meta() で OpenAPI 固有プロパティを許可）。
 // type-only import なのでランタイムバンドルには含まれない。
 import type {} from 'zod-openapi';
-import { CATEGORIES } from '@/constants';
+import { CATEGORIES } from '@/constants/report';
 
 /**
  * Report / ExternalUrl の正準 zod スキーマ。

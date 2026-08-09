@@ -3,7 +3,7 @@ import { render, screen, cleanup } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 import ConfirmationModal from '../organisms/ConfirmationModal';
-import { ESPRESSO_THEME } from '@/constants';
+import { ESPRESSO_THEME } from '@/constants/theme';
 
 const makeProps = (overrides: Record<string, unknown> = {}) => ({
   theme: ESPRESSO_THEME,

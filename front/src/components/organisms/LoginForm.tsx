@@ -3,7 +3,7 @@
 import React from 'react';
 import LoadingOverlay from './LoadingOverlay';
 import { useLoginForm } from '@/hooks/useLoginForm';
-import { DesignSystem } from '@/types';
+import type { DesignSystem } from '@/types/theme';
 
 /** ログインフォームの props。 */
 interface LoginFormProps {

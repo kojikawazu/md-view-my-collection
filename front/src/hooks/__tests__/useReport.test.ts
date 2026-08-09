@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { useReport } from '../useReport';
-import type { ReportItem } from '@/types';
+import type { ReportItem } from '@/types/report';
 
 const listReport: ReportItem = {
   id: 'r1',

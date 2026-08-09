@@ -2,7 +2,7 @@
 
 import React from 'react';
 import AppLink from '@/components/atoms/AppLink';
-import { DesignSystem } from '@/types';
+import type { DesignSystem } from '@/types/theme';
 import ReportMarkdown from '@/components/organisms/ReportMarkdown';
 
 interface MarkdownLabPageProps {

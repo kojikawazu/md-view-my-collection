@@ -298,8 +298,8 @@ LoginPage 内のインラインスピナー（`LoginPage.tsx:52-58`）を削除�
 | **Molecules** | Atoms, React, 外部ライブラリ |
 | **Organisms** | Atoms, Molecules, React, 外部ライブラリ, hooks |
 | **Pages** | Atoms, Molecules, Organisms, hooks |
-| **hooks** | providers, `types.ts`, `constants.ts`, 外部ライブラリ（コンポーネント import 禁止） |
-| **providers** | `types.ts`, `constants.ts`, `lib/`, 外部ライブラリ |
+| **hooks** | providers, `types/`, `constants/`, 外部ライブラリ（コンポーネント import 禁止） |
+| **providers** | `types/`, `constants/`, `lib/`, 外部ライブラリ |
 | **設置ポイント**（`layout.tsx` 等） | providers を直接 import して Provider ツリーを構築する唯一の場所 |
 
 **UI コンポーネント（atoms〜pages）から providers を直接 import しない。**
@@ -375,9 +375,18 @@ front/src/
 │   ├── auth-server.ts
 │   ├── db.ts
 │   └── validation.ts
-├── types.ts
-└── constants.ts
+├── types/
+│   ├── theme.ts
+│   ├── report.ts
+│   ├── user.ts
+│   └── api.ts
+└── constants/
+    ├── theme.ts
+    ├── report.ts
+    └── auth.ts
 ```
+
+> `types/` `constants/` に barrel（`index.ts`）は置かない。import は実ファイルを直接指す（`.claude/rules/typescript.md`）。アトミックデザインの `components/*/index.ts` は対象外で、従来どおり維持する。
 
 ## 移行フェーズ
 

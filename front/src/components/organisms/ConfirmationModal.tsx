@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { DesignSystem } from '@/types';
+import type { DesignSystem } from '@/types/theme';
 
 /** 確認モーダルの props。 */
 interface ConfirmationModalProps {

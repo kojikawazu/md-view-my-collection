@@ -57,8 +57,8 @@ front/
 │   ├── hooks/                   クライアントロジック（カスタムフック）
 │   ├── lib/                     db / auth-server / supabaseClient / validation
 │   ├── providers/              アプリ全体の Context Provider
-│   ├── constants.ts           テーマ・初期データ
-│   └── types.ts                型定義
+│   ├── constants/              定数（theme / report / auth。barrel は作らない）
+│   └── types/                  型定義（theme / report / user / api。barrel は作らない）
 ├── prisma/                     schema.prisma（db pull で取得）
 ├── tests/e2e/                  Playwright E2E（app.spec.ts / helpers.ts）
 ├── tests/integration/          Vitest 統合テスト（*.test.ts / schema.sql / global-setup.ts）

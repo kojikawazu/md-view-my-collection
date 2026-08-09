@@ -8,7 +8,7 @@
   - Entry points: `front/src/app/layout.tsx`, `front/src/app/page.tsx`
   - Route-level screens live under `front/src/app/` (`/`, `/login`, `/report/*`).
   - Shared UI lives in `front/src/components/`.
-  - Theme/data live in `front/src/constants.tsx` and `front/src/types.ts`.
+  - Types live in `front/src/types/` and constants in `front/src/constants/`, split by domain (no barrel files).
 - `docs/` stores planning and requirements notes.
 - Root `README.md` describes this repo; `base/README.md` is legacy and not used.
 

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import LoginForm from '@/components/organisms/LoginForm';
-import { DesignSystem } from '@/types';
+import type { DesignSystem } from '@/types/theme';
 
 interface LoginPageProps {
   /** テーマ（配色・フォント・角丸などのデザイントークン一式） */

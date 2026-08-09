@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { AUTH_COOKIE_NAME } from '../../../constants';
+import { AUTH_COOKIE_NAME } from '@/constants/auth';
 
 /**
  * Markdown スタイル検証ラボの認証ゲート付きレイアウト（サーバーコンポーネント）。

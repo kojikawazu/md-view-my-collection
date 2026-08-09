@@ -1,4 +1,4 @@
-import type { ExternalUrlInput } from '@/types';
+import type { ExternalUrlInput } from '@/types/report';
 import { LIMITS, normalizeTags, reportCreateSchema, reportPatchSchema } from '@/lib/schemas/report';
 
 /**

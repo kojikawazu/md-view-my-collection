@@ -1,8 +1,11 @@
 'use client';
 
 import React from 'react';
-import { DesignSystem, MutationResult, ReportItem, User } from '@/types';
-import { CATEGORIES } from '@/constants';
+import type { MutationResult } from '@/types/api';
+import type { ReportItem } from '@/types/report';
+import type { DesignSystem } from '@/types/theme';
+import type { User } from '@/types/user';
+import { CATEGORIES } from '@/constants/report';
 import { useReportForm } from '@/hooks/useReportForm';
 import FormField from '@/components/molecules/FormField';
 import ExternalUrlFieldList from '@/components/molecules/ExternalUrlFieldList';

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { DesignSystem } from '@/types';
+import type { DesignSystem } from '@/types/theme';
 
 /** フッターの props。 */
 interface FooterProps {

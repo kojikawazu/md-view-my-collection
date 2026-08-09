@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ExternalUrlInput, MutationResult, ReportItem, User } from '@/types';
-import { CATEGORIES } from '@/constants';
+import type { MutationResult } from '@/types/api';
+import type { ExternalUrlInput, ReportItem } from '@/types/report';
+import type { User } from '@/types/user';
+import { CATEGORIES } from '@/constants/report';
 
 /** `useReportForm` の入力。新規作成と編集の両方を 1 つのフックで扱う。 */
 interface UseReportFormOptions {
