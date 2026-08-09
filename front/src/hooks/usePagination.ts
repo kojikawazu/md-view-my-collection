@@ -59,7 +59,10 @@ export const usePagination = (
     Math.min(currentPage - Math.floor(maxPageButtons / 2), safeTotalPages - maxPageButtons + 1),
   );
   const pageEnd = Math.min(safeTotalPages, pageStart + maxPageButtons - 1);
-  const pageNumbers = Array.from({ length: pageEnd - pageStart + 1 }, (_, index) => pageStart + index);
+  const pageNumbers = Array.from(
+    { length: pageEnd - pageStart + 1 },
+    (_, index) => pageStart + index,
+  );
 
   /**
    * 表示ページを更新する。範囲外の値は [1, 総ページ数] にクランプする。
@@ -79,7 +82,7 @@ export const usePagination = (
    * @param items ページングしたい全アイテム配列
    * @returns 現在ページに対応する要素のみを含む配列
    */
-  const paginateSlice = <T,>(items: T[]): T[] => {
+  const paginateSlice = <T>(items: T[]): T[] => {
     return items.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   };
 

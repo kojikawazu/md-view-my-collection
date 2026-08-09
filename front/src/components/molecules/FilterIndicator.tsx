@@ -31,12 +31,8 @@ const FilterIndicator: React.FC<FilterIndicatorProps> = ({
   return (
     <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-widest">
       <span className={mutedClassName}>Filter</span>
-      {category && (
-        <span className={`px-2 py-1 border ${badgeClassName}`}>{category}</span>
-      )}
-      {tag && (
-        <span className={`px-2 py-1 border ${badgeClassName}`}>#{tag}</span>
-      )}
+      {category && <span className={`px-2 py-1 border ${badgeClassName}`}>{category}</span>}
+      {tag && <span className={`px-2 py-1 border ${badgeClassName}`}>#{tag}</span>}
       <Button
         type="button"
         onClick={onClear}

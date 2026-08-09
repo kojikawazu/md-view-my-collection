@@ -165,8 +165,7 @@ export const useReportForm = ({
   };
 
   // 空の外部URL入力行を 1 つ追加する。
-  const addExternalUrl = () =>
-    setExternalUrls((prev) => [...prev, { url: '', label: '' }]);
+  const addExternalUrl = () => setExternalUrls((prev) => [...prev, { url: '', label: '' }]);
 
   /**
    * 指定インデックスの外部URL行を削除する。

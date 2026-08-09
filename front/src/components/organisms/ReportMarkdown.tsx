@@ -143,7 +143,11 @@ const markdownComponents: Components = {
  * @param content - 描画対象の Markdown 断片
  */
 const renderMarkdown = (content: string) => (
-  <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]} components={markdownComponents}>
+  <ReactMarkdown
+    remarkPlugins={[remarkGfm]}
+    rehypePlugins={[rehypeSanitize]}
+    components={markdownComponents}
+  >
     {content}
   </ReactMarkdown>
 );
@@ -162,7 +166,11 @@ const CALLOUT_CLASS: Record<Exclude<SectionKind, 'normal'>, string> = {
  * セクションはコールアウト（強調ボックス）で囲んで描画する。描画はすべて `rehypeSanitize`
  * 経由でサニタイズされる。
  */
-const ReportMarkdown: React.FC<ReportMarkdownProps> = ({ content, variant = 'v7', className = '' }) => {
+const ReportMarkdown: React.FC<ReportMarkdownProps> = ({
+  content,
+  variant = 'v7',
+  className = '',
+}) => {
   const sections = splitSections(content);
 
   return (

@@ -1,5 +1,5 @@
 /* Report Viewer global styles (Markdown readability: Noto Sans JP headings + callouts) */
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
   --background: #faf7f5;
@@ -24,8 +24,7 @@ body {
 }
 
 .loading-gradient {
-  background:
-    radial-gradient(120% 120% at 50% 0%, #fff6ef 0%, #f3e7de 45%, #e2d5cb 100%);
+  background: radial-gradient(120% 120% at 50% 0%, #fff6ef 0%, #f3e7de 45%, #e2d5cb 100%);
 }
 
 .report-markdown {
@@ -134,7 +133,9 @@ body {
 }
 
 .report-markdown :where(code, pre) {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
 }
 
 .report-markdown code {
@@ -437,7 +438,9 @@ body {
 }
 
 .report-markdown--v7 a[href^='http'] {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
   font-size: 0.9em;
 }
 

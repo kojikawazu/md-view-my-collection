@@ -1,10 +1,5 @@
 import { expect, test } from '@playwright/test';
-import {
-  reportsFixture,
-  pagedReportsFixture,
-  userFixture,
-  setStorage,
-} from './helpers';
+import { reportsFixture, pagedReportsFixture, userFixture, setStorage } from './helpers';
 
 test.describe('Reports app', () => {
   test('TC-001/002: list displays reports and navigates to detail', async ({ page }) => {
@@ -83,10 +78,16 @@ test.describe('Reports app', () => {
 
     await expect(pageNumberButtons).toHaveCount(5);
     await page.getByRole('button', { name: '5', exact: true }).click();
-    await expect(page.getByRole('button', { name: '5', exact: true })).toHaveAttribute('aria-current', 'page');
+    await expect(page.getByRole('button', { name: '5', exact: true })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
 
     await page.getByRole('button', { name: '次へ' }).click();
-    await expect(page.getByRole('button', { name: '6', exact: true })).toHaveAttribute('aria-current', 'page');
+    await expect(page.getByRole('button', { name: '6', exact: true })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
     await expect(page.getByRole('button', { name: '次へ' })).toBeDisabled();
     await expect(pageNumberButtons).toHaveCount(5);
   });
@@ -96,18 +97,26 @@ test.describe('Reports app', () => {
     await page.goto('/');
 
     await page.getByRole('button', { name: '次へ' }).click();
-    await expect(page.getByRole('button', { name: '2', exact: true })).toHaveAttribute('aria-current', 'page');
+    await expect(page.getByRole('button', { name: '2', exact: true })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
 
     const sidebar = page.locator('aside');
     const categorySection = sidebar.getByRole('heading', { name: 'Categories' }).locator('..');
     await categorySection.getByRole('button', { name: 'AI', exact: true }).click();
 
-    await expect(page.getByRole('button', { name: '1', exact: true })).toHaveAttribute('aria-current', 'page');
+    await expect(page.getByRole('button', { name: '1', exact: true })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
     await expect(page.getByRole('link', { name: 'Paged Report 2', exact: true })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Paged Report 22', exact: true })).toHaveCount(0);
   });
 
-  test('TC-004/005/006: detail view handles valid/invalid and hides admin controls', async ({ page }) => {
+  test('TC-004/005/006: detail view handles valid/invalid and hides admin controls', async ({
+    page,
+  }) => {
     await setStorage(page, { reports: reportsFixture, user: null });
 
     await page.goto('/report/1');
@@ -148,7 +157,9 @@ test.describe('Reports app', () => {
     await expect(page).toHaveURL(/\/login$/);
   });
 
-  test('TC-011/012/013/014: create report with validation and tag normalization', async ({ page }) => {
+  test('TC-011/012/013/014: create report with validation and tag normalization', async ({
+    page,
+  }) => {
     await setStorage(page, { reports: reportsFixture, user: userFixture });
     await page.goto('/report/new');
 
@@ -185,7 +196,9 @@ test.describe('Reports app', () => {
     await page.goto('/report/1/edit');
 
     await expect(page.locator('input[name="title"]')).toHaveValue('Sample Report One');
-    await expect(page.locator('textarea[name="summary"]')).toHaveValue('Summary for sample report one.');
+    await expect(page.locator('textarea[name="summary"]')).toHaveValue(
+      'Summary for sample report one.',
+    );
 
     await page.locator('textarea[name="content"]').fill('# Heading\n\nUpdated content.');
     await page.getByRole('button', { name: '変更を保存' }).click();
@@ -230,7 +243,9 @@ test.describe('Reports app', () => {
     await expect(page.getByRole('link', { name: '編集' })).toHaveCount(0);
   });
 
-  test('TC-021/022: markdown lab requires auth and is reachable from header menu', async ({ page }) => {
+  test('TC-021/022: markdown lab requires auth and is reachable from header menu', async ({
+    page,
+  }) => {
     await setStorage(page, { reports: reportsFixture, user: userFixture });
 
     await page.goto('/report/markdown-lab');

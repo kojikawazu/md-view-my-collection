@@ -36,7 +36,16 @@ export const ESPRESSO_THEME: DesignSystem = {
  * この配列を参照して検証するため、ここが唯一の正準リスト。増減時は本定数のみ
  * 変更すれば API バリデーションと OpenAPI 生成に伝播する。
  */
-export const CATEGORIES = ['Development', 'AI', 'Cloud', 'Linux', 'Container', 'Application', 'Program', 'Hobby'];
+export const CATEGORIES = [
+  'Development',
+  'AI',
+  'Cloud',
+  'Linux',
+  'Container',
+  'Application',
+  'Program',
+  'Hobby',
+];
 
 /** サイドバー等に表示する「トレンドタグ」の見せ球（固定表示。実データ集計ではない）。 */
 export const TRENDING_TAGS = ['#AI', '#UIUX', '#Minimal', '#Nature'];

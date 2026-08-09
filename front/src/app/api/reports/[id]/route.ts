@@ -186,12 +186,10 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     const euList =
       result.externalUrls ??
-      (
-        await prisma.externalUrl.findMany({
-          where: { reportId: id },
-          select: { id: true, url: true, label: true },
-        })
-      );
+      (await prisma.externalUrl.findMany({
+        where: { reportId: id },
+        select: { id: true, url: true, label: true },
+      }));
 
     const item = {
       id: result.report.id,

@@ -8,7 +8,10 @@ import { requireAdmin } from '@/lib/auth-server';
 type TagMapping = ReportTagMapping & { ReportTag: ReportTag };
 
 /** 一覧取得用の Report 行。本文（content）は省き、タグと外部 URL を結合した型。 */
-type ReportListRow = Omit<Report, 'content'> & { ReportTagMapping: TagMapping[]; ExternalUrl: ExternalUrl[] };
+type ReportListRow = Omit<Report, 'content'> & {
+  ReportTagMapping: TagMapping[];
+  ExternalUrl: ExternalUrl[];
+};
 
 /**
  * タグマッピングの配列からタグ名だけを取り出す。

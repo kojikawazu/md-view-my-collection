@@ -22,9 +22,7 @@ const testReport: ReportItem = {
   author: 'Editor',
   publishDate: '2024-01-15',
   tags: ['#AI', '#Cloud'],
-  externalUrls: [
-    { id: 'eu1', url: 'https://example.com', label: 'Example' },
-  ],
+  externalUrls: [{ id: 'eu1', url: 'https://example.com', label: 'Example' }],
 };
 
 // 安定参照の fixture（edit モードのテストで effect 依存を安定させる）
@@ -41,9 +39,7 @@ describe('useReportForm', () => {
   // --- 正常系 ---
 
   it('should initialize with defaults in add mode (RF-N-1)', () => {
-    const { result } = renderHook(() =>
-      useReportForm({ user: testUser, onSubmit: mockOnSubmit }),
-    );
+    const { result } = renderHook(() => useReportForm({ user: testUser, onSubmit: mockOnSubmit }));
     expect(result.current.formData.category).toBe('Development');
     expect(result.current.formData.author).toBe('Editor');
     expect(result.current.externalUrls).toEqual([]);
@@ -63,9 +59,7 @@ describe('useReportForm', () => {
   });
 
   it('should update formData on handleChange (RF-N-3)', () => {
-    const { result } = renderHook(() =>
-      useReportForm({ user: testUser, onSubmit: mockOnSubmit }),
-    );
+    const { result } = renderHook(() => useReportForm({ user: testUser, onSubmit: mockOnSubmit }));
     act(() => {
       result.current.handleChange({
         target: { name: 'title', value: 'New Title' },
@@ -75,9 +69,7 @@ describe('useReportForm', () => {
   });
 
   it('should normalize tags on handleTagsChange (RF-N-4)', () => {
-    const { result } = renderHook(() =>
-      useReportForm({ user: testUser, onSubmit: mockOnSubmit }),
-    );
+    const { result } = renderHook(() => useReportForm({ user: testUser, onSubmit: mockOnSubmit }));
     act(() => {
       result.current.handleTagsChange({
         target: { value: 'ai, cloud' },
@@ -87,9 +79,7 @@ describe('useReportForm', () => {
   });
 
   it('should show confirm modal when tags are present (RF-N-5)', () => {
-    const { result } = renderHook(() =>
-      useReportForm({ user: testUser, onSubmit: mockOnSubmit }),
-    );
+    const { result } = renderHook(() => useReportForm({ user: testUser, onSubmit: mockOnSubmit }));
     act(() => {
       result.current.handleTagsChange({
         target: { value: 'test' },
@@ -102,9 +92,7 @@ describe('useReportForm', () => {
   });
 
   it('should call onSubmit on handleConfirmSubmit (RF-N-6)', async () => {
-    const { result } = renderHook(() =>
-      useReportForm({ user: testUser, onSubmit: mockOnSubmit }),
-    );
+    const { result } = renderHook(() => useReportForm({ user: testUser, onSubmit: mockOnSubmit }));
     act(() => {
       result.current.handleTagsChange({
         target: { value: 'test' },
@@ -117,9 +105,7 @@ describe('useReportForm', () => {
   });
 
   it('should add, update, and remove external URLs (RF-N-7)', () => {
-    const { result } = renderHook(() =>
-      useReportForm({ user: testUser, onSubmit: mockOnSubmit }),
-    );
+    const { result } = renderHook(() => useReportForm({ user: testUser, onSubmit: mockOnSubmit }));
     act(() => result.current.addExternalUrl());
     expect(result.current.externalUrls).toHaveLength(1);
 
@@ -139,24 +125,18 @@ describe('useReportForm', () => {
         onSubmit: mockOnSubmit,
       }),
     );
-    expect(result.current.externalUrls).toEqual([
-      { url: 'https://example.com', label: 'Example' },
-    ]);
+    expect(result.current.externalUrls).toEqual([{ url: 'https://example.com', label: 'Example' }]);
   });
 
   // --- 準正常系 ---
 
   it('should redirect to /login when user is null (RF-S-1)', () => {
-    renderHook(() =>
-      useReportForm({ user: null, onSubmit: mockOnSubmit }),
-    );
+    renderHook(() => useReportForm({ user: null, onSubmit: mockOnSubmit }));
     expect(mockPush).toHaveBeenCalledWith('/login');
   });
 
   it('should show tag error when tags are empty on submit (RF-S-2)', () => {
-    const { result } = renderHook(() =>
-      useReportForm({ user: testUser, onSubmit: mockOnSubmit }),
-    );
+    const { result } = renderHook(() => useReportForm({ user: testUser, onSubmit: mockOnSubmit }));
     act(() => {
       result.current.handleSubmitAttempt({ preventDefault: vi.fn() } as unknown as React.FormEvent);
     });
@@ -165,9 +145,7 @@ describe('useReportForm', () => {
   });
 
   it('should clear tag error when tags are added (RF-S-3)', () => {
-    const { result } = renderHook(() =>
-      useReportForm({ user: testUser, onSubmit: mockOnSubmit }),
-    );
+    const { result } = renderHook(() => useReportForm({ user: testUser, onSubmit: mockOnSubmit }));
     act(() => {
       result.current.handleSubmitAttempt({ preventDefault: vi.fn() } as unknown as React.FormEvent);
     });
@@ -189,9 +167,7 @@ describe('useReportForm', () => {
       fieldErrors: { title: 'エラー' },
     });
 
-    const { result } = renderHook(() =>
-      useReportForm({ user: testUser, onSubmit: mockOnSubmit }),
-    );
+    const { result } = renderHook(() => useReportForm({ user: testUser, onSubmit: mockOnSubmit }));
     act(() => {
       result.current.handleTagsChange({
         target: { value: 'test' },
@@ -211,9 +187,7 @@ describe('useReportForm', () => {
   });
 
   it('should validate external URLs on confirm submit (RF-S-5)', async () => {
-    const { result } = renderHook(() =>
-      useReportForm({ user: testUser, onSubmit: mockOnSubmit }),
-    );
+    const { result } = renderHook(() => useReportForm({ user: testUser, onSubmit: mockOnSubmit }));
     act(() => {
       result.current.handleTagsChange({
         target: { value: 'test' },
@@ -232,9 +206,7 @@ describe('useReportForm', () => {
   it('should redirect to /login on 401 response (RF-S-6)', async () => {
     mockOnSubmit.mockResolvedValueOnce({ ok: false, status: 401, error: 'Unauthorized' });
 
-    const { result } = renderHook(() =>
-      useReportForm({ user: testUser, onSubmit: mockOnSubmit }),
-    );
+    const { result } = renderHook(() => useReportForm({ user: testUser, onSubmit: mockOnSubmit }));
     act(() => {
       result.current.handleTagsChange({
         target: { value: 'test' },
@@ -254,9 +226,7 @@ describe('useReportForm', () => {
       fieldErrors: { content: '本文エラー' },
     });
 
-    const { result } = renderHook(() =>
-      useReportForm({ user: testUser, onSubmit: mockOnSubmit }),
-    );
+    const { result } = renderHook(() => useReportForm({ user: testUser, onSubmit: mockOnSubmit }));
     act(() => {
       result.current.handleTagsChange({
         target: { value: 'test' },
@@ -275,9 +245,7 @@ describe('useReportForm', () => {
       error: 'Server Error',
     });
 
-    const { result } = renderHook(() =>
-      useReportForm({ user: testUser, onSubmit: mockOnSubmit }),
-    );
+    const { result } = renderHook(() => useReportForm({ user: testUser, onSubmit: mockOnSubmit }));
     act(() => {
       result.current.handleTagsChange({
         target: { value: 'test' },
@@ -290,9 +258,7 @@ describe('useReportForm', () => {
   });
 
   it('should re-index field errors after removeExternalUrl (RF-S-9)', async () => {
-    const { result } = renderHook(() =>
-      useReportForm({ user: testUser, onSubmit: mockOnSubmit }),
-    );
+    const { result } = renderHook(() => useReportForm({ user: testUser, onSubmit: mockOnSubmit }));
     act(() => {
       result.current.addExternalUrl();
       result.current.addExternalUrl();
@@ -325,9 +291,7 @@ describe('useReportForm', () => {
   it('should redirect to /login on 403 response (RF-A-1)', async () => {
     mockOnSubmit.mockResolvedValueOnce({ ok: false, status: 403, error: 'Forbidden' });
 
-    const { result } = renderHook(() =>
-      useReportForm({ user: testUser, onSubmit: mockOnSubmit }),
-    );
+    const { result } = renderHook(() => useReportForm({ user: testUser, onSubmit: mockOnSubmit }));
     act(() => {
       result.current.handleTagsChange({
         target: { value: 'test' },
@@ -340,9 +304,7 @@ describe('useReportForm', () => {
   });
 
   it('should not run effects when isHydrated is false (RF-A-2)', () => {
-    renderHook(() =>
-      useReportForm({ user: null, onSubmit: mockOnSubmit, isHydrated: false }),
-    );
+    renderHook(() => useReportForm({ user: null, onSubmit: mockOnSubmit, isHydrated: false }));
     expect(mockPush).not.toHaveBeenCalled();
   });
 });

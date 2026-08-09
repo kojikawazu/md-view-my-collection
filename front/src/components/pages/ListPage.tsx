@@ -24,7 +24,8 @@ interface ListPageProps {
  */
 const ListPage: React.FC<ListPageProps> = ({ theme, reports }) => {
   const { colors, fontHeader, fontPrimary, borderRadius } = theme;
-  const { selectedCategory, selectedTag, setSelectedCategory, setSelectedTag, currentUser } = useAppState();
+  const { selectedCategory, selectedTag, setSelectedCategory, setSelectedTag, currentUser } =
+    useAppState();
 
   // 一覧画面に入るたびに前回のフィルタ選択を解除し、常に全件表示から始める。
   // （サイドバー等でのフィルタ状態はグローバルに持続するため、ここでリセットする）
@@ -52,8 +53,10 @@ const ListPage: React.FC<ListPageProps> = ({ theme, reports }) => {
   // フィルタ条件が変わったらページネーションを1ページ目へ戻すためのキー。
   // このキーの変化を usePagination が検知して現在ページをリセットする。
   const filterKey = `${selectedCategory ?? ''}|${selectedTag ?? ''}`;
-  const { currentPage, totalPages, pageNumbers, updatePage, paginateSlice } =
-    usePagination(visibleReports.length, filterKey);
+  const { currentPage, totalPages, pageNumbers, updatePage, paginateSlice } = usePagination(
+    visibleReports.length,
+    filterKey,
+  );
   const paginatedReports = paginateSlice(visibleReports);
 
   /**
@@ -101,10 +104,14 @@ const ListPage: React.FC<ListPageProps> = ({ theme, reports }) => {
                 badgeClassName={`${colors.accent} text-white ${borderRadius}`}
                 dateClassName={colors.muted}
               />
-              <h2 className={`${fontHeader} text-2xl font-bold ${colors.text} mb-4 leading-tight group-hover:underline`}>
+              <h2
+                className={`${fontHeader} text-2xl font-bold ${colors.text} mb-4 leading-tight group-hover:underline`}
+              >
                 <AppLink href={`/report/${report.id}`}>{report.title}</AppLink>
               </h2>
-              <p className={`${fontPrimary} ${colors.text} opacity-80 mb-8 line-clamp-3 leading-relaxed`}>
+              <p
+                className={`${fontPrimary} ${colors.text} opacity-80 mb-8 line-clamp-3 leading-relaxed`}
+              >
                 {report.summary}
               </p>
               <div className="flex items-center justify-between border-t pt-6 border-inherit">
