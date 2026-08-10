@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError, requestJson, requestVoid } from '@/repositories/client';
 
 /** `responseDouble` に渡す応答の指定。 */
-type ResponseInit = {
+type ResponseDoubleInit = {
   /** 2xx 相当なら true */
   ok: boolean;
   /** HTTP ステータスコード */
@@ -20,7 +20,7 @@ type ResponseInit = {
  * @param init - 応答の成否・ステータス・ボディ
  * @returns `fetch` の解決値として使えるダブル
  */
-const responseDouble = (init: ResponseInit) =>
+const responseDouble = (init: ResponseDoubleInit) =>
   ({
     ok: init.ok,
     status: init.status,
