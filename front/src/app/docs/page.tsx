@@ -6,6 +6,8 @@ import { useEffect, useState } from 'react';
 import type { ComponentType } from 'react';
 import { useAppState } from '@/providers/AppStateProvider';
 import { supabase } from '@/lib/supabaseClient';
+import { ApiError } from '@/repositories/client';
+import { fetchOpenApiSpec } from '@/repositories/openapi';
 import 'swagger-ui-react/swagger-ui.css';
 
 // Swagger UI は SSR 非対応かつ重いため、クライアントで動的読み込みする。
@@ -33,13 +35,16 @@ export default function DocsPage() {
         setError('アクセストークンを取得できませんでした。再ログインしてください。');
         return;
       }
-      const res = await fetch('/api/openapi', { headers: { Authorization: `Bearer ${token}` } });
-      if (!res.ok) {
-        setError(`API ドキュメントの取得に失敗しました（${res.status}）。`);
-        return;
+      try {
+        const json = await fetchOpenApiSpec(token);
+        if (active) setSpec(json);
+      } catch (err) {
+        setError(
+          err instanceof ApiError
+            ? `API ドキュメントの取得に失敗しました（${err.status}）。`
+            : 'API ドキュメントの取得に失敗しました。',
+        );
       }
-      const json = (await res.json()) as object;
-      if (active) setSpec(json);
     };
 
     void load().catch(() => setError('API ドキュメントの取得に失敗しました。'));

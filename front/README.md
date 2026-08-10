@@ -55,6 +55,8 @@ front/
 │   │       └── tags/                       タグ一覧
 │   ├── components/              アトミックデザイン（atoms / molecules / organisms / pages）
 │   ├── hooks/                   クライアントロジック（カスタムフック）
+│   ├── repositories/            BFF（/api/*）へのアクセス。fetch を書いてよいのはここだけ
+│   ├── schemas/                 zod スキーマ（API 契約の単一ソース）
 │   ├── lib/                     db / auth-server / supabaseClient / validation
 │   ├── providers/              アプリ全体の Context Provider
 │   ├── constants/              定数（theme / report / auth。barrel は作らない）
@@ -171,7 +173,7 @@ pnpm test:e2e:report   # 直近の E2E レポート表示
 
 ## API 仕様（OpenAPI）
 
-API の契約（リクエスト/レスポンス・ステータス）の正準は、zod スキーマ（`src/lib/schemas/report.ts`）から生成する **`docs/openapi.json`**（OpenAPI 3.1）です。
+API の契約（リクエスト/レスポンス・ステータス）の正準は、zod スキーマ（`src/schemas/report.ts`）から生成する **`docs/openapi.json`**（OpenAPI 3.1）です。
 
 ```bash
 pnpm gen:openapi   # zod スキーマ → docs/openapi.json を再生成

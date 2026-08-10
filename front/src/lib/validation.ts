@@ -1,10 +1,10 @@
 import type { ExternalUrlInput } from '@/types/report';
-import { LIMITS, normalizeTags, reportCreateSchema, reportPatchSchema } from '@/lib/schemas/report';
+import { LIMITS, normalizeTags, reportCreateSchema, reportPatchSchema } from '@/schemas/report';
 
 /**
  * ランタイム検証アダプタ。
  *
- * 契約の正準は `lib/schemas/report.ts`（zod）。このモジュールはそれを包み、
+ * 契約の正準は `schemas/report.ts`（zod）。このモジュールはそれを包み、
  * 既存の `{ data, errors }`（フィールド名 → 日本語メッセージ）形式を維持する。
  * これにより Route Handler とフロントのエラー契約を変更せずに済む。
  */

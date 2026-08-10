@@ -18,6 +18,37 @@ import type { ReportItem } from '@/types/report';
 import type { DesignSystem } from '@/types/theme';
 import type { User } from '@/types/user';
 import { supabase } from '@/lib/supabaseClient';
+import { ApiError } from '@/repositories/client';
+import { fetchIsAdmin, fetchIsAllowedEmail } from '@/repositories/auth';
+import { fetchTags as fetchTagsApi } from '@/repositories/tag';
+import {
+  createReport,
+  deleteReport as deleteReportApi,
+  fetchReports as fetchReportsApi,
+  updateReport as updateReportApi,
+} from '@/repositories/report';
+
+/**
+ * リポジトリ層が投げたエラーを、画面へ返す `MutationResult` の失敗形へ変換する。
+ *
+ * `ApiError`（サーバーが非 2xx を返した）はステータスとサーバー由来のメッセージ・
+ * フィールドエラーを引き継ぎ、それ以外（ネットワーク断など）は 500 相当として扱う。
+ *
+ * @param error - catch した例外
+ * @param fallbackMessage - サーバーがメッセージを返さなかった場合の既定文言
+ * @returns 失敗を表す MutationResult
+ */
+const toMutationFailure = (error: unknown, fallbackMessage: string): MutationResult => {
+  if (error instanceof ApiError) {
+    return {
+      ok: false,
+      status: error.status,
+      error: error.body.error ?? fallbackMessage,
+      ...(error.body.errors ? { fieldErrors: error.body.errors } : {}),
+    };
+  }
+  return { ok: false, status: 500, error: 'Network error' };
+};
 
 /**
  * アプリ横断の状態と操作を公開するコンテキストの形。
@@ -141,24 +172,11 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
   }) => {
     try {
       if (authMode === 'local') {
-        const response = await fetch('/api/auth/is-allowed', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: email ?? null }),
-        });
-        if (!response.ok) return false;
-        const result = (await response.json()) as { allowed?: boolean };
-        return Boolean(result.allowed);
+        return await fetchIsAllowedEmail(email ?? null);
       }
 
       if (!token) return false;
-      const response = await fetch('/api/auth/admin', {
-        method: 'GET',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!response.ok) return false;
-      const result = (await response.json()) as { isAdmin?: boolean };
-      return Boolean(result.isAdmin);
+      return await fetchIsAdmin(token);
     } catch (error) {
       console.error('[auth] admin check failed', error);
       return false;
@@ -208,14 +226,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     }
 
     try {
-      const res = await fetch('/api/reports');
-      if (!res.ok) {
-        console.error('[reports] fetch failed', res.status);
-        setReports([]);
-        return;
-      }
-      const data = (await res.json()) as ReportItem[];
-      setReports(data);
+      setReports(await fetchReportsApi());
     } catch (error) {
       console.error('[reports] fetch failed', error);
       setReports([]);
@@ -247,14 +258,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     }
 
     try {
-      const res = await fetch('/api/tags');
-      if (!res.ok) {
-        console.error('[tags] fetch failed', res.status);
-        setTags([]);
-        return;
-      }
-      const data = (await res.json()) as string[];
-      setTags(data);
+      setTags(await fetchTagsApi());
     } catch (error) {
       console.error('[tags] fetch failed', error);
       setTags([]);
@@ -521,26 +525,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     }
 
     try {
-      const res = await fetch('/api/reports', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-        },
-        body: JSON.stringify(report),
-      });
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        return {
-          ok: false,
-          status: res.status,
-          error: body.error ?? 'Create failed',
-          fieldErrors: body.errors,
-        };
-      }
-
-      const created = (await res.json()) as ReportItem;
+      const created = await createReport(report, accessToken);
       console.info('[reports] create', { reportId: created.id, title: created.title });
       setReports((prev) => {
         const nextReports = [created, ...prev];
@@ -551,7 +536,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
       return { ok: true };
     } catch (error) {
       console.error('[reports] create failed', error);
-      return { ok: false, status: 500, error: 'Network error' };
+      return toMutationFailure(error, 'Create failed');
     }
   };
 
@@ -593,26 +578,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     }
 
     try {
-      const res = await fetch(`/api/reports/${id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-        },
-        body: JSON.stringify(updatedData),
-      });
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        return {
-          ok: false,
-          status: res.status,
-          error: body.error ?? 'Update failed',
-          fieldErrors: body.errors,
-        };
-      }
-
-      const updated = (await res.json()) as ReportItem;
+      const updated = await updateReportApi(id, updatedData, accessToken);
       console.info('[reports] update', { reportId: id });
       setReports((prev) => {
         const nextReports = prev.map((report) => (report.id === id ? updated : report));
@@ -623,7 +589,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
       return { ok: true };
     } catch (error) {
       console.error('[reports] update failed', error);
-      return { ok: false, status: 500, error: 'Network error' };
+      return toMutationFailure(error, 'Update failed');
     }
   };
 
@@ -649,22 +615,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     }
 
     try {
-      const res = await fetch(`/api/reports/${id}`, {
-        method: 'DELETE',
-        headers: {
-          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-        },
-      });
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        return {
-          ok: false,
-          status: res.status,
-          error: body.error ?? 'Delete failed',
-        };
-      }
-
+      await deleteReportApi(id, accessToken);
       console.info('[reports] delete', { reportId: id });
       setReports((prev) => {
         const nextReports = prev.filter((report) => report.id !== id);
@@ -675,7 +626,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
       return { ok: true };
     } catch (error) {
       console.error('[reports] delete failed', error);
-      return { ok: false, status: 500, error: 'Network error' };
+      return toMutationFailure(error, 'Delete failed');
     }
   };
 

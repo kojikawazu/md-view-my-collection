@@ -24,7 +24,7 @@
 - [新規ファイル設計](#新規ファイル設計)
   - [1. `front/src/lib/auth-server.ts` — サーバー側認可ミドルウェア](#1-frontsrclibauth-serverts--サーバー側認可ミドルウェア)
   - [2. `front/src/lib/db.ts` — Prismaクライアントシングルトン](#2-frontsrclibdbts--prismaクライアントシングルトン)
-  - [3. `front/src/lib/schemas/` と `front/src/lib/validation.ts` — zod スキーマとアダプタ](#3-frontsrclibschemas-と-frontsrclibvalidationts--zod-スキーマとアダプタ)
+  - [3. `front/src/schemas/` と `front/src/lib/validation.ts` — zod スキーマとアダプタ](#3-frontsrcschemas-と-frontsrclibvalidationts--zod-スキーマとアダプタ)
   - [4. `front/src/types.ts` — 追加型定義](#4-frontsrctypests--追加型定義)
 - [APIルート設計（エンドポイント概要）](#apiルート設計エンドポイント概要)
   - [`GET /api/auth/admin` の設計補足](#get-apiauthadmin-の設計補足)
@@ -58,7 +58,7 @@
 ## API 契約の正準（openapi.json）
 
 - **契約の正準は [`openapi.json`](openapi.json)（OpenAPI 3.1）。** パス・リクエスト/レスポンスのスキーマ・ステータスコードの機械的な記述はこのファイルを唯一の真実とする。
-- 生成元は `front/src/lib/schemas/report.ts` の zod スキーマ（`reportCreateSchema` / `reportPatchSchema` / `externalUrlInputSchema` / `reportItemSchema` / `tagListSchema` / `validationErrorSchema` / `errorSchema`、定数 `LIMITS`、関数 `normalizeTags`）。
+- 生成元は `front/src/schemas/report.ts` の zod スキーマ（`reportCreateSchema` / `reportPatchSchema` / `externalUrlInputSchema` / `reportItemSchema` / `tagListSchema` / `validationErrorSchema` / `errorSchema`、定数 `LIMITS`、関数 `normalizeTags`）。
 - `front/` で `pnpm gen:openapi` を実行すると、`front/src/lib/openapi/document.ts`（`buildOpenApiDocument`）+ `front/scripts/gen-openapi.ts` 経由で `docs/openapi.json` が再生成される。
 - 対象パス: `/api/reports`（GET/POST）, `/api/reports/{id}`（GET/PATCH/DELETE）, `/api/tags`（GET）, `/api/auth/admin`（GET）, `/api/auth/is-allowed`（POST）。
 - **本書の役割**: 設計判断（DJ-1〜DJ-6）・補足・エンドポイント概要を担う。フィールド表やステータス羅列などの機械的な契約記述は openapi.json に集約し、本書からは重複を排除する。
@@ -501,14 +501,14 @@ export const prisma =
 globalForPrisma.prisma = prisma;
 ```
 
-### 3. `front/src/lib/schemas/` と `front/src/lib/validation.ts` — zod スキーマとアダプタ
+### 3. `front/src/schemas/` と `front/src/lib/validation.ts` — zod スキーマとアダプタ
 
-**契約の正準は `front/src/lib/schemas/`（zod）。** `validation.ts` はそれを包む薄いアダプタである。
+**契約の正準は `front/src/schemas/`（zod）。** `validation.ts` はそれを包む薄いアダプタである。
 
-- **単一ソース**: `front/src/lib/schemas/report.ts` に API 契約を zod スキーマとして定義する（`reportCreateSchema` / `reportPatchSchema` / `externalUrlInputSchema` / `reportItemSchema` / `tagListSchema` / `validationErrorSchema` / `errorSchema`、定数 `LIMITS`、関数 `normalizeTags`）。タグは `#` 付きで維持（DJ-2）、カテゴリは固定リスト検証（DJ-6）。フィールドの型・上限・必須/任意の正準はこのスキーマで、`docs/openapi.json` へも反映される。
-- **アダプタ**: `front/src/lib/validation.ts` は上記 zod スキーマを包み、既存の `{ data, errors }` 契約・日本語メッセージ・フィールドキーを維持する。export は `validateReportInput` / `validateExternalUrls` / `normalizeTags`。実装の本体ロジックは `lib/schemas/` 側にあり、本ファイルはエラー整形・後方互換のための薄いラッパーに徹する。
+- **単一ソース**: `front/src/schemas/report.ts` に API 契約を zod スキーマとして定義する（`reportCreateSchema` / `reportPatchSchema` / `externalUrlInputSchema` / `reportItemSchema` / `tagListSchema` / `validationErrorSchema` / `errorSchema`、定数 `LIMITS`、関数 `normalizeTags`）。タグは `#` 付きで維持（DJ-2）、カテゴリは固定リスト検証（DJ-6）。フィールドの型・上限・必須/任意の正準はこのスキーマで、`docs/openapi.json` へも反映される。
+- **アダプタ**: `front/src/lib/validation.ts` は上記 zod スキーマを包み、既存の `{ data, errors }` 契約・日本語メッセージ・フィールドキーを維持する。export は `validateReportInput` / `validateExternalUrls` / `normalizeTags`。実装の本体ロジックは `schemas/` 側にあり、本ファイルはエラー整形・後方互換のための薄いラッパーに徹する。
 - **利用範囲（現状）**: バリデーションは**サーバー専用**で、reports の2ルート（`POST /api/reports` / `PATCH /api/reports/[id]`）のみが使用する。クライアント側では現状は呼び出していない（旧設計の「サーバー+クライアント共用」記述は実態に合わせて修正）。
-- `validation.ts` の `{ data, errors }` 契約・`ValidationErrors` の各フィールドキー・日本語メッセージは Route Handler / hooks 側の既存呼び出しと互換を保つ。詳細なフィールド定義・上限値・エラースキーマは `lib/schemas/report.ts` および `docs/openapi.json` を参照する。
+- `validation.ts` の `{ data, errors }` 契約・`ValidationErrors` の各フィールドキー・日本語メッセージは Route Handler / hooks 側の既存呼び出しと互換を保つ。詳細なフィールド定義・上限値・エラースキーマは `schemas/report.ts` および `docs/openapi.json` を参照する。
 
 ### 4. `front/src/types.ts` — 追加型定義
 
@@ -596,7 +596,7 @@ const [totalCount, reports] = await prisma.$transaction([
 **処理フロー（共通）:**
 
 1. `requireAdmin()` で認可チェック。
-2. `validateReportInput()`（PATCH は `{ partial: true }`）でバリデーション（カテゴリ固定リスト含む）。契約の正準は `lib/schemas/`（zod）。
+2. `validateReportInput()`（PATCH は `{ partial: true }`）でバリデーション（カテゴリ固定リスト含む）。契約の正準は `schemas/`（zod）。
 3. Prismaトランザクションで Report + ReportTag + ReportTagMapping（+ 外部URL）を同期。
 4. 作成/更新済みレポートを返却。
 

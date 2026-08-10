@@ -58,7 +58,11 @@ describe('useReport', () => {
     await waitFor(() => {
       expect(result.current.report?.content).toBe('# Full content here');
     });
-    expect(fetch).toHaveBeenCalledWith('/api/reports/r1');
+    // repositories 層が GET で叩くこと（ヘッダ等の詳細は repositories の責務）を確認する
+    expect(fetch).toHaveBeenCalledWith(
+      '/api/reports/r1',
+      expect.objectContaining({ method: 'GET' }),
+    );
     vi.unstubAllEnvs();
   });
 

@@ -370,6 +370,14 @@ front/src/
 │   ├── index.ts
 │   ├── AppStateProvider.tsx
 │   └── LoadingContext.tsx
+├── repositories/
+│   ├── client.ts
+│   ├── report.ts
+│   ├── tag.ts
+│   ├── auth.ts
+│   └── openapi.ts
+├── schemas/
+│   └── report.ts
 ├── lib/
 │   ├── supabaseClient.ts
 │   ├── auth-server.ts
@@ -386,6 +394,8 @@ front/src/
     └── auth.ts
 ```
 
+> `repositories/` は BFF（`/api/*`）へのアクセスを集約する層。**`fetch` を書いてよいのはここだけ**で、`client.ts` が認証ヘッダの付与と非 2xx の `ApiError` 化を担う（`.claude/rules/frontend.md`）。
+>
 > `types/` `constants/` に barrel（`index.ts`）は置かない。import は実ファイルを直接指す（`.claude/rules/typescript.md`）。アトミックデザインの `components/*/index.ts` は対象外で、従来どおり維持する。
 
 ## 移行フェーズ
@@ -521,7 +531,7 @@ front/src/
 - **認証**: Supabase Auth (Google OAuth)。管理者判定はサーバーAPI `/api/auth/admin`（`ADMIN_EMAIL` 照合）
 - **DB**: Supabase Postgres + RLS。ORM は Prisma（`db pull` のみ・マイグレーション禁止 / 詳細: `docs/05-data-specification.md`）
 - **BFF**: Next.js Route Handlers（詳細: `docs/07-api-specification.md`）
-- **バリデーション/API契約**: zod + zod-openapi（`front/src/lib/schemas/` を単一ソースに `docs/openapi.json` を生成 / 詳細: `docs/07-api-specification.md`）
+- **バリデーション/API契約**: zod + zod-openapi（`front/src/schemas/` を単一ソースに `docs/openapi.json` を生成 / 詳細: `docs/07-api-specification.md`）
 - **デプロイ**: Vercel（`main` のみ本番、プレビュー無し）
 - **コンポーネント設計**: アトミックデザイン（本書 上記）
 

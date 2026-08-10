@@ -26,7 +26,7 @@ pnpm format:check # Prettier 差分ゼロの検証（CI 必須 / static-analysis
 ## コード生成
 
 ```bash
-pnpm gen:openapi      # lib/schemas/（zod）から docs/openapi.json を生成（api.md 参照）
+pnpm gen:openapi      # schemas/（zod）から docs/openapi.json を生成（api.md 参照）
 pnpm gen:test-schema  # IT 用の schema.sql を生成（database.md の test-only 例外）
 ```
 

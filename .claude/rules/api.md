@@ -31,7 +31,7 @@ front/src/app/api/
 - **公開してよいフィールドだけを厳選**して返す（内部 ID・監査カラム・他ユーザー情報を漏らさない）。**ブラウザに届いた時点で、画面に表示していなくてもユーザーは全て閲覧できる**。
 - 変換は**明示マッパー関数**で行う（`toReportItem` / `toReportListItem` を各 Route Handler にコロケーション）。マッパーは返すフィールドを 1 つずつ列挙する**許可リスト方式**であり、**スプレッド（`{ ...row, extra }`）で組み立てない** — スプレッドだと DB にカラムが増えた瞬間、自動的に公開される。
 - **取得側（Prisma の `select` / `include`）を絞るかは、マッパーとは別の判断**とする。マッパーが許可リストである限り過剰公開は起きないため、`include` で取得して必要分だけ詰め替える形でよい。転送量やクエリコストが問題になった時点で `select` に絞る。
-- **Zod スキーマ（`lib/schemas/`）は入力の検証と OpenAPI 生成の正準**であり、レスポンスの実行時 `parse` は必須としない。マッパーの戻り値型で形が保証されるため、`parse` を重ねても得られるのは**同じ保証の二重化**にとどまる（`duplication.md`）。
+- **Zod スキーマ（`schemas/`）は入力の検証と OpenAPI 生成の正準**であり、レスポンスの実行時 `parse` は必須としない。マッパーの戻り値型で形が保証されるため、`parse` を重ねても得られるのは**同じ保証の二重化**にとどまる（`duplication.md`）。
 - エラーレスポンスも整形する。**Prisma のエラーメッセージ・SQL・スタックトレースをそのまま返さない**（`error-handling.md` に従い、`{ error: string }` のクライアント向けメッセージに変換する）。
 - **画面単位のレスポンス型を定義**し、その形に合わせて整形する（`Report` + `ReportTagMapping` + `ExternalUrl` の集約など）。
 - **変換は Route Handler に閉じる。フロント側で再変換しない**（変換層を二重に置かない。`frontend.md`「型の扱い」と対になる規定）。
@@ -44,25 +44,25 @@ front/src/app/api/
 
 | 検証の種類 | 担当 |
 |---|---|
-| **形式・構文**（型・必須・文字数・列挙値） | Route Handler で **Zod**（`lib/schemas/`）。ここが唯一の定義 |
+| **形式・構文**（型・必須・文字数・列挙値） | Route Handler で **Zod**（`schemas/`）。ここが唯一の定義 |
 | **業務ルール**（カテゴリの固定リスト・重複禁止等） | Route Handler（必要なら DB 参照を伴う） |
 | **DB 制約**（NOT NULL・UNIQUE・FK） | DB スキーマ。アプリ側で肩代わりして再実装しない |
 
-- クライアント側の検証は**信頼境界が違うため重複してよい**が、**スキーマ自体は `lib/schemas/` を共有**する（`duplication.md`）。
+- クライアント側の検証は**信頼境界が違うため重複してよい**が、**スキーマ自体は `schemas/` を共有**する（`duplication.md`）。
 - **リクエストの生オブジェクトを Prisma にそのまま渡さない**（マスアサインメント）。Zod で `parse` した値から、**書き込むフィールドを明示的に指定**する。
 
 ## 共通方針
 
 - RESTful 設計（リソース指向エンドポイント）
 - レスポンス形式: JSON（`NextResponse.json()`）
-- 入力バリデーションは Route Handler 内で実施。スキーマの正準は `lib/schemas/`（zod）。`lib/validation.ts` はそれを包むアダプタ（`{ data, errors }` 契約を維持）
+- 入力バリデーションは Route Handler 内で実施。スキーマの正準は `schemas/`（zod）。`lib/validation.ts` はそれを包むアダプタ（`{ data, errors }` 契約を維持）
 - エラー時は適切な HTTP ステータスコード（400/401/403/404/500）で返す
 - 認証は `lib/auth-server.ts` の `requireAdmin()` を使用する
 - DB アクセスは `lib/db.ts` の Prisma インスタンスを使用する（シングルトン）
 
 ## API 契約（OpenAPI）
 
-- リクエスト/レスポンスの契約は `lib/schemas/`（zod）を単一ソースとし、`pnpm gen:openapi` で `docs/openapi.json`（OpenAPI 3.1）を生成する。
+- リクエスト/レスポンスの契約は `schemas/`（zod）を単一ソースとし、`pnpm gen:openapi` で `docs/openapi.json`（OpenAPI 3.1）を生成する。
 - スキーマ・検証ルールを変更したら `pnpm gen:openapi` を実行し、生成物をコミットする。
 - 手書きのエンドポイント仕様は `docs/openapi.json` と重複させない（正準は生成物）。
 - ブラウザ閲覧用に `/docs`（Swagger UI・**管理者のみ**）を提供する。スペックは `/api/openapi`（`requireAdmin`）から Bearer トークン付きで取得する。
