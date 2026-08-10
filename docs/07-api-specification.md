@@ -323,7 +323,7 @@ if (!partial || hasField(input, 'category')) {
 
 **CATEGORIES の参照方針（確定）:**
 
-`validation.ts` から `@/constants` を直接 import する。分離は不要。
+サーバー側の検証は `@/constants` を直接 import する。分離は不要。
 
 理由:
 
@@ -331,6 +331,13 @@ if (!partial || hasField(input, 'category')) {
 - 中身は `DesignSystem` 型の import と純粋なデータ定義（`ESPRESSO_THEME`, `CATEGORIES`, `TRENDING_TAGS`, `AUTH_COOKIE_NAME`）のみ。
 - `.tsx` 拡張子は `DesignSystem` 型参照のためだが、Next.js / TypeScript はサーバー側からの `.tsx` import を問題なく解決する。
 - 実際に youtube-my-collection でも同様のパターン（`@/lib/constants` を共用）を採用しており、動作実績がある。
+
+> **現行実装（Issue #190 / 2026-08-11 更新）**: 上記は設計当時の記録。現在 `CATEGORIES` は
+> **`front/src/types/report.ts`** に `as const` 付きで置かれ、`ReportCategory` union をここから導出する
+> （`.claude/rules/typescript.md`「型の元になる定数は型と同じファイルに置く」）。照合は
+> `front/src/schemas/report.ts` の `reportCategorySchema`（`z.enum`）が担い、リクエスト検証と
+> レスポンス検証の双方がこの 1 箇所を参照する。上のコード片も `validation.ts` 直書きから
+> zod スキーマへ移行済みで、現行の正準は `schemas/report.ts`。
 
 ---
 

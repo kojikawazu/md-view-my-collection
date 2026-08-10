@@ -240,6 +240,7 @@
 - [x] `.claude/rules/` の記載漏れ 3 件を補完（IT・typecheck・frontmatter / Issue #149 / PR #150）
 - [x] Vercel のデプロイ発火を制御（Issue #151 / PR #157・#160・#161）
 - [x] `fetch` を `repositories/` へ集約し、`lib/schemas/` を `src/schemas/` へ移動（Issue #164 / 2026-08-10）
+- [x] API レスポンス・localStorage を zod で実行時検証し、`ReportItem.category` を union へ狭める（Issue #190 / 2026-08-11）
 - [ ] レートリミットの実装（設計のみ完了 / Issue #146 / PR #158）
 - [ ] Vercel のデプロイ抑止が実際に効くことの観測（Issue #159）
 

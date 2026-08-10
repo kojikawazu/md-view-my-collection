@@ -3,7 +3,7 @@
 import React from 'react';
 import CategoryButton from '@/components/molecules/CategoryButton';
 import type { DesignSystem } from '@/types/theme';
-import { CATEGORIES } from '@/constants/report';
+import { CATEGORIES } from '@/types/report';
 
 /** サイドバーの props。 */
 interface SidebarProps {
