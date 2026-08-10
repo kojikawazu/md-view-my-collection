@@ -56,7 +56,7 @@ globs: "front/src/components/**,front/src/app/**,front/src/hooks/**,front/src/li
 - **`fetch` を書いてよいのは `repositories/` だけ**。コンポーネント・hooks・`lib/` から直接叩かない。呼び出し口を 1 箇所に閉じることで、認証ヘッダ・エラー処理・リトライの実装が散らばらない。
 - ディレクトリ名は**複数形で統一**する（`types` / `constants` / `schemas` / `repositories`）。
 
-> **未移行（Issue #164）**: 現行は `fetch` が `providers/AppStateProvider.tsx` / `hooks/useReport.ts` / `app/docs/page.tsx` に散在し、Zod スキーマは `lib/schemas/` にある。本節はルールが先行しており、移行は #164 で対応する。**新規のデータ取得は移行を待たず `repositories/` に置いてよい**。
+> **未移行（Issue #164）**: 現行は `fetch` が `providers/AppStateProvider.tsx` / `hooks/useReport.ts` / `app/docs/page.tsx` に散在し、Zod スキーマは `schemas/` にある。本節はルールが先行しており、移行は #164 で対応する。**新規のデータ取得は移行を待たず `repositories/` に置いてよい**。
 
 ## レイヤ依存の一方向ルール
 

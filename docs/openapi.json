@@ -3,7 +3,7 @@
   "info": {
     "title": "md-view-my-collection API",
     "version": "0.1.0",
-    "description": "Markdown レポートの保存・閲覧 UI の BFF（Next.js Route Handlers）。このドキュメントは zod スキーマ（front/src/lib/schemas）から自動生成される。"
+    "description": "Markdown レポートの保存・閲覧 UI の BFF（Next.js Route Handlers）。このドキュメントは zod スキーマ（front/src/schemas）から自動生成される。"
   },
   "servers": [
     {

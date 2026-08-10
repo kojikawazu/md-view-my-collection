@@ -26,7 +26,7 @@ Markdownレポートの保存・閲覧UIを提供するNext.jsアプリ。
 - 認証: Supabase Auth (Google OAuth)
 - DB: Supabase Postgres (RLS)
 - ORM: Prisma (`prisma db pull` のみ。マイグレーション禁止)
-- バリデーション/API契約: zod + zod-openapi（`src/lib/schemas/` を単一ソースに `docs/openapi.json` を生成）
+- バリデーション/API契約: zod + zod-openapi（`src/schemas/` を単一ソースに `docs/openapi.json` を生成）
 - IT（統合）: Vitest + Testcontainers（Postgres）— APIルート×実DB。Docker 必須。`pnpm test:integration`
 - E2E: Playwright
 - Deploy: Vercel (`main` ブランチのみ本番デプロイ、プレビュー無し)

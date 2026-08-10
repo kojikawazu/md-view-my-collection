@@ -7,12 +7,12 @@ import {
   reportPatchSchema,
   tagListSchema,
   validationErrorSchema,
-} from '@/lib/schemas/report';
+} from '@/schemas/report';
 
 /**
  * OpenAPI ドキュメントの単一ソース。
  *
- * リクエスト/レスポンスのスキーマは `lib/schemas/report.ts`（zod）を参照する。
+ * リクエスト/レスポンスのスキーマは `schemas/report.ts`（zod）を参照する。
  * `scripts/gen-openapi.ts` がこの関数を呼び、`docs/openapi.json` を生成する。
  */
 
@@ -76,7 +76,7 @@ export const buildOpenApiDocument = (version = '0.0.0') =>
       version,
       description:
         'Markdown レポートの保存・閲覧 UI の BFF（Next.js Route Handlers）。' +
-        'このドキュメントは zod スキーマ（front/src/lib/schemas）から自動生成される。',
+        'このドキュメントは zod スキーマ（front/src/schemas）から自動生成される。',
     },
     servers: [{ url: '/', description: '同一オリジン（Next.js）' }],
     tags: [
