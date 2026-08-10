@@ -17,7 +17,9 @@ Markdownレポートの保存・閲覧UIを提供するNext.jsアプリ。
 - `front/src/components/` — 共通UIコンポーネント
 - `front/src/constants/` — 定数（ドメイン単位。`theme.ts` / `report.ts` / `auth.ts`）
 - `front/src/types/` — 型定義（ドメイン単位。`theme.ts` / `report.ts` / `user.ts` / `api.ts`）
-- `front/src/lib/` — ユーティリティ
+- `front/src/schemas/` — Zod スキーマ（API 契約の単一ソース）
+- `front/src/repositories/` — BFF（`/api/*`）へのアクセス。**`fetch` を書いてよいのはここだけ**
+- `front/src/lib/` — 通信を持たない純粋ユーティリティ
 
 ## Tech Stack
 

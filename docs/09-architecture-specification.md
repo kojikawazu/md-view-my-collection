@@ -370,6 +370,14 @@ front/src/
 │   ├── index.ts
 │   ├── AppStateProvider.tsx
 │   └── LoadingContext.tsx
+├── repositories/
+│   ├── client.ts
+│   ├── report.ts
+│   ├── tag.ts
+│   ├── auth.ts
+│   └── openapi.ts
+├── schemas/
+│   └── report.ts
 ├── lib/
 │   ├── supabaseClient.ts
 │   ├── auth-server.ts
@@ -385,6 +393,8 @@ front/src/
     ├── report.ts
     └── auth.ts
 ```
+
+> `repositories/` は BFF（`/api/*`）へのアクセスを集約する層。**`fetch` を書いてよいのはここだけ**で、`client.ts` が認証ヘッダの付与と非 2xx の `ApiError` 化を担う（`.claude/rules/frontend.md`）。
 
 > `types/` `constants/` に barrel（`index.ts`）は置かない。import は実ファイルを直接指す（`.claude/rules/typescript.md`）。アトミックデザインの `components/*/index.ts` は対象外で、従来どおり維持する。
 

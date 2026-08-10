@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { fetchReport } from '@/repositories/report';
 import type { ReportItem } from '@/types/report';
 
 /** レポート詳細の取得結果。 */
@@ -52,14 +53,9 @@ export const useReport = (
     }
 
     setIsLoading(true);
-    fetch(`/api/reports/${reportId}`)
-      .then((res) => {
-        if (!res.ok) return undefined;
-        return res.json();
-      })
-      .then((data: ReportItem | undefined) => {
-        if (data) setReport(data);
-      })
+    fetchReport(reportId)
+      .then((data) => setReport(data))
+      // 取得失敗時は一覧由来のキャッシュ表示を維持する（画面を空にしない）。
       .catch(() => {})
       .finally(() => setIsLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps

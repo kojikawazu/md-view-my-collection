@@ -39,15 +39,22 @@
     - [useLoginForm](#useloginform)
     - [useLoading（+ LoadingContext）](#useloading-loadingcontext)
     - [useReport](#usereport)
-- [テスト設計: ConfirmationModal コンポーネント](#テスト設計-confirmationmodal-コンポーネント)
+- [テスト設計: repositories 共通クライアント](#テスト設計-repositories-共通クライアント)
   - [対象](#対象-2)
   - [モック方針](#モック方針-2)
   - [テストケース一覧](#テストケース一覧-2)
     - [正常系](#正常系-5)
     - [準正常系](#準正常系-4)
     - [異常系](#異常系-4)
-- [テスト設計: E2E テスト強化](#テスト設計-e2e-テスト強化)
+- [テスト設計: ConfirmationModal コンポーネント](#テスト設計-confirmationmodal-コンポーネント)
   - [対象](#対象-3)
+  - [モック方針](#モック方針-3)
+  - [テストケース一覧](#テストケース一覧-3)
+    - [正常系](#正常系-6)
+    - [準正常系](#準正常系-5)
+    - [異常系](#異常系-5)
+- [テスト設計: E2E テスト強化](#テスト設計-e2e-テスト強化)
+  - [対象](#対象-4)
   - [方針](#方針)
   - [ヘルパー分離設計](#ヘルパー分離設計)
   - [新規テストケース一覧](#新規テストケース一覧)
@@ -720,6 +727,51 @@
 | # | テストケース | 入力 | 期待結果 | 優先度 |
 |---|---|---|---|---|
 | R-A-1 | fetch が例外 | fetch → throw Error | クラッシュしない、isLoading=false に戻る | Medium |
+
+---
+
+# テスト設計: repositories 共通クライアント
+
+## 対象
+
+- 対象機能: BFF（`/api/*`）アクセスの共通クライアント（認証ヘッダ付与・非 2xx の `ApiError` 化）
+- 対象ファイル: `front/src/repositories/client.ts`
+- スタック: Frontend (Next.js 16 / Vitest)
+- テストファイル: `front/src/repositories/__tests__/client.test.ts`
+
+各リポジトリ関数（`report.ts` / `tag.ts` / `auth.ts` / `openapi.ts`）は URL とペイロードを差し替えるだけの薄いラッパーであり、
+通信の振る舞いはすべてこのクライアントに集約されている。したがって個別関数ではなくここを検証する。
+
+## モック方針
+
+- モック許可: `fetch`（グローバル）
+- モック禁止: `ApiError` の生成・ヘッダ組み立てロジック（検証対象そのもの）
+
+---
+
+## テストケース一覧
+
+### 正常系
+
+| # | テストケース | 入力 | 期待結果 | 優先度 |
+|---|---|---|---|---|
+| C-N-1 | 成功応答の JSON を返す | ok=true, body={id:"r1"} | パース結果を返し、GET でヘッダ無しで呼ぶ | High |
+| C-N-2 | token と body 指定時のヘッダ | token, body あり | Authorization と Content-Type が付き、body が JSON 化される | High |
+| C-N-3 | requestVoid は本文を読まない | ok=true(204) | resolve し、`json()` が呼ばれない | Medium |
+
+### 準正常系
+
+| # | テストケース | 入力 | 期待結果 | 優先度 |
+|---|---|---|---|---|
+| C-S-1 | 非 2xx で ApiError を投げる | ok=false(400), body に error/errors | ApiError に status と body が載る | High |
+| C-S-2 | 非 JSON のエラー応答 | ok=false(500), json() が reject | ApiError の body が空オブジェクト | Medium |
+| C-S-3 | token が null | token=null | Authorization ヘッダを送らない | Medium |
+
+### 異常系
+
+| # | テストケース | 入力 | 期待結果 | 優先度 |
+|---|---|---|---|---|
+| C-A-1 | 通信自体が失敗 | fetch → reject(TypeError) | ApiError にせずそのまま伝播する（呼び出し側が 500 相当として扱う） | High |
 
 ---
 
