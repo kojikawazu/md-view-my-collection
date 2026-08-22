@@ -244,10 +244,11 @@
 - [x] Vercel のデプロイ発火を制御（Issue #151 / PR #157・#160・#161）
 - [x] `fetch` を `repositories/` へ集約し、`lib/schemas/` を `src/schemas/` へ移動（Issue #164 / 2026-08-10）
 - [x] API レスポンス・localStorage を zod で実行時検証し、`ReportItem.category` を union へ狭める（Issue #190 / 2026-08-11）
-- [ ] レートリミットの実装（設計のみ完了 / Issue #146 / PR #158）
+- [x] レートリミットを実装（Upstash Redis / `@upstash/ratelimit`。認証系 2 本 + 書き込み系 3 本のハンドラ先頭で判定し、超過時は認可より前に 429 + `Retry-After`。環境変数未設定なら無効化して素通しするため CI / E2E に影響しない。クライアントは 429 を「不許可」と区別する。UT 9 + IT 5 ケース追加 / Issue #146 / 2026-08-22）
+  - **本番で効かせるには Upstash のアカウント作成と Vercel への環境変数 2 つの設定が必要（未実施）**
 - [x] Vercel のデプロイ抑止が実際に効くことの観測（`"**": false` が main に載った 2026-07-26 以降、14 本の PR ブランチ push で Preview 0 件・main マージは 14 件すべて本番デプロイ。ドキュメントのみの #174 / #181 もデプロイされ `ignoreCommand` 撤去の意図どおり / Issue #159 → #167 / 2026-08-22）
 
 ### 積み残し
 
-- レートリミット本体の実装（Upstash Redis + 環境変数 2 つの設定が前提 / Issue #146）
+- Upstash のアカウント作成と Vercel への環境変数 2 つの設定（`UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`）。**設定するまで本番ではレートリミットが無効**（実装自体は完了 / Issue #146）
 - `script-src` の nonce 化（`'unsafe-inline' 'unsafe-eval'` の撤廃。`middleware.ts` の新設を伴うため強制化とは分離 / 判断理由は `docs/06-security-specification.md`「nonce 化を見送る判断」）

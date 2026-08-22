@@ -11,7 +11,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { AUTH_COOKIE_NAME } from '@/constants/auth';
+import { AUTH_COOKIE_NAME, RATE_LIMIT_MESSAGE } from '@/constants/auth';
 import { ESPRESSO_THEME } from '@/constants/theme';
 import type { MutationResult } from '@/types/api';
 import type { ReportItem } from '@/types/report';
@@ -50,6 +50,20 @@ const toMutationFailure = (error: unknown, fallbackMessage: string): MutationRes
   }
   return { ok: false, status: 500, error: 'Network error' };
 };
+
+/**
+ * 許可メール判定の結果。
+ *
+ * 「不許可」と「レートリミットで判定できなかった」は**利用者に伝えるべきことが違う**ため
+ * 真偽値にまとめない。前者は許可リストの問題、後者は時間をおけば解消する（Issue #146）。
+ */
+type AllowedCheckResult =
+  /** 許可リストに載っている */
+  | 'allowed'
+  /** 許可リストに無い、または判定に失敗した（安全側に倒して不許可扱い） */
+  | 'denied'
+  /** レートリミット（429）で判定できなかった。時間をおけば再試行できる */
+  | 'rate-limited';
 
 /**
  * アプリ横断の状態と操作を公開するコンテキストの形。
@@ -160,9 +174,12 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
    *   - local   : メールを body で送り `/api/auth/is-allowed`（POST）で照合
    *   - supabase: Bearer トークンを送り `/api/auth/admin`（GET）で照合（メールを露出させない）
    * `ADMIN_EMAIL` はサーバー専用のため判定は必ず API 越しに行う（クライアントに秘匿値を出さない）。
-   * 通信失敗時は安全側に倒して不許可（false）を返す。
+   * 通信失敗時は安全側に倒して不許可（`denied`）を返す。
    *
-   * @returns 許可メールなら true、非許可・トークン欠落・通信失敗なら false
+   * **429 だけは `denied` と区別する。** レートリミットは許可リストと無関係であり、
+   * 「許可されていないメールアドレスです」と伝えると原因を誤らせるため（Issue #146）。
+   *
+   * @returns 判定結果（`allowed` / `denied` / `rate-limited`）
    */
   const checkAllowedEmail = async ({
     email,
@@ -170,17 +187,21 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
   }: {
     email?: string | null;
     accessToken?: string | null;
-  }) => {
+  }): Promise<AllowedCheckResult> => {
     try {
       if (authMode === 'local') {
-        return await fetchIsAllowedEmail(email ?? null);
+        return (await fetchIsAllowedEmail(email ?? null)) ? 'allowed' : 'denied';
       }
 
-      if (!token) return false;
-      return await fetchIsAdmin(token);
+      if (!token) return 'denied';
+      return (await fetchIsAdmin(token)) ? 'allowed' : 'denied';
     } catch (error) {
+      if (error instanceof ApiError && error.status === 429) {
+        console.warn('[auth] admin check rate limited');
+        return 'rate-limited';
+      }
       console.error('[auth] admin check failed', error);
-      return false;
+      return 'denied';
     }
   };
 
@@ -272,8 +293,8 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         if (savedUser) {
           try {
             const parsedUser = JSON.parse(savedUser) as User | null;
-            const allowed = await checkAllowedEmail({ email: parsedUser?.email });
-            if (parsedUser?.email && !allowed) {
+            const check = await checkAllowedEmail({ email: parsedUser?.email });
+            if (parsedUser?.email && check !== 'allowed') {
               localStorage.setItem('espresso_user', JSON.stringify(null));
               setCurrentUser(null);
             } else {
@@ -297,15 +318,19 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
       const session = data.session ?? null;
       const sessionUser = session?.user ?? null;
       if (sessionUser) {
-        const allowed = await checkAllowedEmail({
+        const check = await checkAllowedEmail({
           email: sessionUser.email,
           accessToken: session?.access_token,
         });
-        if (!allowed) {
+        if (check !== 'allowed') {
+          // 判定できなかった場合も含めて安全側に倒す（サインアウトする）。ただし理由は
+          // 取り違えないよう分けて伝える。429 は許可リストの問題ではない（Issue #146）。
           await supabase.auth.signOut();
           setCurrentUser(null);
           setAccessToken(null);
-          router.push('/login?error=unauthorized');
+          router.push(
+            check === 'rate-limited' ? '/login?error=rate-limited' : '/login?error=unauthorized',
+          );
           return;
         }
         setCurrentUser({
@@ -366,15 +391,19 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
           setAccessToken(null);
           return;
         }
-        const allowed = await checkAllowedEmail({
+        const check = await checkAllowedEmail({
           email: sessionUser.email,
           accessToken: session?.access_token,
         });
-        if (!allowed) {
+        if (check !== 'allowed') {
+          // 判定できなかった場合も含めて安全側に倒す（サインアウトする）。ただし理由は
+          // 取り違えないよう分けて伝える。429 は許可リストの問題ではない（Issue #146）。
           await supabase.auth.signOut();
           setCurrentUser(null);
           setAccessToken(null);
-          router.push('/login?error=unauthorized');
+          router.push(
+            check === 'rate-limited' ? '/login?error=rate-limited' : '/login?error=unauthorized',
+          );
           return;
         }
         setCurrentUser({
@@ -404,8 +433,11 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
   const login = async (email: string, password: string) => {
     if (authMode === 'local') {
       const user = { id: '1', username: 'Manager', email, role: 'admin' as const };
-      const allowed = await checkAllowedEmail({ email: user.email });
-      if (!allowed) {
+      const check = await checkAllowedEmail({ email: user.email });
+      if (check === 'rate-limited') {
+        return RATE_LIMIT_MESSAGE;
+      }
+      if (check !== 'allowed') {
         return '許可されていないメールアドレスです。';
       }
       console.info('[auth] login', { userId: user.id, username: user.username });
@@ -420,13 +452,15 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     if (error) return error.message;
     const sessionUser = data.user;
     if (sessionUser) {
-      const allowed = await checkAllowedEmail({
+      const check = await checkAllowedEmail({
         email: sessionUser.email,
         accessToken: data.session?.access_token,
       });
-      if (!allowed) {
+      if (check !== 'allowed') {
         await supabase.auth.signOut();
-        return '許可されていないメールアドレスです。';
+        return check === 'rate-limited'
+          ? RATE_LIMIT_MESSAGE
+          : '許可されていないメールアドレスです。';
       }
       // メールアドレスは個人情報のためログに出さない（error-handling.md）。追跡は userId で足りる
       console.info('[auth] login', { userId: sessionUser.id });

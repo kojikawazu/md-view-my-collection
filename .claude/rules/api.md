@@ -56,7 +56,8 @@ front/src/app/api/
 - RESTful 設計（リソース指向エンドポイント）
 - レスポンス形式: JSON（`NextResponse.json()`）
 - 入力バリデーションは Route Handler 内で実施。スキーマの正準は `schemas/`（zod）。`lib/validation.ts` はそれを包むアダプタ（`{ data, errors }` 契約を維持）
-- エラー時は適切な HTTP ステータスコード（400/401/403/404/500）で返す
+- エラー時は適切な HTTP ステータスコード（400/401/403/404/429/500）で返す
+- **認証系と書き込み系はレートリミットを通す**。`lib/rate-limit.ts` の `checkRateLimit()` を**ハンドラの先頭**で呼び、超過時は `rateLimitResponse()` を返す。認可（`requireAdmin()`）より前に置くのは、弾くなら Supabase へのトークン検証を走らせる前に弾くため
 - 認証は `lib/auth-server.ts` の `requireAdmin()` を使用する
 - DB アクセスは `lib/db.ts` の Prisma インスタンスを使用する（シングルトン）
 

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { RATE_LIMIT_MESSAGE } from '@/constants/auth';
 
 /** `useLoginForm` の依存注入。認証処理本体は AppState 側の関数を渡す。 */
 interface UseLoginFormOptions {
@@ -9,14 +10,19 @@ interface UseLoginFormOptions {
 }
 
 /**
- * URL の `?error=unauthorized` を初回レンダー時に解決する（SSR では window 不在のため null）。
+ * URL の `?error=...` を初回レンダー時に解決する（SSR では window 不在のため null）。
  *
- * @returns 未認可エラー時の日本語メッセージ、該当しなければ `null`
+ * セッション復元でサインアウトさせられた理由を引き継ぐ。`rate-limited` を分けているのは、
+ * レートリミットが許可リストと無関係で、時間をおけば解消するため（Issue #146）。
+ *
+ * @returns 該当するエラーの日本語メッセージ、該当しなければ `null`
  */
 const initialErrorFromUrl = (): string | null => {
   if (typeof window === 'undefined') return null;
   const errorParam = new URLSearchParams(window.location.search).get('error');
-  return errorParam === 'unauthorized' ? '許可されていないメールアドレスです。' : null;
+  if (errorParam === 'unauthorized') return '許可されていないメールアドレスです。';
+  if (errorParam === 'rate-limited') return RATE_LIMIT_MESSAGE;
+  return null;
 };
 
 /** ログインフォームの状態と操作。 */
