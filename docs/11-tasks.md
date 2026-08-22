@@ -243,7 +243,7 @@
 - [x] `fetch` を `repositories/` へ集約し、`lib/schemas/` を `src/schemas/` へ移動（Issue #164 / 2026-08-10）
 - [x] API レスポンス・localStorage を zod で実行時検証し、`ReportItem.category` を union へ狭める（Issue #190 / 2026-08-11）
 - [ ] レートリミットの実装（設計のみ完了 / Issue #146 / PR #158）
-- [ ] Vercel のデプロイ抑止が実際に効くことの観測（Issue #159）
+- [x] Vercel のデプロイ抑止が実際に効くことの観測（`"**": false` が main に載った 2026-07-26 以降、14 本の PR ブランチ push で Preview 0 件・main マージは 14 件すべて本番デプロイ。ドキュメントのみの #174 / #181 もデプロイされ `ignoreCommand` 撤去の意図どおり / Issue #159 → #167 / 2026-08-22）
 
 ### 積み残し
 
