@@ -535,7 +535,7 @@ HTML 変換は `remark-rehype` が担当する。
 
 ## 7. 本プロジェクトでの使用状況
 
-- **ファイル**: `front/src/components/ReportMarkdown.tsx`
+- **ファイル**: `front/src/components/organisms/ReportMarkdown.tsx`
 - **構成**: `remarkPlugins={[remarkGfm]}`（オプション指定なし、デフォルト設定）
 - **用途**: テーブル・取り消し線・タスクリスト・オートリンクをレポート本文で表示可能にする
 
@@ -803,7 +803,7 @@ const schema = deepmerge(defaultSchema, { attributes: { '*': ['className'] } });
 
 ## 9. 本プロジェクトでの使用状況
 
-- **ファイル**: `front/src/components/ReportMarkdown.tsx`
+- **ファイル**: `front/src/components/organisms/ReportMarkdown.tsx`
 - **構成**: `rehypePlugins={[rehypeSanitize]}`（デフォルトスキーマ、カスタマイズなし）
 - **用途**: ユーザー入力の Markdown 本文をサニタイズし、XSS を防止
 - **CLAUDE.md の規約**: 「Markdown 表示は `rehype-sanitize` で必ずサニタイズ」と明記

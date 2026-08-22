@@ -25,7 +25,7 @@
   - [1. `front/src/lib/auth-server.ts` — サーバー側認可ミドルウェア](#1-frontsrclibauth-serverts--サーバー側認可ミドルウェア)
   - [2. `front/src/lib/db.ts` — Prismaクライアントシングルトン](#2-frontsrclibdbts--prismaクライアントシングルトン)
   - [3. `front/src/schemas/` と `front/src/lib/validation.ts` — zod スキーマとアダプタ](#3-frontsrcschemas-と-frontsrclibvalidationts--zod-スキーマとアダプタ)
-  - [4. `front/src/types.ts` — 追加型定義](#4-frontsrctypests--追加型定義)
+  - [4. `front/src/types/api.ts` — 追加型定義](#4-frontsrctypesapits--追加型定義)
 - [APIルート設計（エンドポイント概要）](#apiルート設計エンドポイント概要)
   - [`GET /api/auth/admin` の設計補足](#get-apiauthadmin-の設計補足)
   - [`GET /api/reports` の設計補足（DJ-1）](#get-apireports-の設計補足dj-1)
@@ -43,7 +43,7 @@
 - [ファイル構成（移行後）](#ファイル構成移行後)
 - [テスト方針（DJ-5）](#テスト方針dj-5)
   - [既存 E2E テスト（維持）](#既存-e2e-テスト維持)
-  - [API 統合テスト（新規追加 / 正式一覧）](#api-統合テスト新規追加--正式一覧)
+  - [API 統合テスト（旧案・置き換え済み）](#api-統合テスト旧案置き換え済み)
 - [移行フェーズ](#移行フェーズ)
   - [Phase 1: 基盤ファイル追加](#phase-1-基盤ファイル追加)
   - [Phase 2: APIルート追加 + API統合テスト](#phase-2-apiルート追加--api統合テスト)
@@ -517,10 +517,10 @@ globalForPrisma.prisma = prisma;
 - **利用範囲（現状）**: バリデーションは**サーバー専用**で、reports の2ルート（`POST /api/reports` / `PATCH /api/reports/[id]`）のみが使用する。クライアント側では現状は呼び出していない（旧設計の「サーバー+クライアント共用」記述は実態に合わせて修正）。
 - `validation.ts` の `{ data, errors }` 契約・`ValidationErrors` の各フィールドキー・日本語メッセージは Route Handler / hooks 側の既存呼び出しと互換を保つ。詳細なフィールド定義・上限値・エラースキーマは `schemas/report.ts` および `docs/openapi.json` を参照する。
 
-### 4. `front/src/types.ts` — 追加型定義
+### 4. `front/src/types/api.ts` — 追加型定義
 
 ```typescript
-// 既存の ReportItem, User, DesignSystem に追加
+// ReportItem / User / DesignSystem はドメイン単位のファイルへ分割済み（types/report.ts 等 / Issue #163）
 
 /** API書き込み操作の結果型（DJ-3） */
 export type MutationResult =
@@ -872,34 +872,15 @@ front/src/
 
 - `NEXT_PUBLIC_AUTH_MODE=local` / `NEXT_PUBLIC_DATA_MODE=local` で動作
 - localStorage を seed、APIルート/Prismaは通らない
-- 既存 25 ケース（TC-001〜TC-025）は変更なし
+- 本節は移行検討時（2026-06）の記述。**現在の E2E は 33 ケース**で、一覧は `docs/08-test-specification.md` を正本とする
 
-### API 統合テスト（新規追加 / 正式一覧）
+### API 統合テスト（旧案・置き換え済み）
 
-- ファイル: `front/tests/api/*.test.ts`
-- ツール: Playwright `APIRequestContext`（追加依存なし）
-- 実行: `npm run test:api`
-- CI: GitHub Actions で E2E とは別ジョブで実行
-- DB: テスト用 Supabase 実 DB（DJ-8 で確定）
-
-| ID | メソッド | パス | ケース | 期待 |
-|----|---------|------|--------|------|
-| API-001 | GET | /api/reports | 全件取得 | 200 + ReportItem[] |
-| API-002 | GET | /api/reports/:id | 存在するID | 200 + ReportItem |
-| API-003 | GET | /api/reports/:id | 存在しないID | 404 |
-| API-004 | POST | /api/reports | トークンなし | 401 |
-| API-005 | POST | /api/reports | 管理者でないトークン | 403 |
-| API-006 | POST | /api/reports | バリデーションエラー（タイトル空） | 400 + errors |
-| API-007 | POST | /api/reports | 不正カテゴリ | 400 + errors.category |
-| API-008 | POST | /api/reports | 正常作成 | 201 + ReportItem（tags は # 付き） |
-| API-009 | PATCH | /api/reports/:id | 正常更新 | 200 + ReportItem |
-| API-010 | DELETE | /api/reports/:id | 正常削除 | 200 + { ok: true } |
-| API-011 | GET | /api/tags | タグ一覧取得 | 200 + string[]（# 付き） |
-| API-012 | GET | /api/auth/admin | 管理者トークン | 200 + { isAdmin: true } |
-| API-013 | GET | /api/auth/admin | トークンなし | 401 + { isAdmin: false } |
-| API-014 | GET | /api/auth/admin | 非管理者トークン | 200 + { isAdmin: false } |
-
-**導入タイミング:** Phase 2 完了後、Phase 3 のクライアント切り替え前。
+> **この節にあった内容は実施していない。** 旧案は Playwright `APIRequestContext` + **テスト用 Supabase 実 DB**（`front/tests/api/*.test.ts` / `npm run test:api`）だったが、**Testcontainers による使い捨て Postgres 方式に置き換えた**（本書「テスト方針」の記述が正）。
+>
+> 置き換えた理由: 軽量・ハーメティックで CI secrets が不要なこと、そして**テストが実 Supabase を指す構成そのものを持たないこと**。テストの接続先が本番 Supabase を指したまま seed が走り本番データが全削除される事故が姉妹プロジェクトで起きており、本プロジェクトはその経路を構造的に断つ方針を採る（`.claude/rules/production-data.md` / `.claude/rules/testing.md`）。
+>
+> **現行の IT の正本**: 実装は `front/tests/integration/*.test.ts`、ケース一覧と設計は `docs/08-test-specification.md`。接続先の解決は `front/tests/support/db-target.ts` に集約し、ホスト allowlist を通らなければ実行前に throw する。
 
 ---
 

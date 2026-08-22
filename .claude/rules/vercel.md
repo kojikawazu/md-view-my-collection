@@ -90,7 +90,7 @@ globs: "front/vercel.json"
 | `0` | ビルドを**スキップ**する |
 | `1`（非 0） | ビルドを**実行**する |
 
-参考実装（`front/scripts/vercel-ignore-build.sh`。`vercel.json` からは `"ignoreCommand": "bash scripts/vercel-ignore-build.sh"` で参照する。`ignoreCommand` は Root Directory をカレントとして実行される）:
+参考実装（**このファイルは存在しない。導入する場合の配置先** = `front/scripts/vercel-ignore-build.sh`。`vercel.json` からは `"ignoreCommand": "bash scripts/vercel-ignore-build.sh"` で参照する。`ignoreCommand` は Root Directory をカレントとして実行される）:
 
 ```bash
 #!/usr/bin/env bash

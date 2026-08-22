@@ -18,6 +18,8 @@ globs:
 | `UPSTASH_REDIS_REST_TOKEN` | **サーバー専用** | 同上の REST トークン。URL と揃って初めて有効になる |
 | `NEXT_PUBLIC_AUTH_MODE` | クライアント（**E2E専用**） | `local` でローカル認証モードに切替。`playwright.config.ts` が注入 |
 | `NEXT_PUBLIC_DATA_MODE` | クライアント（**E2E専用**） | `local` で localStorage データモードに切替。`playwright.config.ts` が注入 |
+| `TEST_DATABASE_URL` | **サーバー専用（テスト専用）** | IT のテスト DB 接続先。**`DATABASE_URL` は本番を指すため参照しない**。ホスト allowlist を通らない値は実行前に throw する（`testing.md` / `production-data.md`） |
+| `PLAYWRIGHT_BASE_URL` | テスト実行時 | E2E の接続先。未設定なら `http://127.0.0.1:3000`（`playwright.config.ts`） |
 
 ## 管理方針
 
