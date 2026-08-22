@@ -237,6 +237,7 @@
 - [x] カスタムフック 6 本に戻り値型を明示し、コメントを型メンバーへ移動（Issue #144 / PR #154）
 - [x] `api.md` のレスポンス整形をマッパー許可リスト方式に緩和し、`server-only` を導入（Issue #145 / PR #155）
 - [x] CSP を `Report-Only` で導入。付随セキュリティヘッダー 4 種は強制（Issue #147 / PR #156）
+- [x] CSP を `Report-Only` から**強制**へ切り替え（本番の公開導線・ローカル本番ビルドの認証後導線・`/docs` の Swagger UI・全 100 レポート本文のスキャンで違反 0 件を観測してから切替。強制後も同じ導線と `pnpm test:e2e` 33 ケースで確認 / Issue #166 / 2026-08-22）
 - [x] `constants.tsx` を `constants.ts` にリネーム（Issue #148 / PR #153）
 - [x] `.claude/rules/` の記載漏れ 3 件を補完（IT・typecheck・frontmatter / Issue #149 / PR #150）
 - [x] Vercel のデプロイ発火を制御（Issue #151 / PR #157・#160・#161）
@@ -248,4 +249,4 @@
 ### 積み残し
 
 - レートリミット本体の実装（Upstash Redis + 環境変数 2 つの設定が前提 / Issue #146）
-- CSP の `Report-Only` → 強制への切り替え、`script-src` の nonce 化（Issue #147 のフォローアップ）
+- `script-src` の nonce 化（`'unsafe-inline' 'unsafe-eval'` の撤廃。`middleware.ts` の新設を伴うため強制化とは分離 / 判断理由は `docs/06-security-specification.md`「nonce 化を見送る判断」）

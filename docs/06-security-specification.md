@@ -25,7 +25,7 @@
 
 | ヘッダー | 値 | 状態 |
 |---|---|---|
-| `Content-Security-Policy-Report-Only` | 下表のディレクティブ | **観測中**（強制ではない） |
+| `Content-Security-Policy` | 下表のディレクティブ | **強制**（#147 で Report-Only 導入 → #166 で強制へ切替） |
 | `X-Content-Type-Options` | `nosniff` | 強制 |
 | `X-Frame-Options` | `DENY` | 強制 |
 | `Referrer-Policy` | `strict-origin-when-cross-origin` | 強制 |
@@ -38,12 +38,39 @@
 | `default-src` / `base-uri` / `form-action` | `'self'` | 既定を自オリジンに限定する |
 | `object-src` | `'none'` | プラグイン埋め込みを一切許可しない |
 | `frame-ancestors` | `'none'` | クリックジャッキング対策（`X-Frame-Options` と多層） |
-| `script-src` | `'self' 'unsafe-inline' 'unsafe-eval'` | Next.js のハイドレーション用インラインスクリプトのため。**nonce 化は今後の課題** |
+| `script-src` | `'self' 'unsafe-inline' 'unsafe-eval'` | Next.js のハイドレーション用インラインスクリプトのため。**nonce 化は見送り**（後述「nonce 化を見送る判断」） |
 | `style-src` | `'self' 'unsafe-inline'` | Tailwind / Swagger UI のインラインスタイルのため |
 | `img-src` | `'self' data: blob: https:` | Markdown 本文が外部画像を参照しうるため |
 | `connect-src` | `'self' <NEXT_PUBLIC_SUPABASE_URL>` | Supabase Auth / API との通信を許可する |
 
-**Report-Only から始める理由**: いきなり強制すると Supabase Auth のリダイレクトや `/docs`（Swagger UI）が壊れうる。本番で違反レポートを観測してから `Content-Security-Policy` へ切り替える。Markdown の XSS 対策は `rehype-sanitize` が一次防御であり、CSP はその**多層防御**の位置づけ。
+**位置づけ**: Markdown の XSS 対策は `rehype-sanitize` が一次防御であり、CSP はその**多層防御**。Report-Only のままでは違反がレポートされるだけでブロックされないため、実質的に単層防御に戻ってしまう。#147 では「いきなり強制すると Supabase Auth のリダイレクトや `/docs`（Swagger UI）が壊れうる」という理由で観測モードから始め、#166 で観測を経て強制へ切り替えた。
+
+### CSP 強制化の観測記録（Issue #166 / 2026-08-22）
+
+`report-uri` / `report-to` を設定していないため違反レポートの収集経路が無い。代わりに**ブラウザのコンソールを直接観測**した（Report-Only の違反は `[Report Only] Refused to ...` として出力される）。
+
+| 観測対象 | 環境 | 結果 |
+|---|---|---|
+| 一覧 `/` · 詳細 `/report/:id` · ログイン `/login` | **本番**（`https://www.mdviewers.com`） | 違反 0 件 |
+| ログイン → 一覧 → 作成 → 詳細 → 編集 → Markdown Lab | ローカル本番ビルド（`pnpm build && pnpm start` · localStorage モード） | 違反 0 件 |
+| `/docs`（Swagger UI・8 オペレーション描画） | 同上（管理者ゲートを一時的に外して観測し、確認後に戻した） | 違反 0 件 |
+| 本番の全 100 レポート本文の静的スキャン | — | `http://` 画像・生 HTML ともに 0 件 |
+
+**Report-Only で違反が出ないことと、強制で壊れないことは別の観測**であるため、切り替えたうえで同じ導線を再度通した。Markdown の主要記法（見出し・表・コードブロック・引用・独自の「・」箇条書き・コールアウト）、外部 HTTPS 画像の読み込み、`next/font` の適用、Swagger UI の描画がいずれも壊れないことを確認している。`pnpm test:e2e`（33 ケース）も強制モードでグリーン。
+
+**`img-src` に `https:` を残す理由**: 本番データに Markdown 画像は現時点で 0 件だが、本文が外部画像を参照しうる仕様は維持する。`http://` の画像は強制後にブロックされるが、混在コンテンツとしてブラウザが元々遮断するため実害は無い。
+
+**フォントについて**: `next/font/google` はビルド時にフォントを取得して自オリジンから配信するため、`font-src 'self' data:` で足りる（Google Fonts のオリジンを許可する必要は無い）。
+
+### nonce 化を見送る判断（Issue #166）
+
+`script-src` の `'unsafe-inline' 'unsafe-eval'` は**残したまま**強制へ切り替えた。CSP の XSS 防御としては緩いが、次の理由で強制化とは切り離す。
+
+- nonce はリクエストごとの発行が必要で、**`middleware.ts` の新設**を伴う。本プロジェクトは現在 middleware を持たず、全リクエストに処理を挟む構成変更になる
+- Next.js App Router + React Compiler 構成で `'unsafe-eval'` を外せるかは未検証
+- **強制化そのものに nonce 化は不要**であり、先に強制を有効にした方が「違反が実際にブロックされる」状態を早く得られる
+
+したがって nonce 化は**別タスクとして残す**。着手する場合は middleware 導入の是非から判断する。
 
 ## レートリミット設計（未実装）
 
