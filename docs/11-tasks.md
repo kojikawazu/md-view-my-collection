@@ -213,6 +213,7 @@
 
 ## ドキュメント
 
+- [x] コードと `.claude/rules/` の乖離を機械的に棚卸しし、検出した 5 件を修正（環境変数一覧の欠落 2 件・陳腐化したファイルパス 4 件・置き換え済みの旧テスト方式が「正式一覧」の見出しで残存）。再発防止を `.claude/rules/documentation.md` へ昇格 / Issue #142 / 2026-08-22）
 - [x] ドキュメントを最新状態に整理
 - [x] `npm run dev` 時の `tailwindcss` 解決エラーのバグレポートを起票（Issue #32 / 2026-02-14）
 - [x] 環境変数一覧を docs に追加し、README の参照先を docs に統一（`docs/04-non-functional-specification.md` / 2026-06-10）
