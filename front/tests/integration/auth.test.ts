@@ -39,23 +39,28 @@ describe('POST /api/auth/is-allowed (integration)', () => {
     delete process.env.NEXT_PUBLIC_AUTH_MODE;
   });
 
+  // 許可・拒否は別々の判定分岐。同じ it に置くと、先に評価される許可側が落ちた時点で
+  // 「許可していないメールを拒む」という本命の観点が一度も評価されない（Issue #187）。
   it('local モード: body.email が ADMIN_EMAIL 一致なら allowed=true', async () => {
     process.env.NEXT_PUBLIC_AUTH_MODE = 'local';
-    const ok = await isAllowedPost(
+    const res = await isAllowedPost(
       makeRequest('http://localhost/api/auth/is-allowed', {
         method: 'POST',
         body: { email: 'admin@example.com' },
       }),
     );
-    expect(await ok.json()).toEqual({ allowed: true });
+    expect(await res.json()).toEqual({ allowed: true });
+  });
 
-    const ng = await isAllowedPost(
+  it('local モード: body.email が ADMIN_EMAIL 不一致なら allowed=false', async () => {
+    process.env.NEXT_PUBLIC_AUTH_MODE = 'local';
+    const res = await isAllowedPost(
       makeRequest('http://localhost/api/auth/is-allowed', {
         method: 'POST',
         body: { email: 'someone@else.com' },
       }),
     );
-    expect(await ng.json()).toEqual({ allowed: false });
+    expect(await res.json()).toEqual({ allowed: false });
   });
 
   it('supabase モード: トークンなしは 401', async () => {
@@ -67,24 +72,27 @@ describe('POST /api/auth/is-allowed (integration)', () => {
     expect(await res.json()).toEqual({ allowed: false });
   });
 
-  it('supabase モード: 管理者トークンは allowed=true / 非管理者は false', async () => {
+  it('supabase モード: 管理者トークンは allowed=true', async () => {
     process.env.NEXT_PUBLIC_AUTH_MODE = 'supabase';
-    const admin = await isAllowedPost(
+    const res = await isAllowedPost(
       makeRequest('http://localhost/api/auth/is-allowed', {
         method: 'POST',
         body: {},
         token: ADMIN_TOKEN,
       }),
     );
-    expect(await admin.json()).toEqual({ allowed: true });
+    expect(await res.json()).toEqual({ allowed: true });
+  });
 
-    const user = await isAllowedPost(
+  it('supabase モード: 非管理者トークンは allowed=false', async () => {
+    process.env.NEXT_PUBLIC_AUTH_MODE = 'supabase';
+    const res = await isAllowedPost(
       makeRequest('http://localhost/api/auth/is-allowed', {
         method: 'POST',
         body: {},
         token: USER_TOKEN,
       }),
     );
-    expect(await user.json()).toEqual({ allowed: false });
+    expect(await res.json()).toEqual({ allowed: false });
   });
 });

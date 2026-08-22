@@ -102,7 +102,13 @@ test.describe('Markdown rendering (detail view)', () => {
     await page.goto('/report/md-2');
 
     const article = page.getByRole('article');
-    await expect(article.getByRole('heading', { name: 'Sanitize Check' })).toBeVisible();
+
+    // 本文が描画されていることの前提確認。以下の toHaveCount(0) は画面に何も出ていなくても
+    // 通ってしまうため、この確認が無いと偽の緑になる。
+    // 一方で hard にすると、Markdown 描画とサニタイズが同じ変更で同時に壊れたときここで停止し、
+    // 本命のサニタイズ検証が一度も評価されない（Issue #187 / 実際に TC-041 で起きた）。
+    // soft なら失敗を記録したうえで後続を必ず評価する。
+    await expect.soft(article.getByRole('heading', { name: 'Sanitize Check' })).toBeVisible();
 
     // 本文由来の要素が DOM に注入されていないこと
     await expect(article.locator('script')).toHaveCount(0);
@@ -123,8 +129,9 @@ test.describe('Markdown rendering (detail view)', () => {
     await setStorage(page, { reports: markdownReportsFixture, user: null });
     await page.goto('/report/md-3');
 
-    // タイトル等のメタ情報は表示されるが、本文ブロックは描画されない
-    await expect(page.getByRole('heading', { name: 'Markdown Empty' })).toBeVisible();
+    // タイトル等のメタ情報は表示されるが、本文ブロックは描画されない。
+    // 前提確認を soft にする理由は TC-041 と同じ（Issue #187）
+    await expect.soft(page.getByRole('heading', { name: 'Markdown Empty' })).toBeVisible();
     await expect(page.getByRole('article').locator('.report-markdown')).toHaveCount(0);
   });
 });

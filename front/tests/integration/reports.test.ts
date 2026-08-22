@@ -96,7 +96,7 @@ describe('POST /api/reports (integration)', () => {
     expect(res.status).toBe(403);
   });
 
-  it('準正常: バリデーションエラーは 400（DB へ書き込まない）', async () => {
+  it('準正常: バリデーションエラーは 400', async () => {
     const res = await POST(
       makeRequest(REPORTS_URL, {
         method: 'POST',
@@ -107,6 +107,18 @@ describe('POST /api/reports (integration)', () => {
     expect(res.status).toBe(400);
     const body = (await res.json()) as { errors: Record<string, string> };
     expect(Object.keys(body.errors).length).toBeGreaterThan(0);
+  });
+
+  // 「書き込まない」を上の 400 検証と同居させると、検証が素通りして 201 が返る変更では
+  // status アサーションで停止し、書き込みの有無が確認されないまま終わる（Issue #187）。
+  it('準正常: バリデーションエラー時は DB へ書き込まない', async () => {
+    await POST(
+      makeRequest(REPORTS_URL, {
+        method: 'POST',
+        body: validBody({ title: '', category: 'InvalidCat' }),
+        token: ADMIN_TOKEN,
+      }),
+    );
     expect(await prisma.report.count()).toBe(0);
   });
 

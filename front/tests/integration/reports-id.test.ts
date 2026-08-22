@@ -43,18 +43,24 @@ describe('PATCH /api/reports/[id] (integration)', () => {
   beforeEach(resetDb);
   afterAll(disconnectDb);
 
-  it('異常: 未認証 401 / 非管理者 403', async () => {
+  // 401 と 403 は requireAdmin の別分岐。同じ it に置くと、先に評価される 401 が
+  // 落ちた時点でランナーが停止し、403 が一度も評価されないまま終わる（Issue #187）。
+  it('異常: 未認証は 401', async () => {
     const id = await seedReport();
-    const unauth = await PATCH(
+    const res = await PATCH(
       makeRequest(url(id), { method: 'PATCH', body: { title: 'x' } }),
       routeContext(id),
     );
-    expect(unauth.status).toBe(401);
-    const forbidden = await PATCH(
+    expect(res.status).toBe(401);
+  });
+
+  it('異常: 非管理者は 403', async () => {
+    const id = await seedReport();
+    const res = await PATCH(
       makeRequest(url(id), { method: 'PATCH', body: { title: 'x' }, token: USER_TOKEN }),
       routeContext(id),
     );
-    expect(forbidden.status).toBe(403);
+    expect(res.status).toBe(403);
   });
 
   it('準正常: 不正カテゴリは 400', async () => {
@@ -118,19 +124,20 @@ describe('DELETE /api/reports/[id] (integration)', () => {
   beforeEach(resetDb);
   afterAll(disconnectDb);
 
-  it('異常: 未認証 401 / 非管理者 403', async () => {
+  // PATCH と同じ理由で分割する（Issue #187）。
+  it('異常: 未認証は 401', async () => {
     const id = await seedReport();
-    expect(
-      (await DELETE(makeRequest(url(id), { method: 'DELETE' }), routeContext(id))).status,
-    ).toBe(401);
-    expect(
-      (
-        await DELETE(
-          makeRequest(url(id), { method: 'DELETE', token: USER_TOKEN }),
-          routeContext(id),
-        )
-      ).status,
-    ).toBe(403);
+    const res = await DELETE(makeRequest(url(id), { method: 'DELETE' }), routeContext(id));
+    expect(res.status).toBe(401);
+  });
+
+  it('異常: 非管理者は 403', async () => {
+    const id = await seedReport();
+    const res = await DELETE(
+      makeRequest(url(id), { method: 'DELETE', token: USER_TOKEN }),
+      routeContext(id),
+    );
+    expect(res.status).toBe(403);
   });
 
   it('異常: 存在しない ID は 404', async () => {
