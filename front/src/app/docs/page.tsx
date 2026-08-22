@@ -1,28 +1,26 @@
 'use client';
 
-import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import type { ComponentType } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAppState } from '@/providers/AppStateProvider';
 import { supabase } from '@/lib/supabaseClient';
 import { ApiError } from '@/repositories/client';
 import { fetchOpenApiSpec } from '@/repositories/openapi';
-import 'swagger-ui-react/swagger-ui.css';
-
-// Swagger UI は SSR 非対応かつ重いため、クライアントで動的読み込みする。
-const SwaggerUI = dynamic(() => import('swagger-ui-react'), { ssr: false }) as ComponentType<{
-  spec: object;
-}>;
+import 'swagger-ui-dist/swagger-ui.css';
 
 /**
  * API リファレンス（管理者のみ）。
  * Supabase セッションのトークンで管理者ゲート付き `/api/openapi` を読み込み、Swagger UI で描画する。
+ *
+ * 描画には React ラッパー（`swagger-ui-react`）ではなく **`swagger-ui-dist` の自己完結バンドル**を使う。
+ * ラッパー経由だと apidom（OAS 3.1 の解決に使われる）がバンドラの解決を通る際に壊れ、
+ * オペレーションを展開してもパラメータ・リクエストボディ・レスポンスが一切描画されなかった（Issue #197）。
  */
 export default function DocsPage() {
   const { currentUser, isHydrated } = useAppState();
   const [spec, setSpec] = useState<object | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!isHydrated || !currentUser) return;
@@ -53,6 +51,24 @@ export default function DocsPage() {
     };
   }, [isHydrated, currentUser]);
 
+  useEffect(() => {
+    const node = containerRef.current;
+    if (!spec || !node) return;
+    let active = true;
+
+    // 自己完結バンドルは大きく、かつブラウザ専用（SSR 不可）のためクライアントで動的に読み込む。
+    void import('swagger-ui-dist/swagger-ui-bundle.js').then(({ default: SwaggerUIBundle }) => {
+      if (active) SwaggerUIBundle({ spec, domNode: node });
+    });
+
+    return () => {
+      active = false;
+      // Swagger UI が描画した DOM は React の管理外（この div に children を渡していない）。
+      // 破棄はこちらの責務になるため、アンマウント時に明示的に空にする。
+      node.replaceChildren();
+    };
+  }, [spec]);
+
   if (!isHydrated) {
     return <main className="p-6 text-sm text-gray-500">読み込み中…</main>;
   }
@@ -82,7 +98,7 @@ export default function DocsPage() {
 
   return (
     <main>
-      <SwaggerUI spec={spec} />
+      <div ref={containerRef} />
     </main>
   );
 }

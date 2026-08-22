@@ -62,7 +62,7 @@
 - `front/` で `pnpm gen:openapi` を実行すると、`front/src/lib/openapi/document.ts`（`buildOpenApiDocument`）+ `front/scripts/gen-openapi.ts` 経由で `docs/openapi.json` が再生成される。
 - 対象パス: `/api/reports`（GET/POST）, `/api/reports/{id}`（GET/PATCH/DELETE）, `/api/tags`（GET）, `/api/auth/admin`（GET）, `/api/auth/is-allowed`（POST）。
 - **本書の役割**: 設計判断（DJ-1〜DJ-6）・補足・エンドポイント概要を担う。フィールド表やステータス羅列などの機械的な契約記述は openapi.json に集約し、本書からは重複を排除する。
-- Swagger UI は導入していない（JSON を直接参照する）。
+- ブラウザ閲覧用に `/docs`（Swagger UI・**管理者のみ**）を提供する（運用は `.claude/rules/api.md`）。描画には **`swagger-ui-dist` の自己完結バンドル**を使う。React ラッパー（`swagger-ui-react`）はバンドラの解決を通る過程で apidom（OAS 3.1 の解決に使われる）が壊れ、オペレーションを展開してもスキーマが一切描画されなかった（Issue #197）。
 
 ## 概要
 

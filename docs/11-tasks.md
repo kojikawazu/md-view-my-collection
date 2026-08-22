@@ -228,6 +228,7 @@
 - [x] zod + zod-openapi 導入。`front/src/lib/schemas/` を契約の単一ソース化し、`lib/validation.ts` を zod アダプタへ移行（既存 45 テスト互換維持 / 2026-06-13）
 - [x] `pnpm gen:openapi` で `docs/openapi.json`（OpenAPI 3.1）を生成。`docs/07-api-specification.md` の契約記述を生成物参照へ置換（2026-06-13）
 - [x] Swagger UI を `/docs`（管理者のみ）に導入。スペックは管理者ゲート付き `/api/openapi` から取得（2026-06-13）
+- [x] `/docs` の Swagger UI を `swagger-ui-react` から `swagger-ui-dist` の自己完結バンドルへ置き換え（バンドラ経由で apidom が壊れ、オペレーションを展開しても Parameters / Request body / Responses が一切描画されていなかった。`docs/07-api-specification.md` の「Swagger UI は導入していない」という実態と違う記述も併せて修正 / Issue #197 / 2026-08-22）
 
 ## ルールと実装の乖離解消（Issue #142）
 
