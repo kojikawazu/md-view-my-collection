@@ -7,6 +7,8 @@
 - [CI（GitHub Actions）](#cigithub-actions)
 - [テストデータ注入](#テストデータ注入)
 - [現行の自動テスト実装範囲](#現行の自動テスト実装範囲)
+- [統合テスト（IT・APIルート × 実 DB）](#統合テストitapiルート--実-db)
+- [アサーション順序の点検（Issue #187）](#アサーション順序の点検issue-187)
 - [画面×観点マトリクス（前提/手順/期待）](#画面観点マトリクス前提手順期待)
   - [一覧（/）](#一覧)
   - [詳細（/report/:id）](#詳細reportid)
@@ -109,8 +111,28 @@
 - DB: **Testcontainers で実 Postgres を起動**。`globalSetup` で 1 度だけ起動し `tests/integration/schema.sql`（`pnpm gen:test-schema` 生成物）を適用。テスト間 `TRUNCATE`、終了時にコンテナ破棄（**テストデータを残さない**）。前提として **Docker が必要**。
 - **接続先ガード**: 接続先の解決は `front/tests/support/db-target.ts` に集約する。`DATABASE_URL`（本番 Supabase を指す）は**参照しない**。上書きは `TEST_DATABASE_URL` のみで、いずれの経路もホスト allowlist（`localhost` / `127.0.0.1` / `::1`）を通り、**DDL 適用より前に**非ローカルなら throw する。ガード自体の UT は `front/tests/support/__tests__/db-target.test.ts`（21 ケース。`DATABASE_URL` 汚染への耐性を含む）。背景は `.claude/rules/production-data.md` と Issue #168。
 - 方式: route ハンドラを in-process で直接呼び出し（`NextRequest`）、Prisma は実コンテナに接続。認証は `vi.mock('@supabase/supabase-js')` でモック（`requireAdmin` の 401/403/200 分岐は実検証）。
-- カバー: GET 一覧（ページング・content 除外・ヘッダ）/ POST 作成（201・タグ upsert・外部URL・400・401・403）/ GET 詳細（200・404）/ PATCH（部分更新・タグ置換・URL 全削除・404=P2025・400・401/403）/ DELETE（200・CASCADE 実確認・404・401/403）/ tags GET / auth.admin / auth.is-allowed（local・supabase）/ openapi ゲート。33 ケース。
+- カバー: GET 一覧（ページング・content 除外・ヘッダ）/ POST 作成（201・タグ upsert・外部URL・400・401・403）/ GET 詳細（200・404）/ PATCH（部分更新・タグ置換・URL 全削除・404=P2025・400・401/403）/ DELETE（200・CASCADE 実確認・404・401/403）/ tags GET / auth.admin / auth.is-allowed（local・supabase）/ openapi ゲート。38 ケース。
 - RLS/実 Auth は IT のスコープ外（Prisma オーナー接続で RLS はバイパス）。E2E の実 DB 化（Supabase CLI）で別途カバー予定。
+
+## アサーション順序の点検（Issue #187）
+
+方針の正本は [`.claude/rules/testing.md`](../.claude/rules/testing.md)「アサーションの並べ方（前提確認で本命を隠さない）」。ここには**本プロジェクトで実際に是正した箇所**だけを記録する。
+
+発見の経緯: TC-041（生 HTML のサニタイズ）に 2 種類の変異を与えたところどちらでも赤くなったが、落ちていたのは常に先頭の「見出しが表示される」で、**サニタイズのアサーションは一度も評価されていなかった**。同じ構造を `tests/e2e/` · `tests/integration/` · `src/**/__tests__/` の全テストで点検し、次を是正した。
+
+| 対象 | 隠れていた観点 | 是正 |
+|---|---|---|
+| `e2e/markdown.spec.ts` TC-041 | `script` / `img` / `javascript:` の非注入・XSS 未実行 | 前提確認を `expect.soft()` へ |
+| `e2e/app.spec.ts` TC-004/005/006 | 未ログインで編集・削除の導線が出ない | TC-004 / TC-005 / TC-006 に分割し、TC-006 の前提確認を soft へ |
+| `e2e/app.spec.ts` TC-009/010 | `/report/:id/edit` · `/report/markdown-lab` のリダイレクト | ルート単位に分割（markdown-lab は仕様どおり TC-021 へ戻した） |
+| `e2e/app.spec.ts` TC-020 | ログアウト後に編集・削除の導線が出ない | ログアウト成立の確認を soft へ |
+| `integration/reports-id.test.ts` PATCH / DELETE | 非管理者は 403 | 401 と 403 を別 `it` へ分割 |
+| `integration/reports.test.ts` POST | バリデーション失敗時に DB へ書き込まない | 400 の検証と書き込み検証を別 `it` へ分割 |
+| `integration/auth.test.ts` is-allowed | 許可外メール / 非管理者トークンを拒む | 許可・拒否を別 `it` へ分割 |
+
+- `e2e/markdown.spec.ts` TC-042 は認可の観点ではないが同じ構造だったため併せて soft 化した。
+- UT（`src/**/__tests__/`）に該当は無かった。前提確認とセキュリティ観点が同居する構造を持たない。
+- **これまで TC-009/010 のテストに markdown-lab のリダイレクトが混ざり、TC-021 のテスト名が TC-022 の内容を指していた**（本書のテストケース定義とテスト名が食い違っていた）。分割に合わせて本書の定義どおりに揃えた。
 
 ## 画面×観点マトリクス（前提/手順/期待）
 

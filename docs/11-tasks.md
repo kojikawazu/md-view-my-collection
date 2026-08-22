@@ -108,6 +108,7 @@
 - [ ] E2E/シナリオの実 DB 化（Supabase CLI ローカルスタック・実 Auth/RLS・テストデータ後始末必須 / PR2 予定）
 - [x] 本文の Markdown 描画に E2E 回帰ケースを追加（TC-037〜TC-042: 主要記法・GFM テーブル・「・」箇条書き変換・コールアウト・サニタイズ・本文未取得 / `tests/e2e/markdown.spec.ts` / Issue #25 / 2026-08-09）
 - [x] `tsconfig.json` の `exclude` から `tests` を外し、`front/tests/` 配下を `pnpm typecheck` の対象に含めた（型エラー 0 件・Vitest / Playwright とも `globals` 未使用のため型衝突なし / Issue #183 / 2026-08-09）
+- [x] アサーション順序を全テストで点検し、前提確認に隠れていたセキュリティ・認可の観点を是正（E2E 4 箇所は分割 + `expect.soft()`・IT 3 箇所は `it` 分割で 33→38 ケース・手動ミューテーションの運用を `.claude/rules/testing.md` へ昇格 / Issue #187 / 2026-08-22）
 
 ## デプロイ/運用
 

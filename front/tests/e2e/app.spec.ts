@@ -114,20 +114,34 @@ test.describe('Reports app', () => {
     await expect(page.getByRole('link', { name: 'Paged Report 22', exact: true })).toHaveCount(0);
   });
 
-  test('TC-004/005/006: detail view handles valid/invalid and hides admin controls', async ({
-    page,
-  }) => {
+  test('TC-004: detail view shows title, author and tags', async ({ page }) => {
     await setStorage(page, { reports: reportsFixture, user: null });
-
     await page.goto('/report/1');
+
     await expect(page.getByRole('heading', { name: 'Sample Report One' })).toBeVisible();
     await expect(page.getByText('Manager')).toBeVisible();
     await expect(page.getByRole('article').getByText('#AI')).toBeVisible();
+  });
+
+  test('TC-005: unknown detail id shows not found', async ({ page }) => {
+    await setStorage(page, { reports: reportsFixture, user: null });
+    await page.goto('/report/unknown');
+
+    await expect(page.getByText('Report Not Found')).toBeVisible();
+  });
+
+  // 描画の検証（TC-004）と同居させていたため、タグ表示が壊れた時点で停止し、
+  // 本命である「未ログインに管理操作を見せない」が評価されないままだった（Issue #187）。
+  test('TC-006: detail view hides admin controls when signed out', async ({ page }) => {
+    await setStorage(page, { reports: reportsFixture, user: null });
+    await page.goto('/report/1');
+
+    // 前提確認。以下の toHaveCount(0) は画面が出ていなくても通るため、これが無いと偽の緑になる。
+    // hard にすると描画の失敗で停止して本命が評価されないので soft にする。
+    await expect.soft(page.getByRole('heading', { name: 'Sample Report One' })).toBeVisible();
+
     await expect(page.getByRole('button', { name: '削除' })).toHaveCount(0);
     await expect(page.getByRole('link', { name: '編集' })).toHaveCount(0);
-
-    await page.goto('/report/unknown');
-    await expect(page.getByText('Report Not Found')).toBeVisible();
   });
 
   test('TC-007/008: login success and empty input stays', async ({ page }) => {
@@ -144,16 +158,27 @@ test.describe('Reports app', () => {
     await expect(page.getByRole('navigation').getByText('Manager')).toBeVisible();
   });
 
-  test('TC-009/010: unauth access redirects to login', async ({ page }) => {
+  // 3 ルートは互いに独立した認可の観点。1 つの test に並べると、先頭が落ちた時点で
+  // 残りのルートが一度も評価されない（Issue #187）。ルートごとに分ける。
+  // 併せて、これまで TC-009/010 に混ざっていた markdown-lab を仕様どおり TC-021 に戻す。
+  test('TC-009: unauth access to create page redirects to login', async ({ page }) => {
     await setStorage(page, { reports: reportsFixture, user: null });
-
     await page.goto('/report/new');
-    await expect(page).toHaveURL(/\/login$/);
 
+    await expect(page).toHaveURL(/\/login$/);
+  });
+
+  test('TC-010: unauth access to edit page redirects to login', async ({ page }) => {
+    await setStorage(page, { reports: reportsFixture, user: null });
     await page.goto('/report/1/edit');
-    await expect(page).toHaveURL(/\/login$/);
 
+    await expect(page).toHaveURL(/\/login$/);
+  });
+
+  test('TC-021: unauth access to markdown lab redirects to login', async ({ page }) => {
+    await setStorage(page, { reports: reportsFixture, user: null });
     await page.goto('/report/markdown-lab');
+
     await expect(page).toHaveURL(/\/login$/);
   });
 
@@ -234,16 +259,19 @@ test.describe('Reports app', () => {
     await page.goto('/');
 
     await page.getByRole('button', { name: 'Logout' }).click();
-    await expect(page).toHaveURL(/\/login$/);
-    await expect(page.getByRole('button', { name: 'Authenticate' })).toBeVisible();
+    // ログアウトが成立したことの前提確認。hard にすると遷移が壊れた時点で停止し、
+    // 本命の「ログアウト後に管理操作が出ない」が評価されないまま終わる（Issue #187）
+    await expect.soft(page).toHaveURL(/\/login$/);
+    await expect.soft(page.getByRole('button', { name: 'Authenticate' })).toBeVisible();
     await page.waitForFunction(() => localStorage.getItem('espresso_user') === 'null');
 
     await page.goto('/report/1');
+    await expect.soft(page.getByRole('heading', { name: 'Sample Report One' })).toBeVisible();
     await expect(page.getByRole('button', { name: '削除' })).toHaveCount(0);
     await expect(page.getByRole('link', { name: '編集' })).toHaveCount(0);
   });
 
-  test('TC-021/022: markdown lab requires auth and is reachable from header menu', async ({
+  test('TC-022: markdown lab is reachable from the header menu when signed in', async ({
     page,
   }) => {
     await setStorage(page, { reports: reportsFixture, user: userFixture });
