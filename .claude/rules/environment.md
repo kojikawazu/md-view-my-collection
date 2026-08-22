@@ -14,6 +14,8 @@ globs:
 | `NEXT_PUBLIC_SITE_URL` | クライアント | Google OAuth リダイレクト先 |
 | `ADMIN_EMAIL` | **サーバー専用** | 管理者メール（カンマ区切りで複数可）。`/api/auth/admin` で照合 |
 | `DATABASE_URL` | **サーバー専用** | Supabase Postgres 接続文字列（`prisma.config.ts` で参照） |
+| `UPSTASH_REDIS_REST_URL` | **サーバー専用** | レートリミットのカウンタ用 Upstash Redis の REST URL。**未設定ならレートリミットを無効化**する |
+| `UPSTASH_REDIS_REST_TOKEN` | **サーバー専用** | 同上の REST トークン。URL と揃って初めて有効になる |
 | `NEXT_PUBLIC_AUTH_MODE` | クライアント（**E2E専用**） | `local` でローカル認証モードに切替。`playwright.config.ts` が注入 |
 | `NEXT_PUBLIC_DATA_MODE` | クライアント（**E2E専用**） | `local` で localStorage データモードに切替。`playwright.config.ts` が注入 |
 
@@ -22,8 +24,9 @@ globs:
 - ローカル: `front/.env.local` に記載（`.gitignore` 対象）。
 - 本番: Vercel の環境変数で管理。
 - CI（テスト実行時）: `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` はダミー値で動作させる。
+- `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` は **CI では設定しない**。未設定だとレートリミットが無効化されるため、E2E / IT が上限に引っかからない（`docs/06-security-specification.md`）。
 
 ## 注意事項
 
-- `ADMIN_EMAIL` / `DATABASE_URL` には **`NEXT_PUBLIC_` プレフィックスを付けない**（クライアントバンドルに混入させない）。
+- `ADMIN_EMAIL` / `DATABASE_URL` / `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` には **`NEXT_PUBLIC_` プレフィックスを付けない**（クライアントバンドルに混入させない）。
 - シークレットをコードにハードコードしない。詳細は `.claude/rules/security.md` を参照。

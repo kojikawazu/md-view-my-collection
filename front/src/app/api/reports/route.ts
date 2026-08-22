@@ -3,6 +3,7 @@ import type { Report, ReportTagMapping, ReportTag, ExternalUrl } from '@prisma/c
 import { prisma } from '@/lib/db';
 import { validateReportInput, validateExternalUrls } from '@/lib/validation';
 import { requireAdmin } from '@/lib/auth-server';
+import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit';
 
 /** タグマッピング行に、関連する `ReportTag` を結合した型。 */
 type TagMapping = ReportTagMapping & { ReportTag: ReportTag };
@@ -139,6 +140,11 @@ export async function GET(request: NextRequest) {
  * @returns 作成した Report を 201 で返す。認可失敗は 401/403、検証エラーは 400 で `{ errors }`、失敗時は 500
  */
 export async function POST(request: NextRequest) {
+  // 認可より前に判定する。`requireAdmin()` は Supabase へのトークン検証を伴うため、
+  // 弾くなら外部 API を呼ぶ前に弾く（Issue #146）。
+  const limit = await checkRateLimit('reports-write', request);
+  if (!limit.allowed) return rateLimitResponse(limit);
+
   const auth = await requireAdmin(request, 'api/reports');
   if (!auth.ok) return auth.response;
 

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
@@ -12,10 +13,16 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
  * そのメールアドレスを `ADMIN_EMAIL`（カンマ区切り・大小無視）と照合する。
  * 管理者判定はサーバー専用の `ADMIN_EMAIL` で行い、クライアントには公開しない。
  *
+ * Bearer トークンの総当たりを許さないよう、認証処理より前にレートリミットを適用する
+ * （`docs/06-security-specification.md`）。
+ *
  * @param request - 受信リクエスト（Authorization ヘッダの Bearer トークンを参照）
- * @returns 判定結果 `{ isAdmin }` の JSON。トークン欠如・検証失敗時は 401 で `{ isAdmin: false }`
+ * @returns 判定結果 `{ isAdmin }` の JSON。トークン欠如・検証失敗時は 401 で `{ isAdmin: false }`、上限超過時は 429
  */
 export async function GET(request: Request) {
+  const limit = await checkRateLimit('auth-admin', request);
+  if (!limit.allowed) return rateLimitResponse(limit);
+
   const authHeader = request.headers.get('authorization');
   const token = authHeader ? authHeader.replace(/^Bearer\s+/i, '').trim() : '';
 

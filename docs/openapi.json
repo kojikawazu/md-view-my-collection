@@ -133,6 +133,16 @@
               }
             }
           },
+          "429": {
+            "description": "レートリミット超過",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "500": {
             "description": "サーバーエラー",
             "content": {
@@ -266,6 +276,16 @@
               }
             }
           },
+          "429": {
+            "description": "レートリミット超過",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "500": {
             "description": "サーバーエラー",
             "content": {
@@ -319,6 +339,16 @@
           },
           "404": {
             "description": "未存在",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "レートリミット超過",
             "content": {
               "application/json": {
                 "schema": {
@@ -397,6 +427,16 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "レートリミット超過",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -434,6 +474,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/IsAllowedResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "レートリミット超過",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }

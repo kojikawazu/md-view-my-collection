@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit';
 
 /** 許可判定 API のレスポンス形式（許可されていれば `allowed: true`）。 */
 type AllowedResponse = {
@@ -53,10 +54,16 @@ const extractBearerToken = (request: NextRequest) => {
  * - local モード（E2E 専用）: リクエストボディの `email` を許可リストと照合する。
  * - supabase モード（本番）: Bearer トークンで Supabase ユーザーを解決し、そのメールを照合する。
  *
+ * 許可リストに載っているメールを総当たりで**列挙**されないよう、判定より前にレートリミットを
+ * 適用する（`docs/06-security-specification.md`）。
+ *
  * @param request - 受信リクエスト（local はボディ、supabase は Authorization ヘッダを参照）
- * @returns 判定結果 `{ allowed }` の JSON。トークン欠如・検証失敗時は 401、Supabase 環境変数不足時は 500
+ * @returns 判定結果 `{ allowed }` の JSON。トークン欠如・検証失敗時は 401、Supabase 環境変数不足時は 500、上限超過時は 429
  */
 export async function POST(request: NextRequest) {
+  const limit = await checkRateLimit('auth-is-allowed', request);
+  if (!limit.allowed) return rateLimitResponse(limit);
+
   const authMode = process.env.NEXT_PUBLIC_AUTH_MODE ?? 'supabase';
 
   if (authMode === 'local') {

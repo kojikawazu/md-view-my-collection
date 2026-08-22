@@ -55,6 +55,7 @@
     - [正常系](#正常系-6)
     - [準正常系](#準正常系-5)
     - [異常系](#異常系-5)
+- [テスト設計: レートリミット（lib/rate-limit.ts）](#テスト設計-レートリミットlibrate-limitts)
 - [テスト設計: ConfirmationModal コンポーネント](#テスト設計-confirmationmodal-コンポーネント)
   - [対象](#対象-4)
   - [モック方針](#モック方針-4)
@@ -111,7 +112,7 @@
 - DB: **Testcontainers で実 Postgres を起動**。`globalSetup` で 1 度だけ起動し `tests/integration/schema.sql`（`pnpm gen:test-schema` 生成物）を適用。テスト間 `TRUNCATE`、終了時にコンテナ破棄（**テストデータを残さない**）。前提として **Docker が必要**。
 - **接続先ガード**: 接続先の解決は `front/tests/support/db-target.ts` に集約する。`DATABASE_URL`（本番 Supabase を指す）は**参照しない**。上書きは `TEST_DATABASE_URL` のみで、いずれの経路もホスト allowlist（`localhost` / `127.0.0.1` / `::1`）を通り、**DDL 適用より前に**非ローカルなら throw する。ガード自体の UT は `front/tests/support/__tests__/db-target.test.ts`（21 ケース。`DATABASE_URL` 汚染への耐性を含む）。背景は `.claude/rules/production-data.md` と Issue #168。
 - 方式: route ハンドラを in-process で直接呼び出し（`NextRequest`）、Prisma は実コンテナに接続。認証は `vi.mock('@supabase/supabase-js')` でモック（`requireAdmin` の 401/403/200 分岐は実検証）。
-- カバー: GET 一覧（ページング・content 除外・ヘッダ）/ POST 作成（201・タグ upsert・外部URL・400・401・403）/ GET 詳細（200・404）/ PATCH（部分更新・タグ置換・URL 全削除・404=P2025・400・401/403）/ DELETE（200・CASCADE 実確認・404・401/403）/ tags GET / auth.admin / auth.is-allowed（local・supabase）/ openapi ゲート。38 ケース。
+- カバー: GET 一覧（ページング・content 除外・ヘッダ）/ POST 作成（201・タグ upsert・外部URL・400・401・403）/ GET 詳細（200・404）/ PATCH（部分更新・タグ置換・URL 全削除・404=P2025・400・401/403）/ DELETE（200・CASCADE 実確認・404・401/403）/ tags GET / auth.admin / auth.is-allowed（local・supabase）/ openapi ゲート / レートリミット（Upstash のみモック）。43 ケース。
 - RLS/実 Auth は IT のスコープ外（Prisma オーナー接続で RLS はバイパス）。E2E の実 DB 化（Supabase CLI）で別途カバー予定。
 
 ## アサーション順序の点検（Issue #187）
@@ -848,6 +849,66 @@ DB 側に CHECK 制約が無いため、**型の断言を実行時に裏付け�
 | R-A-2 | 必須項目の欠落 | title なし | `null` | High |
 | R-A-3 | オブジェクトでない値 | `null` / 文字列 | `null` | Medium |
 | R-A-4 | 配列でない値 | `{ reports: [] }` / `null` | `[]` を返し `console.error` | High |
+
+---
+
+# テスト設計: レートリミット（lib/rate-limit.ts）
+
+## 対象
+
+- 対象機能: 認証系・書き込み系エンドポイントのレートリミット（Issue #146）
+- 対象ファイル: `front/src/lib/rate-limit.ts`
+- スタック: Frontend BFF (Next.js 16 / Vitest)
+- テストファイル: `front/src/lib/__tests__/rate-limit.test.ts`（UT）/ `front/tests/integration/rate-limit.test.ts`（IT）
+
+**「効いているつもり」が最も危険**な領域であり、無効化条件・フェイルオープンの判断を含めて検証する。
+
+## モック方針
+
+- モック許可: **Upstash（`@upstash/ratelimit` / `@upstash/redis`）のみ**。真の外部 3rd-party であり、UT・IT とも実接続しない
+- モック許可: `console.warn` / `console.error`（出力抑制。呼ばれたこと自体は検証対象）
+- モック禁止: `lib/rate-limit.ts` 自身、Route Handler、`requireAdmin()`。IT ではすべて実物を通す
+- 時刻は `vi.useFakeTimers()` で固定する（`retryAfterSeconds` が `reset - Date.now()` から計算されるため）
+
+---
+
+## テストケース一覧（UT）
+
+### 正常系（UT）
+
+| # | テストケース | 入力 | 期待結果 | 優先度 |
+|---|---|---|---|---|
+| RL-N-1 | 上限内 | `success: true` | `{ allowed: true, retryAfterSeconds: 0 }` | High |
+| RL-N-2 | 送信元 IP の解決（プロキシ連結） | `x-forwarded-for: "203.0.113.9, 10.0.0.1"` | 左端の `203.0.113.9` でカウント | High |
+| RL-N-3 | 送信元 IP の解決（代替ヘッダー） | `x-real-ip` のみ | その値でカウント | Medium |
+| RL-N-4 | 429 応答の形 | `retryAfterSeconds: 42` | 429 / `Retry-After: 42` / `{ error }` | High |
+
+### 準正常系（UT）
+
+| # | テストケース | 入力 | 期待結果 | 優先度 |
+|---|---|---|---|---|
+| RL-S-1 | 上限超過 | `success: false`, `reset` が 30 秒後 | `{ allowed: false, retryAfterSeconds: 30 }` | High |
+| RL-S-2 | `reset` が過去 | `reset` が 5 秒前 | `retryAfterSeconds: 1`（`Retry-After: 0` を出さない） | High |
+| RL-S-3 | 送信元 IP 不明 | IP ヘッダーなし | `unknown` バケットでカウント（**素通しにしない**） | High |
+
+### 異常系（UT）
+
+| # | テストケース | 入力 | 期待結果 | 優先度 |
+|---|---|---|---|---|
+| RL-A-1 | 環境変数が未設定 | `UPSTASH_*` が空 | 常に通す。警告は**初回 1 回だけ**。Upstash を呼ばない | High |
+| RL-A-2 | Upstash が失敗 | `limit()` が reject | 通す（可用性優先）。`console.error` に残す | High |
+
+---
+
+## テストケース一覧（IT・ルートハンドラ経由）
+
+| # | テストケース | 期待結果 | 優先度 |
+|---|---|---|---|
+| RLI-N-1 | 上限内なら本来の処理へ進む | `GET /api/auth/admin` がトークン欠落の 401 を返す（429 ではない） | High |
+| RLI-A-1 | `GET /api/auth/admin` の上限超過 | 429 / `Retry-After` / `{ error }` | High |
+| RLI-A-2 | `POST /api/auth/is-allowed` の上限超過 | 429 / `Retry-After` | High |
+| RLI-A-3 | 書き込み系は認可より前に弾く | 管理者トークン付きでも 429（Supabase を呼ばせない） | High |
+| RLI-S-1 | 対象ごとにカウンタを分ける | `admin` と `is-allowed` で別インスタンスの `limit` が呼ばれる | Medium |
 
 ---
 

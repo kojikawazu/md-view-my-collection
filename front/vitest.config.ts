@@ -26,6 +26,12 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      // `server-only` は "react-server" 条件でのみ空モジュールに解決され、それ以外では
+      // 読み込むだけで throw する。サーバー専用モジュール（`lib/rate-limit.ts` 等）を
+      // UT から import するには空実装へ明示的に向ける必要がある。
+      // 本番のガード（Client Component から import されたらビルド失敗）には影響しない。
+      // vitest.integration.config.ts と同じ理由・同じ指定。
+      'server-only': path.resolve(__dirname, './node_modules/server-only/empty.js'),
     },
   },
 });

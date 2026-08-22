@@ -3,6 +3,7 @@ import type { Report, ReportTagMapping, ReportTag, ExternalUrl } from '@prisma/c
 import { prisma } from '@/lib/db';
 import { validateReportInput, validateExternalUrls } from '@/lib/validation';
 import { requireAdmin } from '@/lib/auth-server';
+import { checkRateLimit, rateLimitResponse } from '@/lib/rate-limit';
 
 /** 動的ルート `[id]` のパラメータ（App Router 仕様で params は Promise）。 */
 type RouteParams = {
@@ -82,6 +83,10 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
  * @returns 更新後の Report の JSON。認可失敗は 401/403、検証エラーは 400、対象なしは 404、失敗時は 500
  */
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
+  // 認可より前に判定する（理由は `POST /api/reports` と同じ / Issue #146）。
+  const limit = await checkRateLimit('reports-write', request);
+  if (!limit.allowed) return rateLimitResponse(limit);
+
   const auth = await requireAdmin(request, 'api/reports/[id]');
   if (!auth.ok) return auth.response;
 
@@ -226,6 +231,10 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
  * @returns 成功時 `{ ok: true }`。認可失敗は 401/403、対象なしは 404、失敗時は 500
  */
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
+  // 認可より前に判定する（理由は `POST /api/reports` と同じ / Issue #146）。
+  const limit = await checkRateLimit('reports-write', request);
+  if (!limit.allowed) return rateLimitResponse(limit);
+
   const auth = await requireAdmin(request, 'api/reports/[id]');
   if (!auth.ok) return auth.response;
 
