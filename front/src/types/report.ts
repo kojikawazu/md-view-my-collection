@@ -1,4 +1,31 @@
 /**
+ * カテゴリの固定リスト。表示順（サイドバー・フォームのセレクト）もこの並びに従う。
+ *
+ * レポートの `category` はこの中のいずれかに限定する（自由入力は不可）。
+ * DB 側に CHECK 制約は無く、担保は API のバリデーション（`schemas/report.ts` の
+ * `reportCategorySchema`）とレスポンスの実行時検証（`repositories/report.ts`）の 2 点のみ。
+ * 増減時は本定数だけを変更すれば、検証・OpenAPI 生成・{@link ReportCategory} に伝播する。
+ */
+export const CATEGORIES = [
+  'Development',
+  'AI',
+  'Cloud',
+  'Linux',
+  'Container',
+  'Application',
+  'Program',
+  'Hobby',
+] as const;
+
+/**
+ * レポートのカテゴリ。{@link CATEGORIES} から導出する。
+ *
+ * この union は「値が必ず 8 種のいずれか」を断言するため、外部由来の値
+ * （API レスポンス・localStorage）は必ず zod で検証してからこの型に入れる。
+ */
+export type ReportCategory = (typeof CATEGORIES)[number];
+
+/**
  * レポートに紐づく外部リンク 1 件（サーバー／表示用）。
  *
  * DB の `ExternalUrl` 由来。`id` を持つ既存レコードを表し、フォーム入力用の
@@ -45,8 +72,8 @@ export interface ReportItem {
    * 実体は詳細 API（`GET /api/reports/[id]`）でのみ取得できる点に注意。
    */
   content: string;
-  /** カテゴリ。固定リスト（`constants/report.ts` の `CATEGORIES`）のいずれか。 */
-  category: string;
+  /** カテゴリ。{@link CATEGORIES} のいずれか。 */
+  category: ReportCategory;
   /** 著者名。 */
   author: string;
   /** 公開日（ISO 文字列）。未指定・不正値は `null`/`undefined`。 */

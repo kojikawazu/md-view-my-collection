@@ -18,6 +18,7 @@ import type { ReportItem } from '@/types/report';
 import type { DesignSystem } from '@/types/theme';
 import type { User } from '@/types/user';
 import { supabase } from '@/lib/supabaseClient';
+import { parseReportList } from '@/lib/report';
 import { ApiError } from '@/repositories/client';
 import { fetchIsAdmin, fetchIsAllowedEmail } from '@/repositories/auth';
 import { fetchTags as fetchTagsApi } from '@/repositories/tag';
@@ -198,19 +199,16 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
   /**
    * レポート一覧を取得して状態に反映する。
    *
-   * local モードは localStorage から復元（`externalUrls` 欠落を空配列で補正）、
-   * supabase モードは BFF（`/api/reports`）から取得する。いずれも失敗時は空配列にフォールバックし、
-   * 描画側が undefined を踏まないようにする。
+   * local モードは localStorage から復元、supabase モードは BFF（`/api/reports`）から取得する。
+   * いずれも `parseReportList` / repositories 側で 1 件ずつ検証してから状態に入れ（`externalUrls`
+   * 欠落は空配列で補正される）、失敗時は空配列にフォールバックして描画側が undefined を踏まないようにする。
    */
   const fetchReports = async () => {
     if (dataMode === 'local') {
       const savedReports = localStorage.getItem('espresso_reports');
       if (savedReports) {
         try {
-          const parsedReports = (JSON.parse(savedReports) as ReportItem[]).map((r) => ({
-            ...r,
-            externalUrls: r.externalUrls ?? [],
-          }));
+          const parsedReports = parseReportList(JSON.parse(savedReports));
           setReports(parsedReports);
           setTags(deriveTagsFromReports(parsedReports));
           return;
@@ -245,7 +243,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
       const savedReports = localStorage.getItem('espresso_reports');
       if (savedReports) {
         try {
-          const parsedReports = JSON.parse(savedReports) as ReportItem[];
+          const parsedReports = parseReportList(JSON.parse(savedReports));
           setTags(deriveTagsFromReports(parsedReports));
           return;
         } catch {

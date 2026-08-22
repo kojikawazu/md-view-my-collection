@@ -127,7 +127,18 @@ model ExternalUrl {
 | externalUrls[].url | 必須、`http://`/`https://` で始まる（`/^https?:\/\//`） |
 | externalUrls[].label | 任意、最大200文字 |
 
-実装は `front/src/lib/validation.ts`。API での扱いは `docs/07-api-specification.md` を参照。
+実装は `front/src/schemas/report.ts`（zod が正準）と、それを包む `front/src/lib/validation.ts`。
+API での扱いは `docs/07-api-specification.md` を参照。
+
+**category は DB 側に CHECK 制約が無く、担保はアプリ側の 2 点のみ**（Issue #190）:
+
+1. **書き込み時** — Route Handler が `reportCategorySchema`（`z.enum(CATEGORIES)`）で検証する。
+2. **読み出し時** — `front/src/lib/report.ts` の `parseReportList` / `parseReportItem` が、API レスポンスと
+   localStorage の値を状態へ入れる前に検証する。固定リスト外の値を持つレポートは**その 1 件だけ捨て、
+   `console.error` に残す**（1 件の混入で一覧全体が消えないようにするため）。
+
+読み出し時の検証があることで、`ReportItem.category` を `ReportCategory` union として宣言できる
+（型が実行時に裏付けられている状態）。
 
 ## RLSポリシー（Supabase Row Level Security）
 

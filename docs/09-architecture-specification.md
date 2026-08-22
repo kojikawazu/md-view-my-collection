@@ -382,6 +382,7 @@ front/src/
 │   ├── supabaseClient.ts
 │   ├── auth-server.ts
 │   ├── db.ts
+│   ├── report.ts
 │   └── validation.ts
 ├── types/
 │   ├── theme.ts
@@ -395,6 +396,8 @@ front/src/
 ```
 
 > `repositories/` は BFF（`/api/*`）へのアクセスを集約する層。**`fetch` を書いてよいのはここだけ**で、`client.ts` が認証ヘッダの付与と非 2xx の `ApiError` 化を担う（`.claude/rules/frontend.md`）。
+>
+> `lib/report.ts` は外部由来のレポート値（API レスポンス・localStorage）を状態へ入れる前に検証する純粋関数（`parseReportList` / `parseReportItem`）。`repositories/report.ts` と `AppStateProvider` の双方がここを通ることで、**ドメインへの入口が 1 箇所に閉じる**（Issue #190）。
 >
 > `types/` `constants/` に barrel（`index.ts`）は置かない。import は実ファイルを直接指す（`.claude/rules/typescript.md`）。アトミックデザインの `components/*/index.ts` は対象外で、従来どおり維持する。
 

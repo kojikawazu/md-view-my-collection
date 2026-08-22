@@ -2,7 +2,7 @@ import { z } from 'zod';
 // zod-openapi の型拡張（.meta() で OpenAPI 固有プロパティを許可）。
 // type-only import なのでランタイムバンドルには含まれない。
 import type {} from 'zod-openapi';
-import { CATEGORIES } from '@/constants/report';
+import { CATEGORIES } from '@/types/report';
 
 /**
  * Report / ExternalUrl の正準 zod スキーマ。
@@ -114,16 +114,18 @@ const authorSchema = z
   .preprocess(toStringValue, z.string().min(1, '著者は必須です。'))
   .meta({ type: 'string', description: '著者名', example: 'Editor' });
 
+/**
+ * カテゴリの固定リスト検証。出力型は `ReportCategory` に狭まる。
+ *
+ * リクエスト・レスポンスの双方から参照する唯一の判定点。空文字（未入力）と
+ * 「リスト外の値」はユーザーに伝えるべき内容が違うため、メッセージを分ける。
+ */
+export const reportCategorySchema = z.enum(CATEGORIES, {
+  error: `カテゴリは次のいずれかです: ${CATEGORIES.join(' / ')}`,
+});
+
 const categorySchema = z
-  .preprocess(
-    toStringValue,
-    z
-      .string()
-      .min(1, 'カテゴリは必須です。')
-      .refine((value) => (CATEGORIES as readonly string[]).includes(value), {
-        message: `カテゴリは次のいずれかです: ${CATEGORIES.join(' / ')}`,
-      }),
-  )
+  .preprocess(toStringValue, z.string().min(1, 'カテゴリは必須です。').pipe(reportCategorySchema))
   .meta({
     type: 'string',
     description: 'カテゴリ（固定リスト）',
@@ -263,7 +265,7 @@ export const reportItemSchema = z
     title: z.string(),
     summary: z.string().nullable(),
     content: z.string().meta({ description: '一覧 API では空文字' }),
-    category: z.string().meta({ example: 'AI' }),
+    category: reportCategorySchema.meta({ example: 'AI' }),
     author: z.string().meta({ example: 'Editor' }),
     publishDate: z
       .string()
@@ -275,6 +277,22 @@ export const reportItemSchema = z
     externalUrls: z.array(externalUrlItemSchema),
   })
   .meta({ id: 'ReportItem' });
+
+/**
+ * クライアント側の状態に入れる直前に通す検証スキーマ（`ReportItem` と 1:1）。
+ *
+ * {@link reportItemSchema} は BFF が返す契約そのものだが、こちらは**受け入れ側**の形。
+ * 監査列や要約は local モード（localStorage）で作られたレコードに存在しないため任意にし、
+ * `externalUrls` は欠落を空配列で補う。API 由来と localStorage 由来を同じ門に通すためのもので、
+ * OpenAPI には出力しない（`.meta({ id })` を付けない）。
+ */
+export const reportItemStateSchema = reportItemSchema.extend({
+  summary: reportItemSchema.shape.summary.optional(),
+  publishDate: reportItemSchema.shape.publishDate.optional(),
+  createdAt: reportItemSchema.shape.createdAt.optional(),
+  updatedAt: reportItemSchema.shape.updatedAt.optional(),
+  externalUrls: z.array(externalUrlItemSchema).default([]),
+});
 
 /** タグ名の配列（レスポンス）。 */
 export const tagListSchema = z

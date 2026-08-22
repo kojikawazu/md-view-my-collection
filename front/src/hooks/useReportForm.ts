@@ -3,7 +3,8 @@ import { useRouter } from 'next/navigation';
 import type { MutationResult } from '@/types/api';
 import type { ExternalUrlInput, ReportItem } from '@/types/report';
 import type { User } from '@/types/user';
-import { CATEGORIES } from '@/constants/report';
+import { CATEGORIES } from '@/types/report';
+import { reportCategorySchema } from '@/schemas/report';
 
 /** `useReportForm` の入力。新規作成と編集の両方を 1 つのフックで扱う。 */
 interface UseReportFormOptions {
@@ -125,7 +126,15 @@ export const useReportForm = ({
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) => {
     const { name, value } = event.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    // `[name]: value` は計算キーのため TS が型を絞れず、union の `category` に任意の文字列が
+    // 入りうる（型だけでは塞げない穴）。カテゴリだけは実行時に検証し、リスト外なら無視する。
+    if (name === 'category') {
+      const parsed = reportCategorySchema.safeParse(value);
+      if (!parsed.success) return;
+      setFormData((prev) => ({ ...prev, category: parsed.data }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
     if (fieldErrors[name]) {
       setFieldErrors((prev) => {
         const next = { ...prev };
