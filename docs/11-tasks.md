@@ -249,6 +249,7 @@
 - [x] レートリミットを実装（Upstash Redis / `@upstash/ratelimit`。認証系 2 本 + 書き込み系 3 本のハンドラ先頭で判定し、超過時は認可より前に 429 + `Retry-After`。環境変数未設定なら無効化して素通しするため CI / E2E に影響しない。クライアントは 429 を「不許可」と区別する。UT 9 + IT 5 ケース追加 / Issue #146 / 2026-08-22）
   - **本番で効かせるには Upstash のアカウント作成と Vercel への環境変数 2 つの設定が必要（未実施）**
 - [x] Vercel のデプロイ抑止が実際に効くことの観測（`"**": false` が main に載った 2026-07-26 以降、14 本の PR ブランチ push で Preview 0 件・main マージは 14 件すべて本番デプロイ。ドキュメントのみの #174 / #181 もデプロイされ `ignoreCommand` 撤去の意図どおり / Issue #159 → #167 / 2026-08-22）
+- [x] GitHub Actions ワークフローを actionlint で検証（`.github/workflows/actionlint.yml` を新設し**パスフィルタ無しで全 PR 常時実行**。バージョンは `Makefile` の `ACTIONLINT_VERSION` と揃えて固定し `make actionlint` で同一検査。ルール本文が `github-actions.md` の表の 1 セルに単語があるだけだったため、上流 `my-custom-skills` #147 相当のセクションを追記して正本を揃えた。既存 `test.yml` / `docs.yml` は指摘ゼロで通過 / Issue #202 / 2026-08-23）
 
 ### 積み残し
 

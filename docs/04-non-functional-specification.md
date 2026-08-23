@@ -14,6 +14,7 @@
 - デプロイ: 本番運用はVercelで実施（デプロイ必須）。
 - CI/CD: 自動デプロイのみ（Vercel連携を前提）。`main` ブランチのみ本番デプロイ。プレビューは不要。
 - CI: GitHub Actions（`.github/workflows/test.yml`）で自動実行する。`static-analysis` ジョブが静的解析（整形検証 `pnpm format:check` + ESLint `pnpm lint` + 型チェック `pnpm typecheck`）、`playwright` ジョブがユニット（Vitest）→ 統合（IT・Testcontainers Postgres・`pnpm test:integration`）→ E2E（Playwright）を順に担当し、両ジョブを並列実行する。IT は ubuntu-latest 同梱の Docker で実 Postgres を起動する。
+- CI（ワークフロー自体の検証）: `.github/workflows/actionlint.yml` が [actionlint](https://github.com/rhysd/actionlint) で全ワークフローを検査する。**パスフィルタをかけず全 PR で常時実行**する（実行が数秒で終わるため、変更判定ジョブを足すほうが高くつく。ワークフローが必ず起動するので required status check にしても pending で詰まらない）。バージョンは `Makefile` の `ACTIONLINT_VERSION` と揃えて固定し、ローカルでは `make actionlint` で CI と同じ検査を実行できる。`run:` の中身は shellcheck に流され、untrusted input の直挿し（スクリプトインジェクション）も検出される。
 - テスト: 正常/準正常/異常をすべて必須とする（ユニット + E2E）。詳細は `docs/08-test-specification.md`。
 - 監視/ログ: 不具合を早期発見できるログ設計を意識する。
 - セキュリティ: Markdown表示はサニタイズ必須。Supabase RLSは「公開閲覧 + 認証ユーザーのみ書き込み」を採用する（詳細: `docs/06-security-specification.md`）。
