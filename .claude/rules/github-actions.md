@@ -1,11 +1,65 @@
 ---
-description: GitHub Actions の発火ルール — 何を変更したときに何を動かすか
+description: GitHub Actions のルール — ワークフローの静的解析（actionlint）と発火ルール
 globs: ".github/workflows/**"
 ---
 
-# GitHub Actions の発火ルール
+# GitHub Actions のルール
 
-**「変更した内容に関係のあるジョブだけを動かす」** を原則とする。ドキュメントやルールの更新でテスト・ビルド・デプロイを回さない（CI 時間・コストの浪費、キュー待ちによる他 PR のブロック、無意味なデプロイの発生を防ぐ）。
+本ルールは 2 つを定める。
+
+1. **ワークフローの静的解析**: ワークフロー自体の誤りを actionlint で機械的に潰す。
+2. **発火ルール**: **「変更した内容に関係のあるジョブだけを動かす」**。ドキュメントやルールの更新でテスト・ビルド・デプロイを回さない（CI 時間・コストの浪費、キュー待ちによる他 PR のブロック、無意味なデプロイの発生を防ぐ）。
+
+## ワークフローの静的解析（actionlint）
+
+**ワークフローを追加・変更したら、[actionlint](https://github.com/rhysd/actionlint) による検証を CI で必須にする。** ワークフローの誤りは「push して実際に動かすまで気づけない」ため、CI 時間を溶かす前に機械で潰す。
+
+検出できるもの:
+
+| 検出内容 | 例 |
+|---|---|
+| ランナーラベルの誤り | `runs-on: ubuntu-lates`（typo）／未登録のセルフホストラベル |
+| アクション入力名の誤り | `actions/checkout@v4` に `fetch-dept:`（正: `fetch-depth`） |
+| 式・コンテキストの誤り | 存在しない `steps.<id>.outputs.*` の参照、型の不一致 |
+| ジョブ依存の誤り | `needs:` が存在しないジョブ ID を指している |
+| **スクリプトインジェクション** | `run: echo "${{ github.event.pull_request.title }}"` のように untrusted input を `run:` へ直接埋め込む（環境変数経由に直す） |
+| シェルスクリプトの不備 | `run:` の中身（shellcheck 連携。クォート漏れ等） |
+| cron 式・glob の誤り | `schedule` の cron 構文、`branches` のパターン |
+
+**検出できないもの**（機械では判断できないため、レビューで見る）: ブランチ名・パスフィルタの内容が意図と合っているか、参照しているシークレットが実在するか、ジョブの実行順序が業務的に正しいか。
+
+### CI での実行
+
+`.github/workflows/actionlint.yml` として**独立したワークフロー**で実行する。
+
+- **パスフィルタをかけず、全 PR で常に実行する**。実行は数秒で終わるため、「ワークフローを変更したときだけ動かす」ための判定ジョブ（後述の `dorny/paths-filter`）を足すほうが高くつく。必須チェックにしても pending で詰まらない。
+  - **本プロジェクトでは、この 1 本だけが常時実行**である。既存の `test.yml` / `docs.yml` はワークフローレベルの `paths` で絞っており、そのため必須チェックにできない（`test.yml` 冒頭の注意書き）。actionlint はその制約を負わない。
+- **`actions/checkout` を必ず先に置く**。actionlint は Git リポジトリの中から `.github/workflows` を探すため、リポジトリ外で実行するとエラー終了する。
+- **バージョンを固定する**。`latest` にすると、コードを変えていないのに新リリースの検査強化で CI が落ちる。更新は依存更新として明示的に行う（`run:` 内のバージョンは Dependabot では更新されない）。**`Makefile` の `ACTIONLINT_VERSION` と同じ値に揃える**（ローカル green / CI red を防ぐ。`docs.yml` の markdownlint と同じ理由）。
+- **shellcheck の追加設定は不要**。GitHub ホストの ubuntu ランナーにはプリインストール済みで、PATH にあれば `run:` のシェルスクリプトも自動で併せて検査される。
+- **バイナリ取得はチェックサム検証を伴わない**ため、リスクはバージョン固定（スクリプト URL・本体の双方）で抑える。あわせて**このジョブにシークレットを渡さず `permissions: contents: read` に絞る**（万一取得物が不正でも、読み取り専用のチェックアウト以外に到達できない）。
+
+実体は `.github/workflows/actionlint.yml` を正とする（本ルールに YAML を再掲すると、片方だけ変わったときに食い違う）。
+
+### ローカルでの実行
+
+- **push する前に手元で実行する**。本プロジェクトは **`make actionlint`** を用意しており、CI と同じバージョンで走る。
+- 直接入れる場合は `brew install actionlint` / `go install github.com/rhysd/actionlint/cmd/actionlint@latest`。引数なしで実行すると、リポジトリ内の `.github/workflows` を自動検出して全ワークフローを検査する。指摘があれば終了コード 1 で落ちる。
+
+### 抑制と設定
+
+抑制の作法（理由を書く・範囲を最小にする・増えたら設定自体を見直す）は `static-analysis.md` に従う。
+
+**本プロジェクトに `.github/actionlint.yaml` は存在しない**（現時点で抑制も設定も不要なため）。下表の設定ファイルが必要になった時点で新規作成する。actionlint 固有の手段は以下:
+
+| 目的 | 手段 |
+|---|---|
+| セルフホストランナーのラベルを認識させる | `.github/actionlint.yaml` の `self-hosted-runner.labels` に登録する（`actionlint -init-config` で雛形を生成できる） |
+| 特定のエラーメッセージを無視する | `-ignore <正規表現>`（繰り返し指定可）／`.github/actionlint.yaml` の `paths.<glob>.ignore` |
+| shellcheck の特定ルールを無視する | 該当箇所の直前に `# shellcheck disable=SC2086` を書く（`run:` 内の対象行のみ） |
+
+- **リポジトリ単位・ワークフロー単位での一括無効化をしない**。無視するなら対象を絞り、設定ファイルに理由をコメントで残す。
+- 設定ファイルを作った場合は**コミット対象**。ローカル固有設定に依存しない。
 
 ## トリガの基本形
 
@@ -33,7 +87,7 @@ globs: ".github/workflows/**"
 | テストコード | ✅ | ❌ | — |
 | `docs/**`、`*.md`、`README.md` | ❌ | ❌ | markdown lint、リンク切れチェック |
 | `.claude/**`（rules / skills） | ❌ | ❌ | markdown lint |
-| `.github/workflows/**` | ✅（自身の検証のため） | ❌ | actionlint |
+| `.github/workflows/**` | ✅（自身の検証のため） | ❌ | actionlint（全 PR で常時実行するため、この行の変更に限らず走る） |
 | 依存関係（ロックファイル） | ✅ | ✅ | — |
 | インフラ定義（Terraform 等） | ❌（アプリのテストは不要） | ✅（インフラ側の適用） | plan の差分確認 |
 
@@ -93,7 +147,9 @@ jobs:
 
 ## レビュー観点
 
-- ドキュメント・ルールのみの PR で、テストが起動していないか。**PR ブランチでは Vercel のデプロイ自体が発火しないこと**も確認する（`deploymentEnabled`）。なお **main へのマージはドキュメントのみでもデプロイされる**（意図した挙動。`vercel.md`「2. ビルドスキップ」）。
+- **actionlint が CI に入っているか**。ワークフローを追加・変更する PR で actionlint が実行され、成功しているか。
+- actionlint の指摘を `-ignore` や `paths.<glob>.ignore` で握り潰していないか（理由・範囲が最小か）。
+- ドキュメント・ルールのみの PR で、テストが起動していないか（**actionlint は常時実行のため、走っていて正しい**）。**PR ブランチでは Vercel のデプロイ自体が発火しないこと**も確認する（`deploymentEnabled`）。なお **main へのマージはドキュメントのみでもデプロイされる**（意図した挙動。`vercel.md`「2. ビルドスキップ」）。
 - 逆に、**アプリコードを変更したのに必要なジョブがスキップされていないか**（パスフィルタの書き漏れ）。
 - 必須チェックにしているジョブが、ワークフローレベルの `paths` / `paths-ignore` で止められていないか（PR がマージ不能になる）。
 - `permissions` が明示され、最小権限になっているか。

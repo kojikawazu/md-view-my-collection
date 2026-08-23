@@ -5,7 +5,7 @@ globs:
 
 # 静的解析の運用
 
-使用するツールは各言語のコーディング規約（`typescript.md` / `go.md` / `java.md` / `ruby.md` / `python.md` / `php.md`）で定める。本ルールは**どう運用するか**を定める。
+使用するツールは各言語のコーディング規約（`typescript.md` / `go.md` / `java.md` / `ruby.md` / `python.md` / `php.md`）で定める。GitHub Actions のワークフロー YAML については `github-actions.md`（actionlint）で定める。本ルールは**どう運用するか**を定める。
 
 ## 役割分担（重ねない）
 
