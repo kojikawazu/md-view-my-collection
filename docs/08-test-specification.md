@@ -951,6 +951,41 @@ DB 側に CHECK 制約が無いため、**型の断言を実行時に裏付け�
 
 ---
 
+# テスト設計: 管理者ゲートのトークンキャッシュ（lib/auth-server.ts）
+
+## 対象
+
+- 対象機能: `requireAdmin()` の検証済みトークンキャッシュ（Issue #208）
+- 対象ファイル: `front/src/lib/auth-server.ts`
+- スタック: Frontend BFF (Next.js 16 / Vitest)
+- テストファイル: `front/src/lib/__tests__/auth-server.test.ts`（UT）
+
+キャッシュが効いているかどうかは応答からは見えない（どちらでも 200 が返る）。そのため、**`getUser` の呼び出し回数**で「Supabase への往復を省いたか」を判定する。追加時に手動ミューテーション（キャッシュ期限から `exp` の上限を外し、修正前の一律 5 分に戻す）を行い、AS-A-1 は `called 2 times, but got 1 times`、AS-A-2 は `expected true to be false` で、**本命のアサーション**で落ちることを確認済み（`.claude/rules/testing.md`）。
+
+401 / 403 / 200 の分岐そのものは IT（`tests/integration/auth.test.ts` / `reports*.test.ts`）が担う。IT のモックトークン（`admin-token` 等）は JWT ではないため、IT ではキャッシュされず毎回モックの `getUser` を通る。
+
+## モック方針
+
+- モック許可: **Supabase Auth（`@supabase/supabase-js` の `getUser`）のみ**。真の外部 3rd-party
+- モック許可: `console.warn`（出力抑制）
+- 時刻は `vi.useFakeTimers()` で固定する（キャッシュ期限とトークンの `exp` を同じ基準で組み立てるため）
+- キャッシュはモジュールスコープにあるため、テストごとに `vi.resetModules()` で読み直す
+
+## テストケース一覧（UT）
+
+| # | 区分 | テストケース | 期待結果 | 優先度 |
+|---|---|---|---|---|
+| AS-N-1 | 正常 | 有効なトークンで 2 回呼ぶ | 2 回目は通り、`getUser` は 1 回 | High |
+| AS-N-2 | 正常 | `exp` が 1 時間後、5 分 + 1ms 経過後に再度呼ぶ | 再検証する（`getUser` 2 回） | High |
+| AS-N-3 | 正常 | `exp` が 60 秒後、59 秒経過後に再度呼ぶ | キャッシュが効く（`getUser` 1 回） | Medium |
+| AS-A-1 | 異常 | `exp` が 60 秒後、61 秒経過後に再度呼ぶ | 再検証する（`getUser` 2 回） | High |
+| AS-A-2 | 異常 | AS-A-1 の再検証で Supabase が期限切れエラーを返す | `ok: false`（5 分以内でも通さない） | High |
+| AS-S-1 | 準正常 | JWT でないトークン | キャッシュしない（`getUser` 2 回） | High |
+| AS-S-2 | 準正常 | payload が壊れた JWT | キャッシュしない（`getUser` 2 回） | Medium |
+| AS-S-3 | 準正常 | キャッシュ中に `ADMIN_EMAIL` から外す | 403 | High |
+
+---
+
 # テスト設計: ConfirmationModal コンポーネント
 
 ## 対象
