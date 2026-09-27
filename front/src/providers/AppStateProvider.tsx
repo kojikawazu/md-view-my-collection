@@ -17,6 +17,7 @@ import type { MutationResult } from '@/types/api';
 import type { ReportItem } from '@/types/report';
 import type { DesignSystem } from '@/types/theme';
 import type { User } from '@/types/user';
+import { resolveAuthMode } from '@/lib/auth-mode';
 import { supabase } from '@/lib/supabaseClient';
 import { parseReportList } from '@/lib/report';
 import { ApiError } from '@/repositories/client';
@@ -145,7 +146,7 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
   const [isHydrated, setIsHydrated] = useState(false);
   const router = useRouter();
   const theme = ESPRESSO_THEME;
-  const authMode = process.env.NEXT_PUBLIC_AUTH_MODE ?? 'supabase';
+  const authMode = resolveAuthMode();
   const dataMode = process.env.NEXT_PUBLIC_DATA_MODE ?? 'supabase';
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
 

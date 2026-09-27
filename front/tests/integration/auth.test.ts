@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { GET as adminGet } from '@/app/api/auth/admin/route';
 import { POST as isAllowedPost } from '@/app/api/auth/is-allowed/route';
 import { ADMIN_TOKEN, USER_TOKEN, makeRequest } from './helpers';
@@ -94,5 +94,38 @@ describe('POST /api/auth/is-allowed (integration)', () => {
       }),
     );
     expect(await res.json()).toEqual({ allowed: false });
+  });
+
+  // Issue #207: E2E 用の local 指定が本番ビルドに紛れ込んでも、トークン検証を省略しない。
+  // 「トークンを要求する」と「ボディのメールを信用しない」は別の観点なので it を分ける（Issue #187）。
+  describe('本番（NODE_ENV=production）で local 指定', () => {
+    afterEach(() => {
+      vi.unstubAllEnvs();
+    });
+
+    it('異常: 管理者メールを body で送ってもトークンなしは 401', async () => {
+      vi.stubEnv('NODE_ENV', 'production');
+      process.env.NEXT_PUBLIC_AUTH_MODE = 'local';
+      const res = await isAllowedPost(
+        makeRequest('http://localhost/api/auth/is-allowed', {
+          method: 'POST',
+          body: { email: 'admin@example.com' },
+        }),
+      );
+      expect(res.status).toBe(401);
+    });
+
+    it('異常: 非管理者トークンなら body の管理者メールは無視され allowed=false', async () => {
+      vi.stubEnv('NODE_ENV', 'production');
+      process.env.NEXT_PUBLIC_AUTH_MODE = 'local';
+      const res = await isAllowedPost(
+        makeRequest('http://localhost/api/auth/is-allowed', {
+          method: 'POST',
+          body: { email: 'admin@example.com' },
+          token: USER_TOKEN,
+        }),
+      );
+      expect(await res.json()).toEqual({ allowed: false });
+    });
   });
 });
