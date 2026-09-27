@@ -11,6 +11,7 @@ globs:
 - 管理者判定は `ADMIN_EMAIL` 環境変数をサーバーサイドAPI（`/api/auth/admin`）で判定する。クライアント環境変数（`NEXT_PUBLIC_*`）に出さない。
 - API エンドポイントごとにアクセス制御を設定する（公開 / 認証必須）。
 - **E2E 用の認証バイパス（`NEXT_PUBLIC_AUTH_MODE=local`）は本番で有効にならない構造にする。** 認証モードは必ず `lib/auth-mode.ts` の `resolveAuthMode()` で解決し、`process.env.NEXT_PUBLIC_AUTH_MODE` を直接読まない（`NODE_ENV` の許可リストを通らない経路を作らないため）。詳細は `docs/06-security-specification.md`（Issue #207）。
+- **検証済みトークンをキャッシュする場合、期限はトークン自身の `exp` を超えてはならない。** `exp` を読めないトークンはキャッシュしない。キャッシュのキーにトークン本体を使わない（ハッシュ値にする）。実装は `lib/auth-server.ts`、詳細は `docs/06-security-specification.md`（Issue #208）。
 - RLS（Row Level Security）: Supabase 全テーブルで有効。SELECT は公開、INSERT/UPDATE/DELETE は認証ユーザーのみ。
 
 ## 通信・アクセス制御

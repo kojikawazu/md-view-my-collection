@@ -394,93 +394,20 @@ youtube-my-collection/front/src/
 youtube-my-collection の `auth-server.ts` をベースに、以下のパフォーマンス改善を追加（#47）:
 
 - Supabase クライアントをモジュールスコープで生成し warm invocation 間で再利用
-- 認証済みトークンをインメモリキャッシュ（TTL 5分）し、同一トークンの2回目以降は Supabase HTTP 往復をスキップ
+- 認証済みトークンをインメモリキャッシュし、同一トークンの2回目以降は Supabase HTTP 往復をスキップ
+  - **キャッシュ期限は「5 分後」と「トークン自身の `exp`」の早い方**。失効したトークンをキャッシュで通さない（Issue #208）
+  - `exp` を読めないトークン（JWT でない等）はキャッシュせず、毎回 Supabase で検証する
+  - キャッシュのキーはトークンの SHA-256。メモリ上でもトークン本体を保持しない
+  - キャッシュヒット時も `ADMIN_EMAIL` との照合は毎回行う（許可リストからの削除は即時に反映される）
 - `supabase.auth.getUser(token)` は明示的に JWT を渡すため、共有クライアントでも auth 状態の混線は起きない
 
-```typescript
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-type RequireAdminResult =
-  | { ok: true; email: string }
-  | { ok: false; response: NextResponse };
-
-// モジュールスコープで生成し warm invocation 間で再利用
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
-const supabaseAdmin = createClient(supabaseUrl, supabaseAnonKey);
-
-// 認証済みトークンのインメモリキャッシュ（warm invocation 間で存続）
-const authCache = new Map<string, { email: string; expiresAt: number }>();
-const AUTH_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-
-// ログ出力時のメールマスク
-const maskEmail = (value: string) => {
-  if (!value) return '';
-  const at = value.indexOf('@');
-  if (at <= 1) return '***';
-  return `${value[0]}***@${value.slice(at + 1)}`;
-};
-
-export const requireAdmin = async (
-  request: NextRequest,
-  context: string,
-): Promise<RequireAdminResult> => {
-  const authHeader = request.headers.get('authorization');
-  const token = authHeader ? authHeader.replace(/^Bearer\s+/i, '').trim() : '';
-
-  if (!authHeader || !token) {
-    console.warn(`[${context}] auth header missing`);
-    return { ok: false, response: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) };
-  }
-
-  const adminEmails = (process.env.ADMIN_EMAIL ?? '')
-    .split(',')
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
-
-  // キャッシュヒット時は Supabase HTTP 往復をスキップ
-  const cached = authCache.get(token);
-  if (cached && cached.expiresAt > Date.now()) {
-    if (adminEmails.includes(cached.email.toLowerCase())) {
-      return { ok: true, email: cached.email };
-    }
-    return { ok: false, response: NextResponse.json({ error: 'Forbidden' }, { status: 403 }) };
-  }
-
-  const { data: authData, error: authError } = await supabaseAdmin.auth.getUser(token);
-  const email = authData?.user?.email ?? '';
-  const emailMatches = adminEmails.includes(email.toLowerCase());
-
-  if (authError || adminEmails.length === 0 || !emailMatches) {
-    console.warn(`[${context}] auth check failed`, {
-      hasAuthError: Boolean(authError),
-      emailMasked: maskEmail(email),
-      emailMatches,
-    });
-    return { ok: false, response: NextResponse.json({ error: 'Forbidden' }, { status: 403 }) };
-  }
-
-  // 検証成功をキャッシュ
-  authCache.set(token, { email, expiresAt: Date.now() + AUTH_CACHE_TTL });
-
-  // メモリリーク防止: 100件超で期限切れエントリを削除
-  if (authCache.size > 100) {
-    const now = Date.now();
-    for (const [key, val] of authCache) {
-      if (val.expiresAt <= now) authCache.delete(key);
-    }
-  }
-
-  return { ok: true, email };
-};
-```
+実装は `front/src/lib/auth-server.ts` を正とする（本書にコードを写すと実装とずれるため、以前掲載していたコード全文は #208 で削除した）。
 
 **youtube版との差分:**
 
 - `ADMIN_EMAIL` をカンマ区切りで複数対応（md-viewの既存仕様を維持）
 - Supabase クライアントをモジュールスコープで再利用（youtube版はリクエストごと生成）
-- 認証トークンのインメモリキャッシュを追加（TTL 5分、最大100件で自動evict）
+- 認証トークンのインメモリキャッシュを追加（最長 5 分・トークンの `exp` を超えない。100 件超で期限切れを掃除）
 
 ### 2. `front/src/lib/db.ts` — Prismaクライアントシングルトン
 
