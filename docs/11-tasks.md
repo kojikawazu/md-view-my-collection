@@ -251,6 +251,7 @@
 - [x] Vercel のデプロイ抑止が実際に効くことの観測（`"**": false` が main に載った 2026-07-26 以降、14 本の PR ブランチ push で Preview 0 件・main マージは 14 件すべて本番デプロイ。ドキュメントのみの #174 / #181 もデプロイされ `ignoreCommand` 撤去の意図どおり / Issue #159 → #167 / 2026-08-22）
 - [x] GitHub Actions ワークフローを actionlint で検証（`.github/workflows/actionlint.yml` を新設し**パスフィルタ無しで全 PR 常時実行**。バージョンは `Makefile` の `ACTIONLINT_VERSION` と揃えて固定し `make actionlint` で同一検査。ルール本文が `github-actions.md` の表の 1 セルに単語があるだけだったため、上流 `my-custom-skills` #147 相当のセクションを追記して正本を揃えた。既存 `test.yml` / `docs.yml` は指摘ゼロで通過 / Issue #202 / 2026-08-23）
 - [x] Next.js を `16.1.4` → `16.3.6` へ更新（issue 起票後に next 自体へ未認証 RCE の critical 2 件が追加され、修正版が `>=16.3.3` のため起票時目標の `>=16.2.11` から引き上げ。推移的依存は `pnpm.overrides` を使わずロックファイルの再解決のみで解消し、`pnpm audit --prod` は 50 件 → high 1 件。supabase-js は Node 22 必須化を避けて据え置き、`ws` のみ範囲内で更新。更新で表面化した `AppStateProvider` の reports 永続化 effect の初期化前上書きを `isHydrated` ガードで修正。16.3 の `next dev` が `front/AGENTS.md`・`front/CLAUDE.md` を自動生成するため `agentRules: false` で停止 / Issue #206 / 2026-09-27）
+- [x] E2E 用 `NEXT_PUBLIC_AUTH_MODE=local` を本番ビルドで無効化（判定を `lib/auth-mode.ts` の `resolveAuthMode()` に一本化し、`NODE_ENV` が `development` / `test` のときだけ local を許可。API・`AppStateProvider`・`LoginForm` の 3 箇所の直読みを置換。本番で指定されていたら `instrumentation.ts` で起動時に警告。UT 7 + IT 2 ケース追加・手動ミューテーションで本命アサーションでの失敗を確認。本番ビルドで body のメールのみの `is-allowed` が 401 になることを実機確認 / Issue #207 / 2026-09-27）
 
 ### 積み残し
 

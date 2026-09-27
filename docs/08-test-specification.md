@@ -112,7 +112,7 @@
 - DB: **Testcontainers で実 Postgres を起動**。`globalSetup` で 1 度だけ起動し `tests/integration/schema.sql`（`pnpm gen:test-schema` 生成物）を適用。テスト間 `TRUNCATE`、終了時にコンテナ破棄（**テストデータを残さない**）。前提として **Docker が必要**。
 - **接続先ガード**: 接続先の解決は `front/tests/support/db-target.ts` に集約する。`DATABASE_URL`（本番 Supabase を指す）は**参照しない**。上書きは `TEST_DATABASE_URL` のみで、いずれの経路もホスト allowlist（`localhost` / `127.0.0.1` / `::1`）を通り、**DDL 適用より前に**非ローカルなら throw する。ガード自体の UT は `front/tests/support/__tests__/db-target.test.ts`（21 ケース。`DATABASE_URL` 汚染への耐性を含む）。背景は `.claude/rules/production-data.md` と Issue #168。
 - 方式: route ハンドラを in-process で直接呼び出し（`NextRequest`）、Prisma は実コンテナに接続。認証は `vi.mock('@supabase/supabase-js')` でモック（`requireAdmin` の 401/403/200 分岐は実検証）。
-- カバー: GET 一覧（ページング・content 除外・ヘッダ）/ POST 作成（201・タグ upsert・外部URL・400・401・403）/ GET 詳細（200・404）/ PATCH（部分更新・タグ置換・URL 全削除・404=P2025・400・401/403）/ DELETE（200・CASCADE 実確認・404・401/403）/ tags GET / auth.admin / auth.is-allowed（local・supabase）/ openapi ゲート / レートリミット（Upstash のみモック）。43 ケース。
+- カバー: GET 一覧（ページング・content 除外・ヘッダ）/ POST 作成（201・タグ upsert・外部URL・400・401・403）/ GET 詳細（200・404）/ PATCH（部分更新・タグ置換・URL 全削除・404=P2025・400・401/403）/ DELETE（200・CASCADE 実確認・404・401/403）/ tags GET / auth.admin / auth.is-allowed（local・supabase・本番での local 指定無視）/ openapi ゲート / レートリミット（Upstash のみモック）。45 ケース。
 - RLS/実 Auth は IT のスコープ外（Prisma オーナー接続で RLS はバイパス）。E2E の実 DB 化（Supabase CLI）で別途カバー予定。
 
 ## アサーション順序の点検（Issue #187）
@@ -909,6 +909,45 @@ DB 側に CHECK 制約が無いため、**型の断言を実行時に裏付け�
 | RLI-A-2 | `POST /api/auth/is-allowed` の上限超過 | 429 / `Retry-After` | High |
 | RLI-A-3 | 書き込み系は認可より前に弾く | 管理者トークン付きでも 429（Supabase を呼ばせない） | High |
 | RLI-S-1 | 対象ごとにカウンタを分ける | `admin` と `is-allowed` で別インスタンスの `limit` が呼ばれる | Medium |
+
+---
+
+# テスト設計: 認証モードの解決（lib/auth-mode.ts）
+
+## 対象
+
+- 対象機能: E2E 用 local 認証モードの本番ガード（Issue #207）
+- 対象ファイル: `front/src/lib/auth-mode.ts`（`resolveAuthMode`）/ `front/src/app/api/auth/is-allowed/route.ts`
+- スタック: Frontend BFF (Next.js 16 / Vitest)
+- テストファイル: `front/src/lib/__tests__/auth-mode.test.ts`（UT）/ `front/tests/integration/auth.test.ts`（IT）
+
+**壊れても画面は正常に見える**（本番で local が有効になっても通常のログインは動く）ため、テスト以外に検知手段が無い。追加時に手動ミューテーション（ガード行を削除）を行い、UT の異常系 3 件と IT 2 件が**本命のアサーション**（UT: 戻り値 / IT: `expected 200 to be 401`・`{ allowed: true }`）で落ちることを確認済み（`.claude/rules/testing.md`）。
+
+## モック方針
+
+- モック許可: 環境変数（`vi.stubEnv` で `NODE_ENV` / `NEXT_PUBLIC_AUTH_MODE` を差し替える）。IT の Supabase Auth は既存どおり `setup-auth-mock.ts`
+- モック禁止: `resolveAuthMode` 自身、Route Handler
+
+---
+
+## テストケース一覧（UT）
+
+| # | 区分 | テストケース | 入力（`NODE_ENV` / `NEXT_PUBLIC_AUTH_MODE`） | 期待結果 | 優先度 |
+|---|---|---|---|---|---|
+| AM-N-1 | 正常 | 開発サーバー（E2E） | `development` / `local` | `local` | High |
+| AM-N-2 | 正常 | Vitest | `test` / `local` | `local` | High |
+| AM-N-3 | 正常 | 未指定 | `development` / 空 | `supabase` | Medium |
+| AM-S-1 | 準正常 | local 以外の値 | `development` / `LOCAL` | `supabase` | Medium |
+| AM-A-1 | 異常 | 本番ビルドで local 指定 | `production` / `local` | `supabase` | High |
+| AM-A-2 | 異常 | 想定外の `NODE_ENV` | `staging` / `local` | `supabase`（許可リスト方式） | High |
+| AM-A-3 | 異常 | `NODE_ENV` が空 | 空 / `local` | `supabase` | High |
+
+## テストケース一覧（IT・ルートハンドラ経由）
+
+| # | テストケース | 期待結果 | 優先度 |
+|---|---|---|---|
+| AMI-A-1 | `production` + `local` 指定で、管理者メールを body に載せトークンなし | 401（トークン検証を省略しない） | High |
+| AMI-A-2 | `production` + `local` 指定で、非管理者トークン + body に管理者メール | `{ allowed: false }`（body のメールを信用しない） | High |
 
 ---
 

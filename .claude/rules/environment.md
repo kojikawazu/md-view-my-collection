@@ -16,7 +16,7 @@ globs:
 | `DATABASE_URL` | **サーバー専用** | Supabase Postgres 接続文字列（`prisma.config.ts` で参照） |
 | `UPSTASH_REDIS_REST_URL` | **サーバー専用** | レートリミットのカウンタ用 Upstash Redis の REST URL。**未設定ならレートリミットを無効化**する |
 | `UPSTASH_REDIS_REST_TOKEN` | **サーバー専用** | 同上の REST トークン。URL と揃って初めて有効になる |
-| `NEXT_PUBLIC_AUTH_MODE` | クライアント（**E2E専用**） | `local` でローカル認証モードに切替。`playwright.config.ts` が注入 |
+| `NEXT_PUBLIC_AUTH_MODE` | クライアント（**E2E専用**） | `local` でローカル認証モードに切替。`playwright.config.ts` が注入。**`NODE_ENV` が `development` / `test` 以外では無視**し supabase になる（`lib/auth-mode.ts` / Issue #207） |
 | `NEXT_PUBLIC_DATA_MODE` | クライアント（**E2E専用**） | `local` で localStorage データモードに切替。`playwright.config.ts` が注入 |
 | `TEST_DATABASE_URL` | **サーバー専用（テスト専用）** | IT のテスト DB 接続先。**`DATABASE_URL` は本番を指すため参照しない**。ホスト allowlist を通らない値は実行前に throw する（`testing.md` / `production-data.md`） |
 | `PLAYWRIGHT_BASE_URL` | テスト実行時 | E2E の接続先。未設定なら `http://127.0.0.1:3000`（`playwright.config.ts`） |

@@ -44,7 +44,7 @@
 | `NEXT_PUBLIC_SITE_URL` | クライアント | 本番 | Google OAuth リダイレクト先 |
 | `ADMIN_EMAIL` | **サーバー専用** | 本番 | 管理者メール許可リスト（カンマ区切り可）。`/api/auth/admin` で照合 |
 | `DATABASE_URL` | **サーバー専用** | 本番 | Supabase Postgres 接続文字列（Prisma が参照） |
-| `NEXT_PUBLIC_AUTH_MODE` | クライアント（E2E専用） | E2E | `local` でローカル認証に切替 |
+| `NEXT_PUBLIC_AUTH_MODE` | クライアント（E2E専用） | E2E | `local` でローカル認証に切替。**本番ビルド（`NODE_ENV=production`）では無視される**（`docs/06-security-specification.md`） |
 | `NEXT_PUBLIC_DATA_MODE` | クライアント（E2E専用） | E2E | `local` で localStorage データに切替 |
 
 - `ADMIN_EMAIL` / `DATABASE_URL` はサーバー専用のため `NEXT_PUBLIC_` を付けない。
