@@ -55,16 +55,25 @@ const toMutationFailure = (error: unknown, fallbackMessage: string): MutationRes
 /**
  * 許可メール判定の結果。
  *
- * 「不許可」と「レートリミットで判定できなかった」は**利用者に伝えるべきことが違う**ため
- * 真偽値にまとめない。前者は許可リストの問題、後者は時間をおけば解消する（Issue #146）。
+ * 「不許可」と「判定できなかった」は**利用者に伝えるべきことも、取るべき処置も違う**ため
+ * 真偽値にまとめない。前者は許可リストの問題、後者は時間をおけば解消する（Issue #146 / #211）。
  */
 type AllowedCheckResult =
   /** 許可リストに載っている */
   | 'allowed'
-  /** 許可リストに無い、または判定に失敗した（安全側に倒して不許可扱い） */
+  /** サーバーが不許可と答えた（許可リストに無い・トークンが無効など 4xx を含む） */
   | 'denied'
   /** レートリミット（429）で判定できなかった。時間をおけば再試行できる */
-  | 'rate-limited';
+  | 'rate-limited'
+  /**
+   * 通信失敗・5xx で判定できなかった。**保存済みのセッションを消す根拠にしない**。
+   * ページ遷移で fetch が中断された場合もここに入る（Issue #211）
+   */
+  | 'unavailable';
+
+/** 許可判定の通信に失敗したときに利用者へ見せる文言。「許可されていない」と取り違えさせない */
+const AUTH_CHECK_UNAVAILABLE_MESSAGE =
+  '認証状態を確認できませんでした。通信環境を確認して再試行してください。';
 
 /**
  * アプリ横断の状態と操作を公開するコンテキストの形。
@@ -175,12 +184,14 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
    *   - local   : メールを body で送り `/api/auth/is-allowed`（POST）で照合
    *   - supabase: Bearer トークンを送り `/api/auth/admin`（GET）で照合（メールを露出させない）
    * `ADMIN_EMAIL` はサーバー専用のため判定は必ず API 越しに行う（クライアントに秘匿値を出さない）。
-   * 通信失敗時は安全側に倒して不許可（`denied`）を返す。
    *
-   * **429 だけは `denied` と区別する。** レートリミットは許可リストと無関係であり、
-   * 「許可されていないメールアドレスです」と伝えると原因を誤らせるため（Issue #146）。
+   * **サーバーが答えた不許可（4xx）だけを `denied` にする。** 429 は `rate-limited`（Issue #146）、
+   * 通信失敗・5xx は `unavailable`（Issue #211）として区別する。以前は通信失敗も `denied` に
+   * まとめており、ページ遷移で fetch が中断されただけで保存済みのセッションが消えていた。
+   * 判定できなかったことを不許可として扱っても安全性は増えない（認可の本体はサーバーの
+   * `requireAdmin()` であり、クライアントの状態では書き込み API を通れない）。
    *
-   * @returns 判定結果（`allowed` / `denied` / `rate-limited`）
+   * @returns 判定結果（`allowed` / `denied` / `rate-limited` / `unavailable`）
    */
   const checkAllowedEmail = async ({
     email,
@@ -202,7 +213,8 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         return 'rate-limited';
       }
       console.error('[auth] admin check failed', error);
-      return 'denied';
+      if (error instanceof ApiError && error.status < 500) return 'denied';
+      return 'unavailable';
     }
   };
 
@@ -295,6 +307,8 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
           try {
             const parsedUser = JSON.parse(savedUser) as User | null;
             const check = await checkAllowedEmail({ email: parsedUser?.email });
+            // 判定できなかっただけなら保存済みユーザーを消さない。次の画面で再判定される。
+            if (check === 'unavailable') return;
             if (parsedUser?.email && check !== 'allowed') {
               localStorage.setItem('espresso_user', JSON.stringify(null));
               setCurrentUser(null);
@@ -309,6 +323,8 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
               localStorage.setItem('espresso_user', JSON.stringify(normalizedUser));
             }
           } catch {
+            // 壊れた保存値は捨てる（残すと毎回ここを通る）
+            localStorage.setItem('espresso_user', JSON.stringify(null));
             setCurrentUser(null);
           }
         }
@@ -323,9 +339,11 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
           email: sessionUser.email,
           accessToken: session?.access_token,
         });
+        // 判定できなかっただけならサインアウトしない（ログインも確定しない）。再読み込みで復元できる。
+        if (check === 'unavailable') return;
         if (check !== 'allowed') {
-          // 判定できなかった場合も含めて安全側に倒す（サインアウトする）。ただし理由は
-          // 取り違えないよう分けて伝える。429 は許可リストの問題ではない（Issue #146）。
+          // 不許可・レートリミットはサインアウトする。ただし理由は取り違えないよう分けて伝える。
+          // 429 は許可リストの問題ではない（Issue #146）。
           await supabase.auth.signOut();
           setCurrentUser(null);
           setAccessToken(null);
@@ -368,15 +386,6 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     }
   }, [reports, dataMode, isHydrated]);
 
-  // local モードのみ currentUser を localStorage に永続化する。
-  // isHydrated 前は初期 null で保存済みユーザーを上書きしてしまうため、初期化完了までスキップする。
-  useEffect(() => {
-    if (authMode === 'local') {
-      if (!isHydrated) return;
-      localStorage.setItem('espresso_user', JSON.stringify(currentUser));
-    }
-  }, [currentUser, authMode, isHydrated]);
-
   // 認証状態が変わるたびサーバー判定用のフラグ Cookie を同期する（初期化完了後のみ）。
   useEffect(() => {
     if (!isHydrated) return;
@@ -399,9 +408,11 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
           email: sessionUser.email,
           accessToken: session?.access_token,
         });
+        // 判定できなかっただけなら状態を変えない（サインアウトも確定もしない）。次のイベントで再判定される。
+        if (check === 'unavailable') return;
         if (check !== 'allowed') {
-          // 判定できなかった場合も含めて安全側に倒す（サインアウトする）。ただし理由は
-          // 取り違えないよう分けて伝える。429 は許可リストの問題ではない（Issue #146）。
+          // 不許可・レートリミットはサインアウトする。ただし理由は取り違えないよう分けて伝える。
+          // 429 は許可リストの問題ではない（Issue #146）。
           await supabase.auth.signOut();
           setCurrentUser(null);
           setAccessToken(null);
@@ -441,6 +452,9 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
       if (check === 'rate-limited') {
         return RATE_LIMIT_MESSAGE;
       }
+      if (check === 'unavailable') {
+        return AUTH_CHECK_UNAVAILABLE_MESSAGE;
+      }
       if (check !== 'allowed') {
         return '許可されていないメールアドレスです。';
       }
@@ -461,10 +475,12 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
         accessToken: data.session?.access_token,
       });
       if (check !== 'allowed') {
+        // ログイン操作中は、判定できなかった場合もログインを確定させずにサインアウトする
+        // （利用者がその場で再試行できるため）。文言だけ原因ごとに分ける。
         await supabase.auth.signOut();
-        return check === 'rate-limited'
-          ? RATE_LIMIT_MESSAGE
-          : '許可されていないメールアドレスです。';
+        if (check === 'rate-limited') return RATE_LIMIT_MESSAGE;
+        if (check === 'unavailable') return AUTH_CHECK_UNAVAILABLE_MESSAGE;
+        return '許可されていないメールアドレスです。';
       }
       // メールアドレスは個人情報のためログに出さない（error-handling.md）。追跡は userId で足りる
       console.info('[auth] login', { userId: sessionUser.id });

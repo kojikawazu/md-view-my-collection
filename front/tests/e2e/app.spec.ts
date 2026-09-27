@@ -431,4 +431,71 @@ test.describe('Reports app', () => {
     await expect(page.getByText('External Links')).toBeVisible();
     await expect(page.getByRole('link', { name: /valid\.example\.com/ })).toBeVisible();
   });
+
+  // Issue #211: セッション復元中の許可判定が「判定できなかった」だけなら、保存済みのログインを消さない。
+  // 以前は通信失敗も不許可と同じに扱い、ページ遷移で fetch が中断されただけでログアウトしていた
+  // （TC-022 が断続的に落ちていた原因）。失敗のログが出たことを待ってから次の画面へ進むことで、
+  // 上書きが起きるならその後に確実に観測できるようにしている。
+  test('TC-043: session survives when the permission check fails to connect', async ({ page }) => {
+    await setStorage(page, { reports: reportsFixture, user: userFixture });
+    await page.route('**/api/auth/is-allowed', (route) => route.abort('failed'));
+    const checkFailed = page.waitForEvent('console', (msg) =>
+      msg.text().includes('[auth] admin check failed'),
+    );
+
+    await page.goto('/');
+    await checkFailed;
+    await page.unroute('**/api/auth/is-allowed');
+    await page.goto('/');
+
+    await expect(page.getByRole('navigation').getByText('Manager')).toBeVisible();
+  });
+
+  test('TC-044: session survives when the permission check returns 5xx', async ({ page }) => {
+    await setStorage(page, { reports: reportsFixture, user: userFixture });
+    await page.route('**/api/auth/is-allowed', (route) =>
+      route.fulfill({ status: 503, json: { error: 'Service Unavailable' } }),
+    );
+    const checkFailed = page.waitForEvent('console', (msg) =>
+      msg.text().includes('[auth] admin check failed'),
+    );
+
+    await page.goto('/');
+    await checkFailed;
+    await page.unroute('**/api/auth/is-allowed');
+    await page.goto('/');
+
+    await expect(page.getByRole('navigation').getByText('Manager')).toBeVisible();
+  });
+
+  // 安全側を壊していないことの確認。スタブを使わず、実際の API に「許可リスト外」と判定させる。
+  test('TC-045: stored session of a non-allowed email is discarded on restore', async ({
+    page,
+  }) => {
+    await setStorage(page, {
+      reports: reportsFixture,
+      user: { ...userFixture, email: 'not-allowed@example.com' },
+    });
+
+    await page.goto('/');
+
+    await page.waitForFunction(() => localStorage.getItem('espresso_user') === 'null');
+    await expect(page.getByRole('navigation').getByText('Manager')).toHaveCount(0);
+  });
+
+  test('TC-046: login shows a connection error instead of "not allowed" when the check fails', async ({
+    page,
+  }) => {
+    await setStorage(page, { reports: reportsFixture, user: null });
+    await page.route('**/api/auth/is-allowed', (route) => route.abort('failed'));
+    await page.goto('/login');
+
+    await page.getByPlaceholder('Enter your email').fill('tester@example.com');
+    await page.getByPlaceholder('Enter your password').fill('password');
+    await page.getByRole('button', { name: 'Authenticate' }).click();
+
+    await expect(page.getByText('認証状態を確認できませんでした')).toBeVisible();
+    await expect(page.getByText('許可されていないメールアドレスです。')).toHaveCount(0);
+    await expect(page).toHaveURL(/\/login$/);
+  });
 });
