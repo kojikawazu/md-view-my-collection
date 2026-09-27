@@ -35,16 +35,19 @@ globs: ".github/workflows/**"
 - **パスフィルタをかけず、全 PR で常に実行する**。実行は数秒で終わるため、「ワークフローを変更したときだけ動かす」ための判定ジョブ（後述の `dorny/paths-filter`）を足すほうが高くつく。必須チェックにしても pending で詰まらない。
   - **本プロジェクトで常時実行するのは `actionlint.yml` と `secret-scan.yml`（秘匿ファイルの混入検出。どのパスの変更でも混入しうるため絞らない）の 2 本**であり、main のルールセットの必須チェックもこの 2 本に限る。既存の `test.yml` / `docs.yml` はワークフローレベルの `paths` で絞っており、そのため必須チェックにできない（`test.yml` 冒頭の注意書き）。常時実行の 2 本はその制約を負わない。
 - **`actions/checkout` を必ず先に置く**。actionlint は Git リポジトリの中から `.github/workflows` を探すため、リポジトリ外で実行するとエラー終了する。
-- **バージョンを固定する**。`latest` にすると、コードを変えていないのに新リリースの検査強化で CI が落ちる。更新は依存更新として明示的に行う（`run:` 内のバージョンは Dependabot では更新されない）。**`Makefile` の `ACTIONLINT_VERSION` と同じ値に揃える**（ローカル green / CI red を防ぐ。`docs.yml` の markdownlint と同じ理由）。
-- **shellcheck の追加設定は不要**。GitHub ホストの ubuntu ランナーにはプリインストール済みで、PATH にあれば `run:` のシェルスクリプトも自動で併せて検査される。
-- **バイナリ取得はチェックサム検証を伴わない**ため、リスクはバージョン固定（スクリプト URL・本体の双方）で抑える。あわせて**このジョブにシークレットを渡さず `permissions: contents: read` に絞る**（万一取得物が不正でも、読み取り専用のチェックアウト以外に到達できない）。
+- **公式 Docker イメージ（`rhysd/actionlint`）で実行し、CI からは `make actionlint` を呼ぶ**。イメージとコマンドの定義は `Makefile` の `ACTIONLINT_IMAGE` **1 箇所だけ**に置き、ワークフローに書き写さない（`duplication.md`。書き写すと片方だけ更新され、ローカル green / CI red が起きる。しかも CI は緑のままなので構造的に検知できない）。
+- **イメージを使う理由は shellcheck が同梱されること**。actionlint は PATH 上の shellcheck を呼んで `run:` の中身を検査するが、**shellcheck が PATH に無いとエラーにも警告にもならず、その層だけ黙ってスキップされ、終了コードは 0 のまま**になる。バイナリ単体の配布（download スクリプト・`brew install actionlint`・`go install`）は shellcheck を含まないため、CI（ランナーにプリインストール済み）とローカルで検査の範囲が静かに食い違う。イメージなら actionlint と shellcheck の版が CI とローカルで必ず揃う（Issue #204 で、SC2086 を含む `run:` がバイナリ + shellcheck 無しでは exit 0、イメージでは exit 2 になることを確認済み）。
+- **バージョンは「タグ + マニフェストリストのダイジェスト」で固定する**（`rhysd/actionlint:<version>@sha256:<digest>`）。`latest` にすると、コードを変えていないのに新リリースの検査強化で CI が落ちる。タグだけだと Docker Hub 側で付け替えられても気づけないため、**ダイジェストで中身まで固定**する（チェックサム検証と同等になる）。ダイジェストは**マルチアーキテクチャのマニフェストリストのもの**を使う（amd64 の CI と arm64 の手元で同じ指定が使える）。更新は依存更新として明示的に行い、タグとダイジェストを一緒に変える（`docker buildx imagetools inspect rhysd/actionlint:<version>` の `Digest` 行。Dependabot では更新されない）。
+- **このジョブにシークレットを渡さず `permissions: contents: read` に絞る**。リポジトリは読み取り専用（`:ro`）でコンテナにマウントする。
+- ワークフローから切り出したシェルスクリプト（`.github/scripts/*.sh` 等）は actionlint の検査対象外（`run:` の中身しか見ない）。別途 shellcheck にかける（例: `secret-scan.yml`）。
 
-実体は `.github/workflows/actionlint.yml` を正とする（本ルールに YAML を再掲すると、片方だけ変わったときに食い違う）。
+実体は `Makefile` の `actionlint` ターゲットと `.github/workflows/actionlint.yml` を正とする（本ルールにコマンドや YAML を再掲すると、片方だけ変わったときに食い違う）。
 
 ### ローカルでの実行
 
-- **push する前に手元で実行する**。本プロジェクトは **`make actionlint`** を用意しており、CI と同じバージョンで走る。
-- 直接入れる場合は `brew install actionlint` / `go install github.com/rhysd/actionlint/cmd/actionlint@latest`。引数なしで実行すると、リポジトリ内の `.github/workflows` を自動検出して全ワークフローを検査する。指摘があれば終了コード 1 で落ちる。
+- **push する前に手元で `make actionlint` を実行する**。CI と**同じイメージ・同じコマンド**で走る（Docker が必要）。引数なしで、リポジトリ内の `.github/workflows` を自動検出して全ワークフローを検査する。指摘があれば非 0 で落ちる。
+- **`brew install actionlint` / `go install` で入れたバイナリを直接使わない**。shellcheck が同梱されず、手元に shellcheck が無いと `run:` の検査だけが黙って欠ける（上記）。
+- **例外（Docker が使えない環境）**: バイナリを使う場合は `brew install shellcheck` 等で **shellcheck も必ず入れる**。要件は「CI とローカルで shellcheck の有無を一致させること」であり、版まで揃わない点は許容する（最終的な担保は CI）。
 
 ### 抑制と設定
 
