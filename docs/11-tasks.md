@@ -253,6 +253,7 @@
 - [x] Next.js を `16.1.4` → `16.3.6` へ更新（issue 起票後に next 自体へ未認証 RCE の critical 2 件が追加され、修正版が `>=16.3.3` のため起票時目標の `>=16.2.11` から引き上げ。推移的依存は `pnpm.overrides` を使わずロックファイルの再解決のみで解消し、`pnpm audit --prod` は 50 件 → high 1 件。supabase-js は Node 22 必須化を避けて据え置き、`ws` のみ範囲内で更新。更新で表面化した `AppStateProvider` の reports 永続化 effect の初期化前上書きを `isHydrated` ガードで修正。16.3 の `next dev` が `front/AGENTS.md`・`front/CLAUDE.md` を自動生成するため `agentRules: false` で停止 / Issue #206 / 2026-09-27）
 - [x] E2E 用 `NEXT_PUBLIC_AUTH_MODE=local` を本番ビルドで無効化（判定を `lib/auth-mode.ts` の `resolveAuthMode()` に一本化し、`NODE_ENV` が `development` / `test` のときだけ local を許可。API・`AppStateProvider`・`LoginForm` の 3 箇所の直読みを置換。本番で指定されていたら `instrumentation.ts` で起動時に警告。UT 7 + IT 2 ケース追加・手動ミューテーションで本命アサーションでの失敗を確認。本番ビルドで body のメールのみの `is-allowed` が 401 になることを実機確認 / Issue #207 / 2026-09-27）
 - [x] `requireAdmin()` のトークンキャッシュがトークンの `exp` を超えないようにする（期限を「5 分後」と `exp` の早い方に丸め、`exp` を読めないトークンはキャッシュしない。キーを SHA-256 に変更。UT 8 ケース追加・手動ミューテーションで本命アサーションでの失敗を確認。`docs/07` に写していた `auth-server.ts` のコード全文は実装とずれるため削除 / Issue #208 / 2026-09-27）
+- [x] セッション復元中の許可判定の通信失敗を「不許可」と区別する（判定結果に `unavailable` を追加し、通信失敗・5xx では保存済みのログインを消さない／サインアウトしない。ログイン時は通信失敗の文言を出す。local モードで `currentUser` を保存する重複 effect を削除。E2E 4 ケース追加・手動ミューテーションで本命アサーションでの失敗を確認。全件リトライなし 3 回で TC-022 を含め 37/37 通過 / Issue #211 / 2026-09-27）
 
 ### 積み残し
 
