@@ -17,6 +17,17 @@
 - API エンドポイントごとにアクセス制御を設定する（公開 / 認証必須）。書き込み系は `requireAdmin()`（`front/src/lib/auth-server.ts`）+ RLS の二重防御。
 - RLS: Supabase 全テーブルで有効。SELECT は公開、INSERT/UPDATE/DELETE は認証ユーザーのみ（詳細: `docs/05-data-specification.md`）。
 
+### E2E 用 local 認証モードの本番ガード（Issue #207）
+
+`NEXT_PUBLIC_AUTH_MODE=local` は E2E 専用のバイパスであり、local モードの `/api/auth/is-allowed` は **トークンを検証せず、リクエストボディの `email` だけで許可判定する**。環境変数の設定ミスで本番に有効化されると、認証が実質無効になる。
+
+- **判定は `resolveAuthMode()`（`front/src/lib/auth-mode.ts`）に一本化する。** API（`is-allowed`）・`AppStateProvider`・`LoginForm` のすべてがこれを通る。`process.env.NEXT_PUBLIC_AUTH_MODE` を直接読まない（ガードを通らない経路を作らないため）。
+- **local を有効にするのは `NODE_ENV` が `development` / `test` のときだけ**（許可リスト方式）。`next build` / `next start`（`production`）、未設定・想定外の値では local 指定を無視して supabase（トークン検証あり）になる。E2E は `next dev`（`development`）で動くため影響を受けない。
+- **本番で local が指定されていたら起動時に警告ログを出す**（`front/src/instrumentation.ts`）。認証は迂回されないが、E2E 用の設定が本番に紛れ込んでいること自体が設定ミスであるため握りつぶさない。
+- local 分岐の UI コード（メール入力フォーム）は本番バンドルに残る。判定が関数を挟むため、ビルド時に分岐が除去されないためである。**安全性はバンドルからの除去ではなく、実行時に supabase が返ることで担保する**（サーバー側の判定も同じ関数のため、クライアントを改ざんしても迂回できない）。
+- **サーバー専用の環境変数への分離は見送った。** 上記ガードにより、本番ではフラグの値にかかわらずサーバーの local 分岐へ到達しない。フラグを分けても塞がる穴が増えず、整合を取るべき環境変数が 1 つ増えるだけのため。
+- `NEXT_PUBLIC_DATA_MODE=local` には同じガードを入れていない。local データモードはブラウザの `localStorage` を読むだけで、書き込み API の認可（`requireAdmin()`）を迂回しないため、認証の穴にはならない（設定ミス時の影響は「本番データが表示されない」という可用性の問題にとどまる）。
+
 ## 通信・アクセス制御
 
 - 全通信は **HTTPS** を必須とする（Vercel デプロイで自動適用）。

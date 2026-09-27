@@ -3,6 +3,7 @@
 import React from 'react';
 import LoadingOverlay from './LoadingOverlay';
 import { useLoginForm } from '@/hooks/useLoginForm';
+import { resolveAuthMode } from '@/lib/auth-mode';
 import type { DesignSystem } from '@/types/theme';
 
 /** ログインフォームの props。 */
@@ -33,8 +34,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ theme, onLogin, onLoginWithGoogle
   } = useLoginForm({ onLogin, onLoginWithGoogle });
 
   const { colors, fontHeader, borderRadius } = theme;
-  // 認証モード。未設定時は本番想定の supabase（Google OAuth）にフォールバックする
-  const authMode = process.env.NEXT_PUBLIC_AUTH_MODE ?? 'supabase';
+  // 認証モード。本番ビルドでは local 指定を無視して supabase（Google OAuth）になる
+  const authMode = resolveAuthMode();
 
   return (
     <div
