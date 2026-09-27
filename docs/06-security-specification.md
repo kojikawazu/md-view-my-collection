@@ -176,4 +176,14 @@
 - シークレット・認証情報をコードにハードコードしない。
 - サーバー専用モジュール（`front/src/lib/db.ts` / `front/src/lib/auth-server.ts`）は先頭で `import 'server-only'` する。Client Component から誤って import された場合に**ビルドを失敗させ**、シークレットのクライアントバンドル混入を機械的に防ぐ。
 
+### 秘匿ファイルの混入検出（Issue #205）
+
+`.gitignore` は「混入させない」側の対策でしかない。**一度追跡されたファイルには無視が効かず**（`git add -f` や新規ディレクトリでの書き漏れも止められない）、**一度 push した秘匿ファイルは追跡を外しても履歴に残る**。公開リポジトリでは誰でも取得でき、対処は鍵・トークンのローテーションしかない。そのため「追跡された時点で落とす」検出を CI に置く（`.github/workflows/secret-scan.yml`）。
+
+- 検出対象: `.env` 系（`.env` / `.env.local` / `.env.production` 等）、鍵・証明書・キーストア（`*.key` / `*.pem` / `*.p12` / `*.pfx` / `*.jks` / `*.keystore`）、SSH 秘密鍵（`id_rsa` / `id_ed25519` / `id_dsa`）、クラウドの認証情報（`credentials.json` / `serviceAccountKey.json`）。大文字小文字は区別しない
+- 除外: 値を持たないテンプレート（`*.example` / `*.sample` / `*.template` / `*.dist`）と環境変数の型定義（`*.env.d.ts`）
+- 対象は**ファイル名のみ**。ファイルの中身（コードに直書きされたトークン等）は検査しない。直書きの禁止は本節冒頭の「ハードコードしない」と、PR 作成時のセルフチェック（`/pr-create` の差分スキャン）で担保する
+- 判定ロジックの正本は `.github/scripts/secret-scan.sh`。検出パターンが壊れると**黙って見逃す**形で失敗するため、代表パスで判定を確かめる自己テスト（`secret-scan.test.sh`）を本番の検査の前に毎回実行する
+- **検出されたら**: `git rm --cached` と `.gitignore` への追加だけで済ませない。push 済みであれば、そのファイルに含まれる鍵・トークンを**ローテーションする**
+
 > 環境変数の一覧は `.claude/rules/environment.md` を参照。

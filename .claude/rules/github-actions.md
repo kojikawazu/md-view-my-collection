@@ -33,7 +33,7 @@ globs: ".github/workflows/**"
 `.github/workflows/actionlint.yml` として**独立したワークフロー**で実行する。
 
 - **パスフィルタをかけず、全 PR で常に実行する**。実行は数秒で終わるため、「ワークフローを変更したときだけ動かす」ための判定ジョブ（後述の `dorny/paths-filter`）を足すほうが高くつく。必須チェックにしても pending で詰まらない。
-  - **本プロジェクトでは、この 1 本だけが常時実行**である。既存の `test.yml` / `docs.yml` はワークフローレベルの `paths` で絞っており、そのため必須チェックにできない（`test.yml` 冒頭の注意書き）。actionlint はその制約を負わない。
+  - **本プロジェクトで常時実行するのは `actionlint.yml` と `secret-scan.yml`（秘匿ファイルの混入検出。どのパスの変更でも混入しうるため絞らない）の 2 本**であり、main のルールセットの必須チェックもこの 2 本に限る。既存の `test.yml` / `docs.yml` はワークフローレベルの `paths` で絞っており、そのため必須チェックにできない（`test.yml` 冒頭の注意書き）。常時実行の 2 本はその制約を負わない。
 - **`actions/checkout` を必ず先に置く**。actionlint は Git リポジトリの中から `.github/workflows` を探すため、リポジトリ外で実行するとエラー終了する。
 - **バージョンを固定する**。`latest` にすると、コードを変えていないのに新リリースの検査強化で CI が落ちる。更新は依存更新として明示的に行う（`run:` 内のバージョンは Dependabot では更新されない）。**`Makefile` の `ACTIONLINT_VERSION` と同じ値に揃える**（ローカル green / CI red を防ぐ。`docs.yml` の markdownlint と同じ理由）。
 - **shellcheck の追加設定は不要**。GitHub ホストの ubuntu ランナーにはプリインストール済みで、PATH にあれば `run:` のシェルスクリプトも自動で併せて検査される。

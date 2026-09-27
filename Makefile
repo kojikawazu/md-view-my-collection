@@ -19,7 +19,7 @@ ACTIONLINT_BIN := .actionlint/actionlint-$(ACTIONLINT_VERSION)
 .DEFAULT_GOAL := help
 
 .PHONY: help install dev build start \
-        lint typecheck format check lint-docs lint-docs-fix actionlint \
+        lint typecheck format check lint-docs lint-docs-fix actionlint secret-scan \
         test test-watch test-integration test-e2e test-e2e-ui test-e2e-report \
         gen-openapi gen-test-schema \
         prisma-pull prisma-generate
@@ -70,9 +70,9 @@ lint-docs:
 lint-docs-fix:
 	npx --yes markdownlint-cli2@$(MARKDOWNLINT_VERSION) --fix
 
-## GitHub Actions ワークフローの静的解析（actionlint.yml と同じバージョンで実行）
 # check には含めない。workflow を触るときしか必要ないため独立させる。
 # 引数なしで実行すると .github/workflows を自動検出して全ワークフローを検査する。
+## GitHub Actions ワークフローの静的解析（actionlint.yml と同じバージョンで実行）
 actionlint: $(ACTIONLINT_BIN)
 	@$(ACTIONLINT_BIN) -color
 
@@ -87,6 +87,12 @@ $(ACTIONLINT_BIN):
 	@bash $(dir $(ACTIONLINT_BIN))download.bash $(ACTIONLINT_VERSION) $(dir $(ACTIONLINT_BIN)) >/dev/null
 	@rm -f $(dir $(ACTIONLINT_BIN))download.bash
 	@mv $(dir $(ACTIONLINT_BIN))actionlint $@
+
+# ガード自体の自己テストを先に通す。判定の正本は .github/scripts/secret-scan.sh。
+## 追跡対象に秘匿ファイル（鍵・.env 系）が無いかを検査（secret-scan.yml と同じ手順）
+secret-scan:
+	@bash .github/scripts/secret-scan.test.sh
+	@bash .github/scripts/secret-scan.sh
 
 ## lint + typecheck をまとめて実行（CI static-analysis 相当）
 check: lint typecheck

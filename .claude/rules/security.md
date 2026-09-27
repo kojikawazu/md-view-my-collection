@@ -35,3 +35,4 @@ globs:
 - 本番環境: Vercel 環境変数で管理
 - `ADMIN_EMAIL` / `DATABASE_URL` はサーバーサイド専用（`NEXT_PUBLIC_` プレフィックスを付けない）
 - サーバー専用モジュールは先頭で `import 'server-only'` し、Client Component からの import をビルド時に失敗させる（`frontend.md` のレイヤ依存ルールと対になる機械的ガード）
+- **秘匿ファイル（鍵・`.env` 系）が Git の追跡対象に入ったら CI で落とす**（`.github/workflows/secret-scan.yml`。判定の正本は `.github/scripts/secret-scan.sh`、手元では `make secret-scan`）。`.gitignore` は追跡済みファイルに効かず、push 済みの秘匿ファイルは履歴から消せない。検出されたら**鍵・トークンをローテーションする**（`git rm --cached` だけで済ませない）。詳細は `docs/06-security-specification.md`（Issue #205）

@@ -15,6 +15,8 @@
 - CI/CD: 自動デプロイのみ（Vercel連携を前提）。`main` ブランチのみ本番デプロイ。プレビューは不要。
 - CI: GitHub Actions（`.github/workflows/test.yml`）で自動実行する。`static-analysis` ジョブが静的解析（整形検証 `pnpm format:check` + ESLint `pnpm lint` + 型チェック `pnpm typecheck`）、`playwright` ジョブがユニット（Vitest）→ 統合（IT・Testcontainers Postgres・`pnpm test:integration`）→ E2E（Playwright）を順に担当し、両ジョブを並列実行する。IT は ubuntu-latest 同梱の Docker で実 Postgres を起動する。
 - CI（ワークフロー自体の検証）: `.github/workflows/actionlint.yml` が [actionlint](https://github.com/rhysd/actionlint) で全ワークフローを検査する。**パスフィルタをかけず全 PR で常時実行**する（実行が数秒で終わるため、変更判定ジョブを足すほうが高くつく。ワークフローが必ず起動するので required status check にしても pending で詰まらない）。バージョンは `Makefile` の `ACTIONLINT_VERSION` と揃えて固定し、ローカルでは `make actionlint` で CI と同じ検査を実行できる。`run:` の中身は shellcheck に流され、untrusted input の直挿し（スクリプトインジェクション）も検出される。
+- CI（秘匿ファイルの混入検出）: `.github/workflows/secret-scan.yml` が、Git の追跡対象（`git ls-files`）に鍵・`.env` 系のファイルが含まれていないかを検査する。`.gitignore` は未追跡ファイルにしか効かず、一度 push した秘匿ファイルは履歴から消せない（鍵のローテーションが必要になる）ため、**追跡された時点で落とす**。どのパスの変更でも混入しうるので、actionlint と同じく**パスフィルタをかけず全 PR で常時実行**する（数秒で終わる）。判定ロジックは `.github/scripts/secret-scan.sh`、その自己テストは `secret-scan.test.sh` にあり、ローカルでは `make secret-scan` で CI と同じ検査を実行できる。検出対象・除外の詳細は `docs/06-security-specification.md`「シークレット管理」を参照。
+- 必須チェック（main のルールセット）: 常時実行する `actionlint` / `secret-scan` のみを必須にする。`test.yml`（`static-analysis` / `playwright`）と `docs.yml`（`markdown-lint`）はワークフローレベルの `paths` で絞っているため必須にしない（起動しない PR で pending のまま詰まる。`.claude/rules/github-actions.md`）。これらはマージ前に目視で緑を確認する。
 - テスト: 正常/準正常/異常をすべて必須とする（ユニット + E2E）。詳細は `docs/08-test-specification.md`。
 - 監視/ログ: 不具合を早期発見できるログ設計を意識する。
 - セキュリティ: Markdown表示はサニタイズ必須。Supabase RLSは「公開閲覧 + 認証ユーザーのみ書き込み」を採用する（詳細: `docs/06-security-specification.md`）。
