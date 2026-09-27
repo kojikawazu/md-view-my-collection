@@ -250,8 +250,10 @@
   - **本番で効かせるには Upstash のアカウント作成と Vercel への環境変数 2 つの設定が必要（未実施）**
 - [x] Vercel のデプロイ抑止が実際に効くことの観測（`"**": false` が main に載った 2026-07-26 以降、14 本の PR ブランチ push で Preview 0 件・main マージは 14 件すべて本番デプロイ。ドキュメントのみの #174 / #181 もデプロイされ `ignoreCommand` 撤去の意図どおり / Issue #159 → #167 / 2026-08-22）
 - [x] GitHub Actions ワークフローを actionlint で検証（`.github/workflows/actionlint.yml` を新設し**パスフィルタ無しで全 PR 常時実行**。バージョンは `Makefile` の `ACTIONLINT_VERSION` と揃えて固定し `make actionlint` で同一検査。ルール本文が `github-actions.md` の表の 1 セルに単語があるだけだったため、上流 `my-custom-skills` #147 相当のセクションを追記して正本を揃えた。既存 `test.yml` / `docs.yml` は指摘ゼロで通過 / Issue #202 / 2026-08-23）
+- [x] Next.js を `16.1.4` → `16.3.6` へ更新（issue 起票後に next 自体へ未認証 RCE の critical 2 件が追加され、修正版が `>=16.3.3` のため起票時目標の `>=16.2.11` から引き上げ。推移的依存は `pnpm.overrides` を使わずロックファイルの再解決のみで解消し、`pnpm audit --prod` は 50 件 → high 1 件。supabase-js は Node 22 必須化を避けて据え置き、`ws` のみ範囲内で更新。更新で表面化した `AppStateProvider` の reports 永続化 effect の初期化前上書きを `isHydrated` ガードで修正。16.3 の `next dev` が `front/AGENTS.md`・`front/CLAUDE.md` を自動生成するため `agentRules: false` で停止 / Issue #206 / 2026-09-27）
 
 ### 積み残し
 
 - Upstash のアカウント作成と Vercel への環境変数 2 つの設定（`UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`）。**設定するまで本番ではレートリミットが無効**（実装自体は完了 / Issue #146）
+- `deepmerge-ts` の high 1 件（`prisma` → `@prisma/config` が `7.1.5` に完全固定。Prisma 6 系の最新でも解消せず、Prisma 7 へのメジャー移行が必要。影響は Prisma CLI が手元の設定ファイルをマージする経路のみで、リクエスト由来の入力は届かない / Issue #206 → #209）
 - `script-src` の nonce 化（`'unsafe-inline' 'unsafe-eval'` の撤廃。`middleware.ts` の新設を伴うため強制化とは分離 / 判断理由は `docs/06-security-specification.md`「nonce 化を見送る判断」）

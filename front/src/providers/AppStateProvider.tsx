@@ -357,12 +357,15 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
   }, []);
 
   // local モードでは reports を localStorage に永続化し、タグを派生させる。
+  // isHydrated 前は初期 [] で保存済みレポートを上書きしてしまうため、初期化完了までスキップする
+  // （開発時の StrictMode で初期化 effect が再実行されると、上書き後の [] を読み直してしまう）。
   useEffect(() => {
     if (dataMode === 'local') {
+      if (!isHydrated) return;
       localStorage.setItem('espresso_reports', JSON.stringify(reports));
       setTags(deriveTagsFromReports(reports));
     }
-  }, [reports, dataMode]);
+  }, [reports, dataMode, isHydrated]);
 
   // local モードのみ currentUser を localStorage に永続化する。
   // isHydrated 前は初期 null で保存済みユーザーを上書きしてしまうため、初期化完了までスキップする。
