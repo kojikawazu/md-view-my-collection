@@ -20,20 +20,14 @@ permissions:
 jobs:
   actionlint:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       # actionlint は Git リポジトリの中で .github/workflows を探すため、checkout を先に置く
       - uses: actions/checkout@v4
 
-      # スクリプト URL・actionlint 本体ともにバージョンを固定する。
-      # latest にすると、コードを変えていないのに新リリースの検査強化で CI が落ちる。
-      # Makefile の ACTIONLINT_VERSION と必ず同じ値にする。版差で結果が食い違うと
-      # ローカル green / CI red が起きる（docs.yml の markdownlint と同じ理由）。
-      - name: Install actionlint
-        env:
-          ACTIONLINT_VERSION: 1.7.12
-        run: bash <(curl -sSfL "https://raw.githubusercontent.com/rhysd/actionlint/v${ACTIONLINT_VERSION}/scripts/download-actionlint.bash") "${ACTIONLINT_VERSION}"
-
-      # shellcheck は GitHub ホストの ubuntu ランナーにプリインストール済みのため、
-      # run: のシェルスクリプトも自動で併せて検査される（追加設定は不要）。
+      # 実行コマンドとイメージ（バージョン・ダイジェスト）の定義は Makefile の 1 箇所だけ。
+      # ここに書き写すと、片方だけ更新されてローカル green / CI red が起きる（Issue #204）。
+      # 公式イメージに shellcheck が同梱されるため、run: の中身も手元と同じ版で検査される。
+      # Docker と make は GitHub ホストの ubuntu ランナーにプリインストール済み。
       - name: Run actionlint
-        run: ./actionlint -color
+        run: make actionlint

@@ -9,12 +9,14 @@ PNPM  := pnpm
 # ローカル green / CI red が起きるため、バージョンを固定して両者を揃える。
 MARKDOWNLINT_VERSION := 0.23.1
 
-# .github/workflows/actionlint.yml の ACTIONLINT_VERSION と必ず同じ値にする。
-# latest にすると、コードを変えていないのに新リリースの検査強化で CI が落ちる。
-ACTIONLINT_VERSION := 1.7.12
-# バージョン付きのパスに置く。PATH 上の actionlint（brew 等）を使うと版が揃わず、
-# ローカル green / CI red が起きるため、CI と同じ取得方法で明示的に落として使う。
-ACTIONLINT_BIN := .actionlint/actionlint-$(ACTIONLINT_VERSION)
+# actionlint の公式 Docker イメージ。CI（actionlint.yml）も `make actionlint` を呼ぶため、
+# バージョンの定義はここ 1 箇所だけ（workflow 側に書き写さない / Issue #204）。
+# - shellcheck / pyflakes が同梱されるので、run: の中身の検査が手元で静かに欠けることがない
+#   （バイナリ単体だと shellcheck が PATH に無いとき、その層だけ黙ってスキップされる）
+# - タグは付け替えられるため、マルチアーキテクチャのマニフェストリストのダイジェストで固定する
+#   （amd64 の CI と arm64 の手元で同じ指定が使える）。更新時はタグとダイジェストを一緒に変える:
+#   docker buildx imagetools inspect rhysd/actionlint:<version>  の Digest 行
+ACTIONLINT_IMAGE := rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
 
 .DEFAULT_GOAL := help
 
@@ -72,21 +74,10 @@ lint-docs-fix:
 
 # check には含めない。workflow を触るときしか必要ないため独立させる。
 # 引数なしで実行すると .github/workflows を自動検出して全ワークフローを検査する。
-## GitHub Actions ワークフローの静的解析（actionlint.yml と同じバージョンで実行）
-actionlint: $(ACTIONLINT_BIN)
-	@$(ACTIONLINT_BIN) -color
-
-# CI（actionlint.yml）と同じ公式 download スクリプトで取得する。
-# スクリプト URL・本体ともにバージョンを固定。取得済みならスキップされる。
-# curl | bash にしないのは、取得失敗が「空の入力を bash が正常終了」→ 後続の mv 失敗、
-# という分かりにくい形で出るため。先にファイルへ落として失敗をその場で検出する。
-$(ACTIONLINT_BIN):
-	@mkdir -p $(dir $(ACTIONLINT_BIN))
-	@curl -sSfL -o $(dir $(ACTIONLINT_BIN))download.bash \
-		"https://raw.githubusercontent.com/rhysd/actionlint/v$(ACTIONLINT_VERSION)/scripts/download-actionlint.bash"
-	@bash $(dir $(ACTIONLINT_BIN))download.bash $(ACTIONLINT_VERSION) $(dir $(ACTIONLINT_BIN)) >/dev/null
-	@rm -f $(dir $(ACTIONLINT_BIN))download.bash
-	@mv $(dir $(ACTIONLINT_BIN))actionlint $@
+# リポジトリは読み取り専用でマウントする（検査するだけで書き込まない）。
+## GitHub Actions ワークフローの静的解析（CI と同じイメージ・同じコマンド。Docker 必須）
+actionlint:
+	@docker run --rm -v "$(CURDIR)":/repo:ro -w /repo $(ACTIONLINT_IMAGE) -color
 
 # ガード自体の自己テストを先に通す。判定の正本は .github/scripts/secret-scan.sh。
 ## 追跡対象に秘匿ファイル（鍵・.env 系）が無いかを検査（secret-scan.yml と同じ手順）
