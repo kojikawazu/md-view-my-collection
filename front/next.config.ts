@@ -57,6 +57,10 @@ const nextConfig: NextConfig = {
   },
   /* config options here */
   reactCompiler: true,
+  // `next dev` が AI エージェント検知時に front/AGENTS.md・front/CLAUDE.md を自動生成するのを止める。
+  // エージェント向けの入口はリポジトリ直下の 2 ファイルに限定しており（.claude/rules/codex.md）、
+  // Codex は祖先の AGENTS.md を階層適用するため、外部ツール由来の指示を front/ に差し込ませない。
+  agentRules: false,
   turbopack: {
     root: process.cwd(),
   },
