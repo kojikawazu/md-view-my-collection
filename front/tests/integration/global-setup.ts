@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import { Client } from 'pg';
-import type { GlobalSetupContext } from 'vitest/node';
+import type { TestProject } from 'vitest/node';
 import { hasTestDatabaseUrlOverride, resolveTestDatabaseUrl } from '../support/db-target';
 
 declare module 'vitest' {
@@ -20,10 +20,10 @@ let container: StartedPostgreSqlContainer | undefined;
  * 接続先は `tests/support/db-target.ts` が解決・検証する（`DATABASE_URL` は参照しない）。
  * `TEST_DATABASE_URL` による上書きが無い場合のみ Testcontainers を起動する。
  *
- * @param ctx - Vitest globalSetup コンテキスト（ワーカーへ値を渡す `provide` を含む）
+ * @param project - Vitest の TestProject（ワーカーへ値を渡す `provide` を持つ）
  * @returns コンテナを停止する teardown 関数
  */
-export default async function setup({ provide }: GlobalSetupContext) {
+export default async function setup(project: TestProject) {
   // 上書きがある場合はコンテナを起動しない（自前のローカル Postgres を使うケース）。
   // その DB は空である必要がある — 下の schema.sql は CREATE TABLE を含むため。
   if (!hasTestDatabaseUrlOverride()) {
@@ -49,7 +49,7 @@ export default async function setup({ provide }: GlobalSetupContext) {
 
   // globalSetup（親プロセス）と各ワーカーの両方へ接続先を伝える。
   process.env.DATABASE_URL = uri;
-  provide('databaseUrl', uri);
+  project.provide('databaseUrl', uri);
 
   return async () => {
     await container?.stop();
