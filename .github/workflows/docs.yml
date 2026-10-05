@@ -40,7 +40,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
 
       # markdownlint-cli2-action は cli2 のバージョンを同梱しており指定できないため、
       # npx でバージョンを固定して実行する。CI とローカル（make lint-docs）で
