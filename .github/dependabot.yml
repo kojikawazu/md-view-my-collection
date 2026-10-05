@@ -1,0 +1,25 @@
+# GitHub Actions のバージョン更新を Dependabot に任せる（Issue #219）。
+# 手で一括置換すると、次の非推奨化（今回は Node 20 向けアクションの v4）でまた手作業になる。
+#
+# 対象は workflows の `uses:` だけ。`run:` や Makefile の中で固定している検査ツールの
+# バージョン（Makefile の ACTIONLINT_IMAGE・markdownlint-cli2 の版）は Dependabot では
+# 更新されないため、Makefile と workflows の該当箇所を手で上げる。
+#
+# npm パッケージの脆弱性修正 PR は、この設定ではなくリポジトリ設定の
+# 「Dependabot security updates」が作る（version updates は npm では有効にしていない）。
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '09:00'
+      timezone: Asia/Tokyo
+    # アクションごとに PR が分かれると、マージのたびに全ワークフローが走る
+    groups:
+      github-actions:
+        patterns:
+          - '*'
+    commit-message:
+      prefix: chore(ci)
