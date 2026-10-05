@@ -23,7 +23,7 @@ jobs:
     timeout-minutes: 5
     steps:
       # actionlint は Git リポジトリの中で .github/workflows を探すため、checkout を先に置く
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # 実行コマンドとイメージ（バージョン・ダイジェスト）の定義は Makefile の 1 箇所だけ。
       # ここに書き写すと、片方だけ更新されてローカル green / CI red が起きる（Issue #204）。
