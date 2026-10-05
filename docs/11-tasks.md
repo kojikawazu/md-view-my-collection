@@ -258,10 +258,10 @@
 - [x] actionlint を公式 Docker イメージに統一（`rhysd/actionlint:1.7.12` をマニフェストリストのダイジェストで固定し、定義を `Makefile` の `ACTIONLINT_IMAGE` 1 箇所に集約。CI は `make actionlint` を呼ぶ。shellcheck 同梱により、SC2086 を含む `run:` が旧方式のバイナリ + shellcheck 無しでは exit 0、イメージでは exit 2 になることを確認。`.actionlint/` キャッシュと `.gitignore` の記載を削除 / Issue #204 / 2026-09-27）
 - [x] lockfile を対象パッケージに絞って再解決し、範囲内で直せる Dependabot alerts を解消（vite / esbuild / postcss / nanoid / js-yaml / flatted / minimatch / brace-expansion / picomatch / @humanfs/node / @grpc/grpc-js。全面的な `pnpm update` は prettier 3.9 と react-hooks の新しい lint ルールまで巻き込み、整形差分 1 件と lint エラー 2 件が出るため採らず、対象を名指しして `--no-save --depth Infinity` で更新。vite は vitest の peer dependency でもあるため再解決されず、`devDependencies` に `vite: ^7.3.6` を明示して解消（major は 7 のまま）/ Issue #221 / 2026-10-06）
 - [x] CI の Node を本番（Vercel `nodeVersion: 24.x`）と同じ 24 に揃える（`test.yml` / `docs.yml` の `node-version` 20 → 24、`@types/node` を `^24`。CI が 20 であることが testcontainers 12・supabase-js 最新の Node 要件を満たせない原因になっていた。Node 24 での OOM 回避として入れていた `vitest.config.ts` の `dangerouslyIgnoreUnhandledErrors` は、vitest 4 + Node 24.14.1 で外して 3 回とも終了コード 0 を確認したうえで削除 / Issue #224 / 2026-10-06）
+- [x] `@testcontainers/postgresql` を `^10.28.0` → `^12.2.0` に更新し、testcontainers 経由の undici（9 件）/ uuid（1 件）の alerts を解消（undici 5.29.0 → 8.11.2、dockerode 4 → 5 で uuid は依存ごと消えた。12 系は Node `>= 22.22` 必須のため #224 で CI を Node 24 に揃えてから着手。12.0.0 の既定の待機戦略の変更は、Postgres モジュールが `Wait.forAll([forHealthCheck, forListeningPorts])` を明示しているため影響なし。`global-setup.ts` の変更は不要。`TEST_DATABASE_URL` に非ローカルを入れると DDL 適用前に throw することを実行して確認 / Issue #222 / 2026-10-06）
 
 ### 積み残し
 
 - Upstash のアカウント作成と Vercel への環境変数 2 つの設定（`UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`）。**設定するまで本番ではレートリミットが無効**（実装自体は完了 / Issue #146）
 - `deepmerge-ts` の high 1 件（`prisma` → `@prisma/config` が `7.1.5` に完全固定。Prisma 6 系の最新でも解消せず、Prisma 7 へのメジャー移行が必要。影響は Prisma CLI が手元の設定ファイルをマージする経路のみで、リクエスト由来の入力は届かない / Issue #206 → #209）
-- testcontainers 10 系が持ち込む undici / uuid の alerts（10 → 12 のメジャー更新が必要。12 系は Node `>= 22.22` 必須のため #224 の後に着手 / Issue #222）
 - `script-src` の nonce 化（`'unsafe-inline' 'unsafe-eval'` の撤廃。`middleware.ts` の新設を伴うため強制化とは分離 / 判断理由は `docs/06-security-specification.md`「nonce 化を見送る判断」）
