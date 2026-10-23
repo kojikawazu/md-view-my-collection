@@ -694,13 +694,9 @@
         "properties": {
           "email": {
             "description": "local モードで照合するメール",
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
+            "type": [
+              "string",
+              "null"
             ]
           }
         }
@@ -722,13 +718,9 @@
             "type": "string"
           },
           "summary": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
+            "type": [
+              "string",
+              "null"
             ]
           },
           "content": {
@@ -754,16 +746,12 @@
             "example": "Editor"
           },
           "publishDate": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
             "format": "date-time",
-            "example": "2024-01-15T00:00:00.000Z"
+            "example": "2024-01-15T00:00:00.000Z",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "createdAt": {
             "type": "string",
@@ -818,15 +806,11 @@
             "example": "https://example.com"
           },
           "label": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "example": "Example"
+            "example": "Example",
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
