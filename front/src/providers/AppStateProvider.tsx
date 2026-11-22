@@ -375,14 +375,16 @@ export const AppStateProvider = ({ children }: { children: React.ReactNode }) =>
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // local モードでは reports を localStorage に永続化し、タグを派生させる。
+  // local モードでは reports を localStorage に永続化する（外部への同期なので effect で行う）。
+  // タグはここで派生させない。reports を書き換える全経路（fetchReports / addReport /
+  // updateReport / deleteReport）が同時に setTags しており、effect で再計算すると描画が
+  // 1 回余分に走るだけになる（react-hooks/set-state-in-effect / Issue #244）。
   // isHydrated 前は初期 [] で保存済みレポートを上書きしてしまうため、初期化完了までスキップする
   // （開発時の StrictMode で初期化 effect が再実行されると、上書き後の [] を読み直してしまう）。
   useEffect(() => {
     if (dataMode === 'local') {
       if (!isHydrated) return;
       localStorage.setItem('espresso_reports', JSON.stringify(reports));
-      setTags(deriveTagsFromReports(reports));
     }
   }, [reports, dataMode, isHydrated]);
 
