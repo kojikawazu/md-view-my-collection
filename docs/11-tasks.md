@@ -117,6 +117,7 @@
 - [x] 本番環境変数を整備（必要が出た場合のみ）
 - [x] 本番動作確認（Google OAuth/初期表示）
 - [x] Prettier の差分ゼロを CI で検証（`format:check` 追加・`static-analysis` ジョブへ組込み・未整形 39 ファイルを一括整形・`.prettierrc.json` の重複設定を削除・`.git-blame-ignore-revs` 追加 / Issue #186 / 2026-08-09）
+- [x] CI の `playwright` ジョブのランナーを `ubuntu-24.04` に固定（`ubuntu-latest`=26.04 で Playwright 1.58 の chromium が未対応になり全 PR の CI が失敗していた / Issue #241 / 2026-11-22）
 
 ## パフォーマンス改善
 

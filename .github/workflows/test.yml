@@ -65,7 +65,11 @@ jobs:
         run: pnpm typecheck
 
   playwright:
-    runs-on: ubuntu-latest
+    # ubuntu-latest ではなく版を固定する。Playwright はブラウザ配布対象の OS を版ごとに
+    # 限定しており、ubuntu-latest の指す先が変わると対応前の Playwright ではブラウザの
+    # インストールで落ちる（ubuntu-latest=26.04 / @playwright/test 1.58 で発生。Issue #241）。
+    # 固定先を上げるときは、使用中の Playwright がその版に対応していることを先に確認する。
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     defaults:
       run:
@@ -93,7 +97,7 @@ jobs:
         run: pnpm test
 
       - name: Run integration tests
-        # Testcontainers が Docker で Postgres を起動する（ubuntu-latest は Docker 同梱）。
+        # Testcontainers が Docker で Postgres を起動する（GitHub ホストの Ubuntu ランナーは Docker 同梱）。
         run: pnpm test:integration
 
       - name: Install Playwright browsers
