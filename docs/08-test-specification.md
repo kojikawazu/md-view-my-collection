@@ -775,6 +775,8 @@
 | R-N-1 | ローカルモードで listReport をそのまま返す | dataMode="local", listReport あり | report === listReport, fetch 未呼び出し | High |
 | R-N-2 | listReport に content がある場合 fetch しない | listReport.content あり | fetch 未呼び出し | Medium |
 | R-N-3 | supabase モードで API から取得 | dataMode="supabase", listReport.content なし | fetch("/api/reports/xxx") が呼ばれ、結果がセット | High |
+| R-N-4 | 取得中だけ isLoading が true | dataMode="supabase", listReport.content なし | 取得中は isLoading=true かつ report === listReport、応答後は isLoading=false で全文 | Medium |
+| R-N-5 | local モードで listReport の更新を反映 | dataMode="local", 同じ id で title だけ変えた listReport で再描画 | report === 新しい listReport（state に写していないため即座に反映） | Medium |
 
 #### 準正常系
 
@@ -782,6 +784,8 @@
 |---|---|---|---|---|
 | R-S-1 | reportId が undefined の場合 | reportId: undefined | fetch 未呼び出し、report は listReport のまま | Medium |
 | R-S-2 | API が非 200 を返す | fetch → { ok: false } | report は listReport のまま（undefined にならない） | Medium |
+| R-S-3 | reportId 切り替え後に古い応答が届く | r1 の取得中に r2 へ切り替え、r2 の応答の後に r1 の応答が届く | report は r2 のまま（古い ID の応答を表示しない） | High |
+| R-S-4 | 全文の取得後に一覧のキャッシュが届く | listReport: undefined で全文を取得 → 本文なしの listReport で再描画 | 全文の表示を維持し、再取得しない（fetch は 1 回） | Medium |
 
 #### 異常系
 
